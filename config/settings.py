@@ -90,9 +90,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'main',
         # 'NAME': 'for_profile',
-        'USER': 'dual_life',
-        'PASSWORD': 'dual_life',
-        'HOST': 'dual-life-instance.cezrhtu6o4hr.ap-northeast-2.rds.amazonaws.com',
+        'USER': 'LoopUS',
+        'PASSWORD': 'rlagudxo',
+        'HOST': 'loopus.cvgyi0zac7m4.us-east-2.rds.amazonaws.com',
         'PORT': '3306',
 
     }
