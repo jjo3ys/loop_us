@@ -92,7 +92,7 @@ DATABASES = {
         # 'NAME': 'for_profile',
         'USER': 'LoopUS',
         'PASSWORD': 'rlagudxo',
-        'HOST': 'loopus.cvgyi0zac7m4.us-east-2.rds.amazonaws.com',
+        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
         'PORT': '3306',
 
     }
