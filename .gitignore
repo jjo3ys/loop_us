@@ -1,0 +1,10 @@
+.vscode/
+__pycache__/
+.__pycache__
+/__pycache__/
+/env/
+/venv/
+/docker-compose.yml
+Dockerfile
+/requirements.txt
+requirements.txt
