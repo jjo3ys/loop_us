@@ -24,11 +24,11 @@ def create_project(request):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def create_crew(request):
+def join_project(request, idx):
     user = request.user
 
     user_obj = User.objects.get(id=user.id)
-    project_obj = Project.objects.get(id=request.data['project_id'])
+    project_obj = Project.objects.get(id=idx)
 
     crew = Crew(crew = user_obj, 
                 project = project_obj,
@@ -42,4 +42,9 @@ def create_crew(request):
     
     else:
         return Response("형식에 맞지 않습니다.", status=status.HTTP_406_NOT_ACCEPTABLE)
+
+@api_view(['GET', ])
+def search_pj(request):
+    results = Project.objects.filter(project_name__incontains=request.data['keyword']).order_by('-count')
     
+    return Response({'results':list(results)[:10]}, status=status.HTTP_200_OK)
