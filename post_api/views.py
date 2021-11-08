@@ -98,8 +98,8 @@ def specific_posting_update(request, user_idx, proj_idx, posting_idx):
                 'posting_contents': postingContents_sz.data
             }
 
-            return Response(profile_sz.data)
-        except Profile.DoesNotExist:
+            return Response(return_dict)
+        except:
             return Response('Request is not valid.', status=status.HTTP_404_NOT_FOUND)
     else:
         return_dict = {
