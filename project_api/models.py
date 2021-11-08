@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
 
 # Create your models here.
 class Project(models.Model):
@@ -10,5 +9,5 @@ class Project(models.Model):
 class Crew(models.Model):
     crew = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey('Project', related_name='crew', on_delete=models.CASCADE)
-    start_date = models.DateField(default=timezone.now())
+    start_date = models.DateField()
     end_date = models.DateField(null=True)
