@@ -24,8 +24,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 # from .department import DEPARTMENT
-from .models import Profile
-# from .serializers import ProfileSerializer, UserSerializer
+from .models import Profile, Tag, Tagging
+from .serializers import TaggingSerailzer#ProfileSerializer, UserSerializer
 
 import jwt
 import time
@@ -92,6 +92,16 @@ def signup(request):
                                     real_name = request.data['real_name'],
                                     class_num = request.data['class_num'],
                                     profile_image = request.data['image'])
+
+            for tag in request.data['tag']:
+                try:
+                    tag_obj = Tag.objects.get(tag=tag)
+                    tag_obj.count += 1
+                    tag_obj.save()
+                    
+                except:
+                    Tag.objects.create(tag=tag)
+
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -118,7 +128,18 @@ def login(request):
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-# @api_view(['GET', ])
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def update_profile(request, idx):
+    profile = Profile.objects.get(user=idx)
+    profile.type = request.data['type']
+    profile.real_name = request.data['real_name']
+    profile.class_num = request.data['class_num']
+    profile.profile_image = request.data['image']
+    profile.save()
+    
+    for tag in request.data['tag']:
+
 # def profile_load(reuqest, idx):
 #     try:
 #         profile = Profile.objects.get(user=idx)
