@@ -10,7 +10,7 @@ class Profile(models.Model):
     profile_image = models.ImageField(null = True)
 
 class Tag(models.Model):
-    tag = models.CharField(max_length=50)
+    tag = models.CharField(max_length=50, unique=True)
     count = models.IntegerField(default=1)
 
 class Tagging(models.Model):

@@ -1,3 +1,4 @@
+from django.http import request
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -25,7 +26,7 @@ from rest_framework import status
 
 # from .department import DEPARTMENT
 from .models import Profile, Tag, Tagging
-from .serializers import TaggingSerailzer#ProfileSerializer, UserSerializer
+from .serializers import ProfileSerializer, TaggingSerailzer#ProfileSerializer, UserSerializer
 
 import jwt
 import time
@@ -87,17 +88,18 @@ def signup(request):
     if user_obj.is_active:
         token = Token.objects.create(user=user_obj)
         try:
-            Profile.objects.create(user = user_obj,
-                                    type = request.data['type'],
-                                    real_name = request.data['real_name'],
-                                    class_num = request.data['class_num'],
-                                    profile_image = request.data['image'])
+            profile_obj = Profile.objects.create(user = user_obj,
+                                                 type = request.data['type'],
+                                                 real_name = request.data['real_name'],
+                                                 class_num = request.data['class_num'],
+                                                 profile_image = request.data['image'])
 
             for tag in request.data['tag']:
                 try:
                     tag_obj = Tag.objects.get(tag=tag)
                     tag_obj.count += 1
                     tag_obj.save()
+                    Tagging.objects.create(profile=profile_obj, tag=tag_obj)
                     
                 except:
                     Tag.objects.create(tag=tag)
@@ -131,18 +133,59 @@ def login(request):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def update_profile(request, idx):
-    profile = Profile.objects.get(user=idx)
+    profile = Profile.objects.get(user_id=idx)
+    old_taged_list = ProfileSerializer(profile).data['tagging']
+
     profile.type = request.data['type']
     profile.real_name = request.data['real_name']
     profile.class_num = request.data['class_num']
     profile.profile_image = request.data['image']
-    profile.save()
-    
+
     for tag in request.data['tag']:
+        try:
+            tag_obj = Tag.objects.get(tag=tag)
+            if tag_obj.id in old_taged_list:
+                continue
+            
+            else:
+                tag_obj.count += tag_obj.count
+                tag_obj.save()
 
-# def profile_load(reuqest, idx):
-#     try:
-#         profile = Profile.objects.get(user=idx)
+                Tagging.objects.create(tag=tag_obj, profile=profile)
+        
+        except:
+            tag_obj = Tag.objects.create(tag=tag)
+            Tagging.objects.create(tag=tag_obj, profile=profile)
+    
+    for tag in old_taged_list:
+        if tag not in request.data['tag']:
+            old_tag = Tag.objects.get(tag=tag)
+            old_tag.count = old_tag.count-1
+            old_tagging = Tagging.objects.get(tag_id=old_tag.id, profile_id=profile.id)
+            old_tagging.delete()
+    
+    profile.save()
+    profile_sz = ProfileSerializer(profile)
+    
+    return Response(profile_sz.data, status=status.HTTP_200_OK)
 
-#     except:
-#         return Response('해당 유저의 프로필이 유효하지 않습니다.', status=status.HTTP_404_NOT_FOUND)
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def profile_load(request, idx):
+    user = Profile.objects.get(user_id=request.user.id)
+    return_dict = {}
+
+    profile = Profile.objects.get(user=idx)
+    profile_sz = ProfileSerializer(profile)
+    return_dict.update(profile_sz.data)
+
+    if user.id == idx:
+        return_dict.update({'is_user':1})
+    
+    return Response(return_dict, status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
+def search_tag(request):
+    tags = Tag.objects.filter(tag__incontains=request.data['key_word']).order_by('-count')
+
+    return Response({'results':list(tags)[:10]}, status=status.HTTP_200_OK)
