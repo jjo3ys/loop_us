@@ -71,6 +71,10 @@ def specific_posting_load(request, posting_idx):
 @permission_classes((IsAuthenticated,))
 def specific_posting_update(request, user_idx, proj_idx, posting_idx):
     if str(request.user.id) == user_idx:
+        postingcont = PostingContents.objects.filter(author_id=user_idx)
+        postingcont.delete()
+
+
         try:
             posting = Posting.objects.get(posting=posting_idx)
             postingContents = PostingContents.objects.filter(posting=posting_idx)
