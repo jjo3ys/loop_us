@@ -26,3 +26,8 @@ class PostingContents(models.Model):
 
     class Meta:
         db_table = "posting_contents"
+
+class PostingContentsImage(models.Model):
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    PostingContents = models.ForeignKey('PostingContents', related_name='posting_image', on_delete=models.CASCADE)
+    image = models.ImageField(null=True)
