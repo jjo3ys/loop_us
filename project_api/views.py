@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 @permission_classes((IsAuthenticated,))
 def create_project(request):
     project_obj = Project(project_name = request.data['project_name'])
-    project_sz = ProjectSerializer(project_obj)
+    project_sz = ProjectSerializer(project_obj, data = {'project_name': request.data['project_name']})
 
     if project_sz.is_valid():
         project_sz.save()
