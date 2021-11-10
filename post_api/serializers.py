@@ -1,15 +1,19 @@
-from .models import Posting, PostingContents
+from .models import Posting, PostingContents, PostingContentsImage
 from rest_framework import serializers
+
+class PostingContentsImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostingContentsImage
+        fields = ['author', 'PostingContents',
+         'image']
 
 class PostingContentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostingContents
-        fields = ['posting', 'sequance',
-         'contentType', 'content', 'date']
+        fields = ['posting', 'contentType', 'content', 'date']
 
 class PostingSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model = Posting
-        fields = ['author', 'project', 'sequance',
+        fields = ['id', 'author', 'project',
          'thumbnail', 'title', 'date']

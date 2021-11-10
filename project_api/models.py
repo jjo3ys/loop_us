@@ -3,6 +3,7 @@ from django.conf import settings
 
 # Create your models here.
 class Project(models.Model):
+    id = models.AutoField(db_column='id', primary_key=True)
     project_name = models.CharField(max_length=50, unique=True)
     count = models.IntegerField(default=1)
 
