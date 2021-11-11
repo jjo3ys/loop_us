@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
     'project_api.apps.ProjectApiConfig',
+    'question_api.apps.QuestionApiConfig',
     
     'rest_framework',
     'rest_framework.authtoken',

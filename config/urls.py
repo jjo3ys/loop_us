@@ -12,4 +12,5 @@ urlpatterns = [
     path('user_api/', include('user_api.urls')),
     path('post_api/', include('post_api.urls')),
     path('project_api/', include('project_api.urls')),
+    path('question_api/', include('question_api.urls')),
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
