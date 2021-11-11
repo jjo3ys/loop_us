@@ -26,7 +26,6 @@ def posting_upload(request, proj_idx):
             'thumbnail' : request.FILES.get('thumbnail')
         })
         if postingSZ.is_valid():
-            print("PostingContentSZ.errors:", postingSZ.errors)
             postingSZ.save()
         else:
             return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
@@ -43,7 +42,6 @@ def posting_upload(request, proj_idx):
                     'content': line['contents']
             })
                 if PostingContentSZ.is_valid():
-                    print("String PostingContentSZ.errors:", PostingContentSZ.errors)
                     PostingContentSZ.save()
 
                 else:
@@ -64,8 +62,6 @@ def posting_upload(request, proj_idx):
                     'content': line['contents']
             })
                 if PostingContentSZ.is_valid():
-                    print('imageFILE')
-                    print("ImageURL PostingContentSZ.errors:", PostingContentSZ.errors)
                     PostingContentSZ.save()
                 else:
                     return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
@@ -87,22 +83,16 @@ def posting_upload(request, proj_idx):
                     'content': line['contents']
             })
                 if PostingContentSZ.is_valid():
-                    print("imageFILE PostingContentSZ.errors:", PostingContentSZ.errors)
                     PostingContentSZ.save()
                 else:
                     return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
-                print(i)
                 postingContImg = request.FILES.getlist('image')[i]
-                print(postingContImg)
-                print(len(postingContImg))
-                print('위에 순서나온다!')
                 i = i + 1
                 PostingContentImgSZ = PostingContentsImageSerializer(data={
                     'author': request.user.id,
                     'PostingContents': postingSZ.data['id'],
                     'image': postingContImg})
                 PostingContentImgSZ.is_valid()
-                print("imageFILEImageDB PostingContentImgSZ.errors:", PostingContentImgSZ.errors)
 
                 try:
                     if PostingContentImgSZ.is_valid():
@@ -199,7 +189,6 @@ def specific_posting_update(request, posting_idx):
                     'content': line['contents']
             })
                 if PostingContentSZ.is_valid():
-                    print("String PostingContentSZ.errors:", PostingContentSZ.errors)
                     PostingContentSZ.save()
 
                 else:
@@ -220,8 +209,6 @@ def specific_posting_update(request, posting_idx):
                     'content': line['contents']
             })
                 if PostingContentSZ.is_valid():
-                    print('imageFILE')
-                    print("ImageURL PostingContentSZ.errors:", PostingContentSZ.errors)
                     PostingContentSZ.save()
                 else:
                     return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
@@ -243,22 +230,16 @@ def specific_posting_update(request, posting_idx):
                     'content': line['contents']
             })
                 if PostingContentSZ.is_valid():
-                    print("imageFILE PostingContentSZ.errors:", PostingContentSZ.errors)
                     PostingContentSZ.save()
                 else:
                     return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
-                print(i)
                 postingContImg = request.FILES.getlist('image')[i]
-                print(postingContImg)
-                print(len(postingContImg))
-                print('위에 순서나온다!')
                 i = i + 1
                 PostingContentImgSZ = PostingContentsImageSerializer(data={
                     'author': request.user.id,
                     'PostingContents': posting_idx,
                     'image': postingContImg})
                 PostingContentImgSZ.is_valid()
-                print("imageFILEImageDB PostingContentImgSZ.errors:", PostingContentImgSZ.errors)
 
                 try:
                     if PostingContentImgSZ.is_valid():
