@@ -10,6 +10,6 @@ from drf_yasg import openapi
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('user_api/', include('user_api.urls')),
-    # path('post_api/', include('post_api.urls')),
+    path('post_api/', include('post_api.urls')),
     path('project_api/', include('project_api.urls')),
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

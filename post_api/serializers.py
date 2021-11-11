@@ -4,13 +4,13 @@ from rest_framework import serializers
 class PostingContentsImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostingContentsImage
-        fields = ['author', 'PostingContents',
+        fields = ['id', 'author', 'PostingContents',
          'image']
 
 class PostingContentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostingContents
-        fields = ['posting', 'contentType', 'content', 'date']
+        fields = ['id', 'posting', 'contentType', 'content', 'date']
 
 class PostingSerializer(serializers.ModelSerializer):
     class Meta:

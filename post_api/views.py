@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from project_api.models import Project
+from project_api.serializers import ProjectSerializer
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
@@ -7,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import json
 
-from .serializers import PostingContentsSerializer, PostingSerializer
+from .serializers import PostingContentsSerializer, PostingSerializer, PostingContentsImageSerializer
 
 from .models import Posting, PostingContents
 
@@ -18,141 +19,108 @@ from .models import Posting, PostingContents
 @permission_classes((IsAuthenticated,))
 def posting_upload(request, proj_idx):
     if request.method == "POST":
-        print(request.user)
-        print(type(request.user))
-        posting = Posting(author = request.user)
-        data = {
-            'author' : request.user.id,
-            'project' :proj_idx,
+        postingSZ = PostingSerializer(data={
+            'author': request.user.id,
+            'project': proj_idx,
             'title' : request.data['title'], 
             'thumbnail' : request.FILES.get('thumbnail')
-        }
-        postingSZ = PostingSerializer(posting, data)
+        })
         if postingSZ.is_valid():
+            print("PostingContentSZ.errors:", postingSZ.errors)
             postingSZ.save()
         else:
             return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
-
         postingContList = json.JSONDecoder().decode(request.data['posting_contents'])
 
         return_list = []
         i = 0
-        print("여기야 여기~~")
-        print("postingSZ:", postingSZ)
+
         for line in postingContList:
             if line['type'] == 'title' or line['type'] == 'content':
-                PostingContModel = PostingContents(posting)
-                print('01230')
-                customizing_sz = PostingContentsSerializer(PostingContModel, data={
+                PostingContentSZ = PostingContentsSerializer(data={
                     'posting': postingSZ.data['id'],
                     'contentType': line['type'],
                     'content': line['contents']
             })
-                print('ㅁㄴㅇㄹㅁㄴㅇㄹ')
-                if customizing_sz.is_valid():
-                    print(customizing_sz.data)
-                    customizing_sz.save()
+                if PostingContentSZ.is_valid():
+                    print("String PostingContentSZ.errors:", PostingContentSZ.errors)
+                    PostingContentSZ.save()
 
-                # else:
-                #     return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
+                else:
+                    return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
 
                 return_list.append(
                     {
-                        "type": customizing_sz.data['type'],
-                        "contents": customizing_sz.data['contents'],
+                        "type": PostingContentSZ.data['contentType'],
+                        "contents": PostingContentSZ.data['content'],
+                        "date": PostingContentSZ.data['date'],
                     }
                 )
 
-#############################################################################################################################
             elif line['type'] == 'imageURL':
-                customizing_model = Customizing(author=request.user)
-                customizing_sz = CustomizingSerializer(customizing_model, data={
-                    'type': line['type'],
-                    'contents': line['contents'],
-                    'seq_id': line['id']
+                PostingContentSZ = PostingContentsSerializer(data={
+                    'posting': postingSZ.data['id'],
+                    'contentType': line['type'],
+                    'content': line['contents']
             })
-                if customizing_sz.is_valid():
-                    customizing_sz.save()
+                if PostingContentSZ.is_valid():
+                    print('imageFILE')
+                    print("ImageURL PostingContentSZ.errors:", PostingContentSZ.errors)
+                    PostingContentSZ.save()
                 else:
                     return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
 
                 try:
                     return_list.append(
-                        {
-                            "id": customizing_sz.data['seq_id'],
-                            "type": customizing_sz.data['type'],
-                            "contents": customizing_sz.data['contents'],
-                        }
-                    )
-
+                    {
+                        "type": PostingContentSZ.data['contentType'],
+                        "contents": PostingContentSZ.data['content'],
+                        "date": PostingContentSZ.data['date'],
+                    }
+                )
                 except:
                     return Response('Error', status=status.HTTP_403_FORBIDDEN)
-#############################################################################################################################
             elif line['type'] == 'imageFILE':
-                customizing_model = Customizing(author=request.user)
-                customizing_sz = CustomizingSerializer(customizing_model, data={
-                    'type': line['type'],
-                    'contents': line['contents'],
-                    'seq_id': line['id']
+                PostingContentSZ = PostingContentsSerializer(data={
+                    'posting': postingSZ.data['id'],
+                    'contentType': line['type'],
+                    'content': line['contents']
             })
-                if customizing_sz.is_valid():
-                    customizing_sz.save()
+                if PostingContentSZ.is_valid():
+                    print("imageFILE PostingContentSZ.errors:", PostingContentSZ.errors)
+                    PostingContentSZ.save()
                 else:
                     return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
-
-                req_image_data = request.FILES.getlist('image')[i]
+                print(i)
+                postingContImg = request.FILES.getlist('image')[i]
+                print(postingContImg)
+                print(len(postingContImg))
+                print('위에 순서나온다!')
                 i = i + 1
+                PostingContentImgSZ = PostingContentsImageSerializer(data={
+                    'author': request.user.id,
+                    'PostingContents': postingSZ.data['id'],
+                    'image': postingContImg})
+                PostingContentImgSZ.is_valid()
+                print("imageFILEImageDB PostingContentImgSZ.errors:", PostingContentImgSZ.errors)
+
                 try:
-                    custom_model = Customizing_imgs(author=request.user)
-                except:
-                    return Response('없는 사용자입니다.', status=status.HTTP_404_NOT_FOUND)
-                customizing_imgs_sz = Customizing_imgs_Serializer(
-                    custom_model, data={'customizing': customizing_sz.data['id'], 'image': req_image_data})
-                try:
-                    if customizing_imgs_sz.is_valid():
-                        customizing_imgs_sz.save()
+                    if PostingContentImgSZ.is_valid():
+                        PostingContentImgSZ.save()
                     else:
                         print("데이터가 저장되지 않았습니다.")
-                    return_list.append(
-                        {
-                            "id": customizing_sz.data['seq_id'],
-                            "type": customizing_sz.data['type'],
-                            "contents": customizing_imgs_sz.data['image'],
-                        }
-                    )
                 except:
                     return Response('유효하지 않은 image 형식입니다.??', status=status.HTTP_403_FORBIDDEN)
-#############################################################################################################################
-            elif line['type'] == 'feed':
-                customizing_model = Customizing(author=request.user)
-                customizing_sz = CustomizingSerializer(customizing_model, data={
-                    'type': line['type'],
-                    'contents': line['contents'],
-                    'seq_id': line['id']
-            })
-                try:
-                    if customizing_sz.is_valid():
-                        customizing_sz.save()
-                    else:
-                        return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
-
-                    feed = Feed.objects.get(
-                        id=customizing_sz.data['contents'])
-                    serializer = FeedSerializer(feed)
-                    # return_dict = {}
-                    # return_dict.update(serializer.data)
-
-                except Feed.DoesNotExist:
-                    return Response(status=status.HTTP_404_NOT_FOUND)
-
+       
                 return_list.append(
                     {
-                        "id": customizing_sz.data['seq_id'],
-                        "type": customizing_sz.data['type'],
-                        "contents": serializer.data,
+                        "type": PostingContentSZ.data['contentType'],
+                        "contents": PostingContentImgSZ.data['image'],
+                        "date": PostingContentSZ.data['date']
                     }
                 )
-        return Response('upload completed')
+                 # return Response('upload completed\nresponse_values:', return_list)
+        return Response(return_list)
             
 
         # except:
