@@ -21,7 +21,7 @@ def create_tag(request):
 def search_tag(request):
     return_dict = {}
     return_dict['results'] = []
-    print(request.GET['query'])
+
     tags = Tag.objects.filter(tag__icontains=request.GET['query']).order_by('-count')
     tags = tags[:10]
 
