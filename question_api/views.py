@@ -93,7 +93,6 @@ def answer(request, question_idx):
             'content': request.data['content'],
             'adopt': False
         })
-        print('asdf')
         if answerSZ.is_valid():
             answerSZ.save()
         else:
