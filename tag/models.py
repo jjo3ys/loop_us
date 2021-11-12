@@ -4,7 +4,7 @@ from user_api.models import Profile
 
 # Create your models here.
 class Tag(models.Model):
-    tag = models.CharField(max_length=50)
+    tag = models.CharField(max_length=50, unique=True)
     count = models.IntegerField(default=1)
 
     class Meta:
