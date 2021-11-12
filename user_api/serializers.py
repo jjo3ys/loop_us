@@ -1,26 +1,13 @@
-from .models import Profile, Tag, Tagging
+from .models import Profile
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-class TagSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model = Tag
-        fields = '__all__'
-
-class TaggingSerailzer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Tagging
-        fields = ['profile', 'tag']
 
 class ProfileSerializer(serializers.ModelSerializer):
 
-    tagging = TaggingSerailzer(many=True, read_only=True)
-
     class Meta:
         model = Profile
-        fields = ['id', 'user', 'real_name', 'type', 'class_num', 'profile_image', 'tagging']
+        fields = ['id', 'user', 'real_name', 'type', 'class_num', 'profile_image']
 
 class UserSerializer(serializers.ModelSerializer):
 

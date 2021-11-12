@@ -1,5 +1,5 @@
-from .serializers import ProjectSerializer, CrewSerializer
-from .models import Project, Crew
+from .serializers import ProjectSerializer
+from .models import Project
 
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -20,31 +20,3 @@ def create_project(request):
     
     else:
         return Response("형식에 맞지 않습니다.", status=status.HTTP_406_NOT_ACCEPTABLE)
-
-
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def join_project(request, idx):
-    user = request.user
-
-    user_obj = User.objects.get(id=user.id)
-    project_obj = Project.objects.get(id=idx)
-
-    crew = Crew(crew = user_obj, 
-                project = project_obj,
-                start_date = request.data['start_date'],
-                end_date = request.data['end_date'])
-
-    crew_sz = CrewSerializer(crew)
-    if crew_sz.is_valid():
-        crew_sz.save()
-        return Response(crew_sz.data, status=status.HTTP_201_CREATED)
-    
-    else:
-        return Response("형식에 맞지 않습니다.", status=status.HTTP_406_NOT_ACCEPTABLE)
-
-@api_view(['GET', ])
-def search_pj(request):
-    results = Project.objects.filter(project_name__incontains=request.data['keyword']).order_by('-count')
-    
-    return Response({'results':list(results)[:10]}, status=status.HTTP_200_OK)

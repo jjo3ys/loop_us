@@ -25,8 +25,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 # from .department import DEPARTMENT
-from .models import Profile, Tag, Tagging
-from .serializers import ProfileSerializer, TaggingSerailzer#ProfileSerializer, UserSerializer
+from .models import Profile
+from .serializers import ProfileSerializer #, ProfileSerializer, UserSerializer
 
 import jwt
 import time
@@ -93,17 +93,6 @@ def signup(request):
                                                  real_name = request.data['real_name'],
                                                  class_num = request.data['class_num'],
                                                  profile_image = request.data['image'])
-
-            for tag in request.data['tag']:
-                try:
-                    tag_obj = Tag.objects.get(tag=tag)
-                    tag_obj.count += 1
-                    tag_obj.save()
-                    Tagging.objects.create(profile=profile_obj, tag=tag_obj)
-                    
-                except:
-                    Tag.objects.create(tag=tag)
-
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -140,29 +129,6 @@ def update_profile(request, idx):
     profile.real_name = request.data['real_name']
     profile.class_num = request.data['class_num']
     profile.profile_image = request.data['image']
-
-    for tag in request.data['tag']:
-        try:
-            tag_obj = Tag.objects.get(tag=tag)
-            if tag_obj.id in old_taged_list:
-                continue
-            
-            else:
-                tag_obj.count += tag_obj.count
-                tag_obj.save()
-
-                Tagging.objects.create(tag=tag_obj, profile=profile)
-        
-        except:
-            tag_obj = Tag.objects.create(tag=tag)
-            Tagging.objects.create(tag=tag_obj, profile=profile)
-    
-    for tag in old_taged_list:
-        if tag not in request.data['tag']:
-            old_tag = Tag.objects.get(tag=tag)
-            old_tag.count = old_tag.count-1
-            old_tagging = Tagging.objects.get(tag_id=old_tag.id, profile_id=profile.id)
-            old_tagging.delete()
     
     profile.save()
     profile_sz = ProfileSerializer(profile)
@@ -183,9 +149,3 @@ def profile_load(request, idx):
         return_dict.update({'is_user':1})
     
     return Response(return_dict, status=status.HTTP_200_OK)
-
-@api_view(['GET', ])
-def search_tag(request):
-    tags = Tag.objects.filter(tag__incontains=request.data['key_word']).order_by('-count')
-
-    return Response({'results':list(tags)[:10]}, status=status.HTTP_200_OK)
