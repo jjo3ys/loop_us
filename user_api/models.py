@@ -8,11 +8,3 @@ class Profile(models.Model):
     type = models.SmallIntegerField(default=0)
     class_num = models.CharField(max_length=100)
     profile_image = models.ImageField(null = True)
-
-class Tag(models.Model):
-    tag = models.CharField(max_length=50, unique=True)
-    count = models.IntegerField(default=1)
-
-class Tagging(models.Model):
-    profile = models.ForeignKey('Profile', related_name='tagging', on_delete=models.CASCADE)
-    tag = models.ForeignKey('Tag', related_name='tagging', on_delete=models.DO_NOTHING)
