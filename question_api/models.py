@@ -19,7 +19,7 @@ class Answer(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE)
     question = models.ForeignKey(
-        Question, on_delete=models.CASCADE)
+        Question, related_name='answers', on_delete=models.CASCADE)
     content = models.TextField(null=True)
     adopt = models.BooleanField(null=False)
     date = models.DateField(auto_now_add=True)

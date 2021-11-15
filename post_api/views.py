@@ -177,9 +177,10 @@ def specific_posting_update(request, posting_idx):
     postingcont = PostingContents.objects.filter(posting=posting_idx)
     postingcont.delete()
     
+    return_list = []
+
     try:
-        ContentsList = json.JSONDecoder().decode(request.data['posting_list'])
-        return_list = []
+        ContentsList = json.JSONDecoder().decode(request.data['contents_list'])
         i = 0
         for line in ContentsList:
             if line['type'] == 'title' or line['type'] == 'content':
