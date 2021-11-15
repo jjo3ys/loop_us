@@ -27,6 +27,7 @@ def search_tag(request):
 
     for tag in tags:
         return_dict['results'].append({'id':tag.id,
-                                       'tag':tag.tag})
+                                       'tag':tag.tag,
+                                       'count':tag.count})
 
     return Response(return_dict, status=status.HTTP_200_OK)
