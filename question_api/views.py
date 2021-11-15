@@ -1,8 +1,10 @@
 from django.shortcuts import render
 
 from question_api.models import Question
+from user_api.models import Profile
 
 from .serializers import QuestionSerializer, AnswerSerializer
+from user_api.serializers import ProfileSerializer
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -46,7 +48,24 @@ def specific_question_load(request, question_idx):
         qestionModel = Question.objects.get(id=question_idx)
         questionSZ = QuestionSerializer(qestionModel)
 
-    return Response(questionSZ.data)
+        profile_obj_question = Profile.objects.get(user=questionSZ.data['user'])
+        profile_sz_question = ProfileSerializer(profile_obj_question)
+        
+        for i in questionSZ.data['answers']:
+            profile_obj = Profile.objects.get(user=i['user'])
+            profile_sz = ProfileSerializer(profile_obj)
+            i.update({
+                "real_name" : profile_sz.data['real_name'],
+                "profile_image" : profile_sz.data['profile_image']
+                })
+        
+        return_dict={
+            "real_name": profile_sz_question.data['real_name'],
+            "profile_image": profile_sz_question.data['profile_image']
+        }
+        return_dict.update(questionSZ.data)
+
+    return Response(return_dict)
 
 
 @api_view(['POST', ])
