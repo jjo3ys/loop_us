@@ -56,8 +56,8 @@ def check_email(request):
     mail_to = email_obj
     EmailMessage(main_title, message_data, to=[mail_to]).send()
 
-    for i in range(6):
-        time.sleep(30)
+    for i in range(36):
+        time.sleep(5)
         user = User.objects.get(pk=user.id)
 
         if user.is_active:
@@ -87,12 +87,13 @@ def signup(request):
 
     if user_obj.is_active:
         token = Token.objects.create(user=user_obj)
+
         try:
-            profile_obj = Profile.objects.create(user = user_obj,
-                                                 type = request.data['type'],
-                                                 real_name = request.data['real_name'],
-                                                 class_num = request.data['class_num'],
-                                                 profile_image = request.data['image'])
+            Profile.objects.create(user = user_obj,
+                                   type = request.data['type'],
+                                   real_name = request.data['real_name'],
+                                   class_num = request.data['class_num'],
+                                   profile_image = request.data['image'])
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -123,7 +124,6 @@ def login(request):
 @permission_classes((IsAuthenticated,))
 def update_profile(request, idx):
     profile = Profile.objects.get(user_id=idx)
-    old_taged_list = ProfileSerializer(profile).data['tagging']
 
     profile.type = request.data['type']
     profile.real_name = request.data['real_name']

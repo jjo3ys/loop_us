@@ -11,4 +11,4 @@ class Project(models.Model):
     end_date = models.DateField(null=True)
 
     class Meta:
-        db_table = 'profile'
+        db_table = 'project'
