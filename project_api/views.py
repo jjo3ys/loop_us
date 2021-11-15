@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from .serializers import ProjectSerializer
 from .models import Project
 
@@ -11,12 +13,18 @@ from rest_framework.permissions import IsAuthenticated
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def create_project(request):
-    project_obj = Project(project_name = request.data['project_name'])
-    project_sz = ProjectSerializer(project_obj, data = {'project_name': request.data['project_name']})
+    user = request.user
 
-    if project_sz.is_valid():
-        project_sz.save()
-        return Response(project_sz.data, status=status.HTTP_201_CREATED)
-    
-    else:
-        return Response("형식에 맞지 않습니다.", status=status.HTTP_406_NOT_ACCEPTABLE)
+    start_date = request.data['start_date']
+    end_date = request.data['end_date']
+
+    if request.data['end_date'] == '':
+        end_date = None
+    project_obj = Project.objects.create(user=user, project_name = request.data['project_name'], 
+                                         introduction = request.data['introduction'],
+                                         start_date = start_date,
+                                         end_date = end_date)
+
+    project_sz = ProjectSerializer(project_obj)
+
+    return Response(project_sz.data, status=status.HTTP_201_CREATED)

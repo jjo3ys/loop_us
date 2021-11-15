@@ -8,7 +8,7 @@ class Project(models.Model):
     project_name = models.CharField(max_length=50)
     introduction = models.CharField(max_length=100)
     start_date = models.DateField()
-    end_date = models.DateField(null=True)
+    end_date = models.DateField(blank=True, null=True)
 
     class Meta:
         db_table = 'project'
