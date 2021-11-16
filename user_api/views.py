@@ -129,7 +129,11 @@ def update_profile(request, idx):
     profile.type = request.data['type']
     profile.real_name = request.data['real_name']
     profile.class_num = request.data['class_num']
-    profile.profile_image = request.data['image']
+    if type(request.data['image']) == str:
+        pass
+    
+    else:
+        profile.profile_image = request.data['image']
     
     profile.save()
     profile_sz = ProfileSerializer(profile)
