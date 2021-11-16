@@ -20,6 +20,7 @@ def create_project(request):
 
     if request.data['end_date'] == '':
         end_date = None
+        
     project_obj = Project.objects.create(user=user, project_name = request.data['project_name'], 
                                          introduction = request.data['introduction'],
                                          start_date = start_date,

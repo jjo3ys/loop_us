@@ -1,7 +1,7 @@
 from django.db import models
 from project_api.models import Project
 from user_api.models import Profile
-
+from question_api.models import Question
 # Create your models here.
 class Tag(models.Model):
     tag = models.CharField(max_length=50, unique=True)
@@ -23,3 +23,10 @@ class Profile_Tag(models.Model):
 
     class Meta:
         db_table = 'profile_tag'
+
+class Question_Tag(models.Model):
+    tag = models.ForeignKey('Tag', related_name='question_tag', on_delete=models.DO_NOTHING)
+    question = models.ForeignKey(Question, related_name='question_tag', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'question_tag'
