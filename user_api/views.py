@@ -100,6 +100,7 @@ def signup(request):
 
         return Response({'message':'singup success',
                          'token':str(token),
+                         'user_id':token.user_id,
                          'isAuthoriztion':1})
     else:
         return Response({'message':'login failed',
