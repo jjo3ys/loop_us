@@ -8,6 +8,8 @@ from .serializers import QuestionSerializer, AnswerSerializer
 from user_api.serializers import ProfileSerializer
 from tag.serializer import TagSerializer
 
+from django.core.paginator import Paginator
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -38,17 +40,35 @@ def raise_question(request):
 @permission_classes((IsAuthenticated,))
 def question_list_load(request):
     if request.method == "GET":
-        myQestionModel = Question.objects.filter(user = request.user.id).order_by('-id')
-        myQuestionSZ = QuestionSerializer(myQestionModel, many=True)
+
+        myQestionModel = Question.objects.filter(user = request.user.id, adopt = False)
+        myQuestionSZ = QuestionSerializer(myQestionModel.order_by('-id'), many=True)
 
         qestionModel = Question.objects.all().order_by('-id')
-        questionSZ = QuestionSerializer(qestionModel, many=True)
 
+        page = request.GET.get('page')
+        page_obj = Paginator(qestionModel, 5).get_page(page)
+
+        questionSZ = QuestionSerializer(page_obj, many=True)
 
         return_dict = {
             'my_questions': myQuestionSZ.data,
             'questions': questionSZ.data
             }
+        
+        for i in myQuestionSZ.data:
+            profile_sz = ProfileSerializer(Profile.objects.get(user=i['user']))
+            i.update({
+                "real_name" : profile_sz.data['real_name'],
+                "profile_image" : profile_sz.data['profile_image']
+                })
+
+        for i in questionSZ.data:
+            profile_sz = ProfileSerializer(Profile.objects.get(user=i['user']))
+            i.update({
+                "real_name" : profile_sz.data['real_name'],
+                "profile_image" : profile_sz.data['profile_image']
+                })
 
     return Response(return_dict)
 
@@ -128,5 +148,8 @@ def answer(request, question_idx):
             answerSZ.save()
         else:
             return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+
+        Question.objects.filter(id=question_idx).update(adopt=True)
+
 
     return Response(answerSZ.data)

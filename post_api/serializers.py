@@ -27,3 +27,12 @@ class PostingSerializer(serializers.ModelSerializer):
     def get_username_from_author(self, posting):
         username = posting.author.username
         return username
+
+
+# class LikeSerializer(serializers.ModelSerializer):
+    
+#     class Meta:
+#         model = Like
+#         # fields = ['username']
+#         fields = ['feed', 'author_id', 'comment']
+    
