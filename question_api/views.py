@@ -150,7 +150,7 @@ def question_update(request, idx):
             Question_Tag.objects.create(tag = tag_obj, project = question_obj)
         
         question_sz = QuestionSerializer(question_obj)
-    return Response(question_sz.data)
+    return Response(question_sz.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST', ])
