@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.shortcuts import render
 
 from question_api.models import Question
@@ -5,6 +6,7 @@ from user_api.models import Profile
 
 from .serializers import QuestionSerializer, AnswerSerializer
 from user_api.serializers import ProfileSerializer
+from tag.serializer import TagSerializer
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -26,7 +28,8 @@ def raise_question(request):
         if questionSZ.is_valid():
             questionSZ.save()
         else:
-            return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+            return Response('유효하지 않은 contents 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+
 
     return Response(questionSZ.data)
 
@@ -35,10 +38,19 @@ def raise_question(request):
 @permission_classes((IsAuthenticated,))
 def question_list_load(request):
     if request.method == "GET":
+        myQestionModel = Question.objects.filter(user = request.user.id).order_by('-id')
+        myQuestionSZ = QuestionSerializer(myQestionModel, many=True)
+
         qestionModel = Question.objects.all().order_by('-id')
         questionSZ = QuestionSerializer(qestionModel, many=True)
 
-    return Response(questionSZ.data)
+
+        return_dict = {
+            'my_questions': myQuestionSZ.data,
+            'questions': questionSZ.data
+            }
+
+    return Response(return_dict)
 
 
 @api_view(['GET', ])
