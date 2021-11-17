@@ -25,8 +25,7 @@ def create_project(request):
                                          start_date = start_date,
                                          end_date = end_date)
 
-    tag_list = request.data['tag']
-    for tag in tag_list:
+    for tag in request.data['tag']:
         try:
             tag_obj = Tag.objects.get(tag=tag)
             tag_obj.count = tag_obj.count + 1
@@ -71,8 +70,8 @@ def update_project(request, idx):
             tag_obj.count = tag_obj.count - 1
             if tag_obj.count == 0:
                 tag_obj.delete()
-                
-            tag_obj.save()
+            else:    
+                tag_obj.save()
 
     for tag in tag_list:
         if tag in old_list:
@@ -88,7 +87,8 @@ def update_project(request, idx):
 
             Project_Tag.objects.create(tag = tag_obj, project = project_obj)
 
-    return Response("ok")
+    project_sz = ProjectSerializer(project_obj)
+    return Response(project_sz.data, status=status.HTTP_200_OK)
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def load_project(request, idx):

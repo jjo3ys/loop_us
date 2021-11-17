@@ -1,6 +1,15 @@
 from .models import Question, Answer
-
+from tag.models import Question_Tag
 from rest_framework import serializers
+
+class QuestionTagSerialier(serializers.ModelSerializer):
+    tag = serializers.SerializerMethodField()
+    class Meta:
+        model = Question_Tag
+        fields = ['tag_id', 'tag']
+    
+    def get_tag(self, obj):
+        return obj.tag.tag
 
 
 class AnswerSerializer(serializers.ModelSerializer):
@@ -17,13 +26,14 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
+    tag = QuestionTagSerialier(many=True, read_only=True)
     questioner = serializers.SerializerMethodField('get_username_to_question')
     answers = AnswerSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
         fields = ['id', 'user', 'questioner',
-                  'content', 'answers', 'adopt', 'date']
+                  'content', 'answers', 'adopt', 'date', 'tag']
 
     def get_username_to_question(self, question):
         username = question.user.username

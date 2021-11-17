@@ -4,8 +4,9 @@ from django.shortcuts import render
 from question_api.models import Question
 from user_api.models import Profile
 
-from .serializers import QuestionSerializer, AnswerSerializer
+from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier
 from user_api.serializers import ProfileSerializer
+from tag.models import Tag, Question_Tag
 from tag.serializer import TagSerializer
 
 from django.core.paginator import Paginator
@@ -22,18 +23,23 @@ from rest_framework.permissions import IsAuthenticated
 @permission_classes((IsAuthenticated,))
 def raise_question(request):
     if request.method == "POST":
-        questionSZ = QuestionSerializer(data={
-            'user': request.user.id,
-            'content': request.data['content'],
-            'adopt': False
-        })
-        if questionSZ.is_valid():
-            questionSZ.save()
-        else:
-            return Response('유효하지 않은 contents 형식입니다.', status=status.HTTP_404_NOT_FOUND)
-
-
-    return Response(questionSZ.data)
+        question_obj = Question.objects.create(user=request.user.id,
+                                               content=request.data['content'],
+                                               adopt=False)
+        
+        for tag in request.data['tag']:
+            try: 
+                tag_obj = Tag.objects.get(tag=tag)
+                tag_obj.count = tag_obj.count + 1
+                tag_obj.save()
+            
+            except Tag.DoesNotExist:
+                tag_obj = Tag.objects.create(tag = tag)
+            
+            Question_Tag.objects.create(question=question_obj, tag=tag_obj)
+        
+        questionSZ = QuestionSerializer(question_obj)
+        return Response(questionSZ.data)
 
 
 @api_view(['GET', ])
@@ -90,11 +96,16 @@ def specific_question_load(request, question_idx):
                 "real_name" : profile_sz.data['real_name'],
                 "profile_image" : profile_sz.data['profile_image']
                 })
+            if profile_obj.user_id == request.user.id:
+                i.update({'is_user':1})
         
         return_dict={
             "real_name": profile_sz_question.data['real_name'],
             "profile_image": profile_sz_question.data['profile_image']
         }
+        if qestionModel.user_id == request.user.id:
+            return_dict.update({'is_user':1})
+
         return_dict.update(questionSZ.data)
 
     return Response(return_dict)
@@ -102,19 +113,44 @@ def specific_question_load(request, question_idx):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def question_update(request):
+def question_update(request, idx):
     if request.method == "POST":
-        answerSZ = AnswerSerializer(data={
-            'user': request.user.id,
-            'content': request.data['content'],
-            'adopt': False
-        })
-        if answerSZ.is_valid():
-            answerSZ.save()
-        else:
-            return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+        question_obj = Question.objects.get(id=idx)
+        question_obj.content = request.data['content']
+        question_obj.save()
 
-    return Response(answerSZ.data)
+        old_tag = Question_Tag.objects.filter(question=idx)
+        old_sz = QuestionTagSerialier(old_tag, many=True)
+        old_list = []
+        
+        for tag in old_sz.data:
+            old_list.append(tag['tag'])
+
+            if tag['tag'] not in request.data['tag']:
+                Question_Tag.objects.get(tag_id = tag['tag_id'], question=question_obj).delete()
+                tag_obj = Tag.objects.get(id=tag['tag_id'])
+                tag_obj.count = tag_obj.count + 1
+                if tag_obj.count == 0:
+                    tag_obj.delete()
+                else:
+                    tag_obj.save()
+        
+        for tag in request.data['tag']:
+            if tag in old_list:
+                continue
+            else:
+                try:
+                    tag_obj = Tag.objects.get(tag=tag)
+                    tag_obj.count = tag_obj.count + 1
+                    tag_obj.save()
+
+                except Tag.DoesNotExist:
+                    tag_obj = Tag.objects.create(tag = tag)
+
+            Question_Tag.objects.create(tag = tag_obj, project = question_obj)
+        
+        question_sz = QuestionSerializer(question_obj)
+    return Response(question_sz.data)
 
 
 @api_view(['POST', ])
