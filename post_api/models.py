@@ -33,6 +33,6 @@ class PostingContentsImage(models.Model):
     PostingContents = models.ForeignKey('PostingContents', related_name='posting_image', on_delete=models.CASCADE)
     image = models.ImageField(null=True)
 
-# class Like(models.Model):
-#     posting = models.ForeignKey(Posting, null=True, related_name='like', on_delete=models.CASCADE)
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+class Like(models.Model):
+    posting = models.ForeignKey(Posting, null=True, related_name='like', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
