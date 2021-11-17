@@ -26,7 +26,9 @@ from rest_framework import status
 
 # from .department import DEPARTMENT
 from .models import Profile
-from .serializers import ProfileSerializer #, ProfileSerializer, UserSerializer
+from .serializers import ProfileSerializer, ProfileTagSerializer #, ProfileSerializer, UserSerializer
+
+from tag.models import Tag, Profile_Tag
 
 import jwt
 import time
@@ -89,14 +91,25 @@ def signup(request):
         token = Token.objects.create(user=user_obj)
 
         try:
-            Profile.objects.create(user = user_obj,
-                                   type = request.data['type'],
-                                   real_name = request.data['real_name'],
-                                   class_num = request.data['class_num'],
-                                   profile_image = request.data['image'])
+            profile_obj = Profile.objects.create(user = user_obj,
+                                                 type = request.data['type'],
+                                                 real_name = request.data['real_name'],
+                                                 class_num = request.data['class_num'],
+                                                 profile_image = request.data['image'])
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
+
+        for tag in request.data['tag']:
+            try:
+                tag_obj = Tag.objects.get(tag=tag)
+                tag_obj.count = tag_obj.count + 1
+                tag_obj.save()
+            
+            except Tag.DoesNotExist:
+                tag_obj = Tag.objects.create(tag = tag)
+            
+            Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
 
         return Response({'message':'singup success',
                          'token':str(token),
@@ -123,8 +136,8 @@ def login(request):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def update_profile(request, idx):
-    profile = Profile.objects.get(user_id=idx)
+def update_profile(request):
+    profile = Profile.objects.get(user_id=request.user.id)
 
     profile.type = request.data['type']
     profile.real_name = request.data['real_name']
@@ -136,9 +149,38 @@ def update_profile(request, idx):
         profile.profile_image = request.data['image']
     
     profile.save()
-    profile_sz = ProfileSerializer(profile)
+
+    old_tag = Profile_Tag.objects.filter(profile_id=profile.id)
+    old_sz = ProfileTagSerializer(old_tag, many=True)
+    old_tag_list = []
+
+    for tag in old_sz.data:
+        old_tag_list.append(tag['tag'])
+
+        if tag['tag'] not in request.data['tag']:
+            Profile_Tag.objects.get(tag_id=tag['tag_id'], project=profile).delete()
+            tag_obj = Tag.objects.get(id=tag['tag_id'])
+            tag_obj.count = tag_obj.count - 1
+            if tag_obj.count == 0:
+                tag_obj.delete()
+            else:    
+                tag_obj.save()
     
-    return Response(profile_sz.data, status=status.HTTP_200_OK)
+    for tag in request.data['tag']:
+        if tag in old_tag_list:
+            continue
+        else:
+            try:
+                tag_obj = Tag.objects.get(tag=tag)
+                tag_obj.count = tag_obj.count + 1
+                tag_obj.save()
+
+            except Tag.DoesNotExist:
+                tag_obj = Tag.objects.create(tag = tag)
+
+            Profile_Tag.objects.create(tag = tag_obj, project = profile)
+
+    return Response("ok", status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
