@@ -1,6 +1,13 @@
-from .models import Posting, PostingContents, PostingContentsImage
+from .models import Posting, PostingContents, PostingContentsImage, Like
 from rest_framework import serializers
 
+
+class LikeSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Like
+        fields = ['id', 'posting', 'user']
+    
 class PostingContentsImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostingContentsImage
@@ -27,12 +34,3 @@ class PostingSerializer(serializers.ModelSerializer):
     def get_username_from_author(self, posting):
         username = posting.author.username
         return username
-
-
-# class LikeSerializer(serializers.ModelSerializer):
-    
-#     class Meta:
-#         model = Like
-#         # fields = ['username']
-#         fields = ['feed', 'author_id', 'comment']
-    

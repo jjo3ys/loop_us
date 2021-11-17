@@ -8,9 +8,9 @@ from rest_framework.response import Response
 from rest_framework import status
 import json
 
-from .serializers import PostingContentsSerializer, PostingSerializer, PostingContentsImageSerializer
+from .serializers import PostingContentsSerializer, PostingSerializer, PostingContentsImageSerializer, LikeSerializer
 
-from .models import Posting, PostingContents
+from .models import Posting, PostingContents, Like
 
 
 # Create your views here.
@@ -260,3 +260,33 @@ def specific_posting_update(request, posting_idx):
     except PostingContents.DoesNotExist:
         return Response('Contents aren\'t valid.', status=status.HTTP_404_NOT_FOUND)
     return Response(return_list)
+
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def like(request, type, idx):
+
+    if type == 'posting':
+        try:
+            like_valid = Like.objects.get(posting=idx, user=request.user.id)
+            like_valid.delete()
+            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+        except:
+            like_sz = LikeSerializer(data={
+                'posting': idx,
+                'user': request.user.id
+                    }
+                )
+            if like_sz.is_valid():
+                like_sz.save()
+                return Response('liked posting', status=status.HTTP_202_ACCEPTED)
+    # if type == '':
+    #     try:
+    #         like_valid = Like.objects.get(posting=idx, user=request.user.id)
+    #         like_valid.delete()
+    #         return Response('disliked comment', status=status.HTTP_202_ACCEPTED)
+    #     except:
+    #         like_sz = LikeSerializer(like, data={'comment': idx})
+    #         if like_sz.is_valid():
+    #             like_sz.save()
+    #             return Response('liked comment', status=status.HTTP_202_ACCEPTED)
