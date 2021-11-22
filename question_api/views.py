@@ -155,19 +155,19 @@ def question_update(request, idx):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def question_delete(request):
+def question_delete(request, question_idx):
     if request.method == "POST":
-        answerSZ = AnswerSerializer(data={
-            'user': request.user.id,
-            'content': request.data['content'],
-            'adopt': False
-        })
-        if answerSZ.is_valid():
-            answerSZ.save()
-        else:
-            return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+        try:
+            QuestionModel = Question.objects.get(id = question_idx)
+            if QuestionModel.user.id == request.user.id :
+                QuestionModel.delete()
+            else:
+                return Response('No permission to modify')
+        except:
+            return Response('Question not found')
 
-    return Response(answerSZ.data)
+
+    return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['POST', ])

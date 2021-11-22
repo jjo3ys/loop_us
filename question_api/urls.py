@@ -5,6 +5,7 @@ urlpatterns = [
     path('raise_question/', views.raise_question),
     path('question_list_load/', views.question_list_load),
     path('specific_question_load/<question_idx>/', views.specific_question_load),
+    path('question_delete/<question_idx>/', views.question_delete),
     path('answer/<question_idx>/', views.answer),
     path('update_question/<question_idx>/', views.question_update)
 ]
