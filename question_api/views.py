@@ -23,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 @permission_classes((IsAuthenticated,))
 def raise_question(request):
     if request.method == "POST":
-        question_obj = Question.objects.create(user=request.user.id,
+        question_obj = Question.objects.create(user_id=request.user.id,
                                                content=request.data['content'],
                                                adopt=False)
         
@@ -113,13 +113,13 @@ def specific_question_load(request, question_idx):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def question_update(request, idx):
+def question_update(request, question_idx):
     if request.method == "POST":
-        question_obj = Question.objects.get(id=idx)
+        question_obj = Question.objects.get(id=question_idx)
         question_obj.content = request.data['content']
         question_obj.save()
 
-        old_tag = Question_Tag.objects.filter(question=idx)
+        old_tag = Question_Tag.objects.filter(question=question_idx)
         old_sz = QuestionTagSerialier(old_tag, many=True)
         old_list = []
         
@@ -150,6 +150,7 @@ def question_update(request, idx):
             Question_Tag.objects.create(tag = tag_obj, project = question_obj)
         
         question_sz = QuestionSerializer(question_obj)
+        print(question_sz)
     return Response(question_sz.data, status=status.HTTP_200_OK)
 
 

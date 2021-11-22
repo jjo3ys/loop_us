@@ -5,6 +5,8 @@ from django.contrib.auth.models import User
 # for email check
 from django.conf.global_settings import SECRET_KEY
 from django.views import View
+
+from project_api.serializers import ProjectSerializer
 from .text import message
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
@@ -29,6 +31,7 @@ from .models import Profile
 from .serializers import ProfileSerializer, ProfileTagSerializer #, ProfileSerializer, UserSerializer
 
 from tag.models import Tag, Profile_Tag
+from project_api.models import Project
 
 import jwt
 import time
@@ -158,7 +161,7 @@ def update_profile(request):
         old_tag_list.append(tag['tag'])
 
         if tag['tag'] not in request.data['tag']:
-            Profile_Tag.objects.get(tag_id=tag['tag_id'], project=profile).delete()
+            Profile_Tag.objects.get(tag_id=tag['tag_id'], profile=profile).delete()
             tag_obj = Tag.objects.get(id=tag['tag_id'])
             tag_obj.count = tag_obj.count - 1
             if tag_obj.count == 0:
@@ -178,21 +181,24 @@ def update_profile(request):
             except Tag.DoesNotExist:
                 tag_obj = Tag.objects.create(tag = tag)
 
-            Profile_Tag.objects.create(tag = tag_obj, project = profile)
+            Profile_Tag.objects.create(tag = tag_obj, profile = profile)
 
     return Response("ok", status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def profile_load(request, idx):
-    user = Profile.objects.get(user_id=request.user.id)
     return_dict = {}
 
     profile = Profile.objects.get(user=idx)
-    profile_sz = ProfileSerializer(profile)
-    return_dict.update(profile_sz.data)
+    project_obj = Project.objects.filter(user=idx)
 
-    if user.id == idx:
+    project_sz = ProjectSerializer(project_obj, many=True)
+    profile_sz = ProfileSerializer(profile)
+
+    return_dict.update(profile_sz.data)
+    return_dict.update({"project":project_sz.data})
+    if str(request.user.id) == idx:
         return_dict.update({'is_user':1})
     
     return Response(return_dict, status=status.HTTP_200_OK)
