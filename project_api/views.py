@@ -89,19 +89,19 @@ def update_project(request, idx):
 
     project_sz = ProjectSerializer(project_obj)
     return Response(project_sz.data, status=status.HTTP_200_OK)
+
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def load_project(request, idx):
     return_dict = {}
     user = request.user
-    
-    project_obj = Project.objects.filter(user=idx)
-
-    project_sz = ProjectSerializer(project_obj, many=True)  
-
+ 
+    project_obj = Project.objects.get(id=idx)
+    project_sz = ProjectSerializer(project_obj)  
+    print(project_sz)
     return_dict.update({'project':project_sz.data})
 
-    if str(user.id) == idx:
+    if str(user.id) == project_obj.id:
         return_dict.update({'is_user':1})
     
     return Response(return_dict, status=status.HTTP_200_OK)

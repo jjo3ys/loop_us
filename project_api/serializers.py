@@ -1,4 +1,5 @@
 from tag.models import Project_Tag
+from post_api.models import Posting
 from .models import Project
 from rest_framework import serializers
 from post_api.serializers import PostingSerializer
@@ -13,9 +14,9 @@ class ProjectTagSerializer(serializers.ModelSerializer):
         return obj.tag.tag
 
 class ProjectSerializer(serializers.ModelSerializer):
-    post = PostingSerializer(many=True, read_only=True)
+    posting = PostingSerializer(many=True, read_only=True)
     project_tag = ProjectTagSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
-        fields = ['id', 'project_name', 'introduction', 'start_date', 'end_date', 'post', 'project_tag']
+        fields = ['id', 'project_name', 'introduction', 'start_date', 'end_date', 'posting', 'project_tag']
