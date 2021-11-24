@@ -94,12 +94,19 @@ def update_project(request, idx):
 @permission_classes((IsAuthenticated,))
 def load_project(request, idx):
     return_dict = {}
+    likeNum = 0
     user = request.user
  
     project_obj = Project.objects.get(id=idx)
     project_sz = ProjectSerializer(project_obj)  
-    print(project_sz)
     return_dict.update({'project':project_sz.data})
+    for i in project_sz.data['posting']:
+        likeNum = likeNum + len(i['like'])
+
+    return_dict.update({
+        'total_like': likeNum
+    })
+
 
     if str(user.id) == project_obj.id:
         return_dict.update({'is_user':1})
