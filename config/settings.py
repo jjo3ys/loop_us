@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'project_api.apps.ProjectApiConfig',
     'question_api.apps.QuestionApiConfig',
     'tag.apps.TagConfig',
+    'loop.apps.LoopConfig',
     
     'rest_framework',
     'rest_framework.authtoken',

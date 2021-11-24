@@ -13,5 +13,6 @@ urlpatterns = [
     path('post_api/', include('post_api.urls')),
     path('project_api/', include('project_api.urls')),
     path('question_api/', include('question_api.urls')),
-    path('tag_api/', include('tag.urls'))
+    path('tag_api/', include('tag.urls')),
+    path('loop_api/', include('loop.urls'))
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)

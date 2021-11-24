@@ -66,15 +66,23 @@ def question_list_load(request):
             profile_sz = ProfileSerializer(Profile.objects.get(user=i['user']))
             i.update({
                 "real_name" : profile_sz.data['real_name'],
-                "profile_image" : profile_sz.data['profile_image']
+                "profile_image" : profile_sz.data['profile_image'],
+                "is_user":1
                 })
 
         for i in questionSZ.data:
             profile_sz = ProfileSerializer(Profile.objects.get(user=i['user']))
-            i.update({
-                "real_name" : profile_sz.data['real_name'],
-                "profile_image" : profile_sz.data['profile_image']
-                })
+            if i['user'] == request.user.id:
+                i.update({
+                    "real_name" : profile_sz.data['real_name'],
+                    "profile_image" : profile_sz.data['profile_image'],
+                    "is_user" : 1
+                    })
+            else:
+                i.update({
+                    "real_name" : profile_sz.data['real_name'],
+                    "profile_image" : profile_sz.data['profile_image']
+                    })
 
     return Response(return_dict)
 
