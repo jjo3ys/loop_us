@@ -133,6 +133,9 @@ def posting_list_load(request, proj_idx):
         return_dict = {
             'posting_list' : postingSZ.data
         }
+
+        for posting in return_dict['posting_list']:
+            posting.update({'like_num': len(posting['like'])})
         return Response(return_dict)
     else:
         return Response('Request isn\'t valid.', status=status.HTTP_404_NOT_FOUND)
