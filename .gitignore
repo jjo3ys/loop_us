@@ -8,3 +8,5 @@ __pycache__/
 Dockerfile
 /requirements.txt
 requirements.txt
+/Pipfile
+/Pipfile.lock
