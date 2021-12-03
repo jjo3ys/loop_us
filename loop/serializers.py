@@ -6,9 +6,9 @@ from rest_framework import serializers
 class LoopSerializer(serializers.ModelSerializer):
     class Meta:
         model = Loopship
-        fields = ['first', 'second']
+        fields = ['friend']
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['real_name', 'profile_image']
+        fields = ['user_id', 'real_name', 'profile_image']
