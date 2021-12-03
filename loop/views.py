@@ -1,5 +1,5 @@
 from .serializers import LoopSerializer, ProfileSerializer
-from .models import Loopship
+from .models import Loopship, Request
 from user_api.models import Profile
 
 from django.contrib.auth.models import User
@@ -9,6 +9,19 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def loop_request(request, idx):
+    user = request.user
+    try:
+        friend = User.objects.get(id=idx)  
+        Request.objects.create(From=user, To=friend)
+    
+        return Response("ok", status=status.HTTP_200_OK)
+    
+    except:
+        return Response("Nan", status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
