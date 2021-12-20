@@ -1,12 +1,11 @@
-from django.contrib.auth.models import User
 from django.shortcuts import render
 
 from question_api.models import Question
 from user_api.models import Profile
+from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 
-from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier, ProfileSerializer
+from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier
 from tag.models import Tag, Question_Tag
-from tag.serializer import TagSerializer
 
 from django.core.paginator import Paginator
 

@@ -1,6 +1,9 @@
+import os
+import firebase_admin
+
 from pathlib import Path
 from .my_settings import EMAIL, S3
-import os
+from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,7 +14,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-
+cred_path = os.path.join(BASE_DIR, "firebase.json")
+cred = credentials.Certificate(cred_path)
+firebase_admin.initialize_app(cred)
 # Application definition
 
 INSTALLED_APPS = [
@@ -27,6 +32,7 @@ INSTALLED_APPS = [
     'project_api.apps.ProjectApiConfig',
     'question_api.apps.QuestionApiConfig',
     'tag.apps.TagConfig',
+    'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
     
     'rest_framework',

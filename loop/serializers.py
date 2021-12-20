@@ -7,8 +7,3 @@ class LoopSerializer(serializers.ModelSerializer):
     class Meta:
         model = Loopship
         fields = ['friend']
-
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ['user_id', 'real_name', 'profile_image']

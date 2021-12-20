@@ -1,5 +1,6 @@
 from django.shortcuts import render
-from project_api.models import Project
+from user_api.models import Profile
+from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 from project_api.serializers import ProjectSerializer
 
 from rest_framework.permissions import IsAuthenticated
@@ -20,7 +21,7 @@ from .models import Posting, PostingContents, Like
 def posting_upload(request, proj_idx):
     if request.method == "POST":
         postingSZ = PostingSerializer(data={
-            'author': request.user.id,
+            'user': request.user.id,
             'project': proj_idx,
             'title' : request.data['title'], 
             'thumbnail' : request.FILES.get('thumbnail')
@@ -89,7 +90,7 @@ def posting_upload(request, proj_idx):
                 postingContImg = request.FILES.getlist('image')[i]
                 i = i + 1
                 PostingContentImgSZ = PostingContentsImageSerializer(data={
-                    'author': request.user.id,
+                    'user': request.user.id,
                     'PostingContents': postingSZ.data['id'],
                     'image': postingContImg})
                 PostingContentImgSZ.is_valid()
@@ -144,6 +145,7 @@ def posting_list_load(request, proj_idx):
 @permission_classes((IsAuthenticated,))
 def specific_posting_load(request, posting_idx):
     if request.method == 'GET':
+        user_id = request.user.id
         try:
             posting = Posting.objects.get(id=posting_idx)
 
@@ -163,10 +165,12 @@ def specific_posting_load(request, posting_idx):
     
     
         postingSZ = PostingSerializer(posting)
-
+        profile_obj = Profile.objects.get(user_id=posting.user_id)
+        profile = ProfileSerializer(profile_obj).data
         return_dict = {
             'posting_info': postingSZ.data,
         }
+        return_dict.update(profile)
 
         return Response(return_dict)
 
@@ -240,7 +244,7 @@ def specific_posting_update(request, posting_idx):
                 postingContImg = request.FILES.getlist('image')[i]
                 i = i + 1
                 PostingContentImgSZ = PostingContentsImageSerializer(data={
-                    'author': request.user.id,
+                    'user': request.user.id,
                     'PostingContents': posting_idx,
                     'image': postingContImg})
                 PostingContentImgSZ.is_valid()
@@ -275,14 +279,9 @@ def like(request, type, idx):
             like_valid.delete()
             return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
         except:
-            like_sz = LikeSerializer(data={
-                'posting': idx,
-                'user': request.user.id
-                    }
-                )
-            if like_sz.is_valid():
-                like_sz.save()
-                return Response('liked posting', status=status.HTTP_202_ACCEPTED)
+            Like.objects.create(posting=idx, user=request.user.id)
+            return Response('liked posting', status=status.HTTP_202_ACCEPTED)
+
     # if type == '':
     #     try:
     #         like_valid = Like.objects.get(posting=idx, user=request.user.id)

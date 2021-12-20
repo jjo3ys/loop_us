@@ -7,7 +7,7 @@ from project_api.models import Project
 
 
 class Posting(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='posting', on_delete=models.CASCADE)
     # sequance = models.CharField(max_length=100)
     title = models.TextField(null=True)

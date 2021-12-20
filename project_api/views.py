@@ -1,6 +1,8 @@
 from .serializers import ProjectSerializer, ProjectTagSerializer
 from .models import Project
 from tag.models import Tag, Project_Tag
+from user_api.models import Profile
+from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -96,19 +98,23 @@ def load_project(request, idx):
     return_dict = {}
     likeNum = 0
     user = request.user
- 
-    project_obj = Project.objects.get(id=idx)
-    project_sz = ProjectSerializer(project_obj)  
-    return_dict.update({'project':project_sz.data})
-    for i in project_sz.data['posting']:
-        likeNum = likeNum + len(i['like'])
+    try:
+        project_obj = Project.objects.filter(user_id=idx)
+        project_sz = ProjectSerializer(project_obj, many=True)  
+        return_dict.update({'project':project_sz.data})
+        for d in project_sz.data:
+            for i in d['posting']:
+                likeNum = likeNum + len(i['like'])
 
-    return_dict.update({
-        'total_like': likeNum
-    })
+        return_dict.update({'total_like': likeNum})
+        profile_obj = Profile.objects.get(user_id=idx)
+        profile = ProfileSerializer(profile_obj).data
+        return_dict.update(profile)
 
+        if str(user.id) == idx:
+            return_dict.update({'is_user':1})
 
-    if str(user.id) == project_obj.id:
-        return_dict.update({'is_user':1})
-    
-    return Response(return_dict, status=status.HTTP_200_OK)
+        return Response(return_dict, status=status.HTTP_200_OK)
+        
+    except Project.DoesNotExist:
+        return Response("no project", status=status.HTTP_200_OK)

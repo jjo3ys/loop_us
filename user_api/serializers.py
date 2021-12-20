@@ -19,13 +19,17 @@ class ProfileTagSerializer(serializers.ModelSerializer):
     def get_tag(self, obj):
         return obj.tag.tag
 
-
 class ProfileSerializer(serializers.ModelSerializer):
     profile_tag = ProfileTagSerializer(many=True, read_only=True)
 
     class Meta:
         model = Profile
         fields = ['user', 'real_name', 'type', 'class_num', 'profile_image', 'department','profile_tag']
+
+class SimpleProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['user_id', 'real_name', 'profile_image', 'department']
 
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(many=False, read_only=True)

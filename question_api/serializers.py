@@ -3,11 +3,6 @@ from tag.models import Question_Tag
 from user_api.models import Profile
 from rest_framework import serializers
 
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ['user_id', 'real_name', 'profile_image']
-
 class QuestionTagSerialier(serializers.ModelSerializer):
     tag = serializers.SerializerMethodField()
     class Meta:

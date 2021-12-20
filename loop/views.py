@@ -1,6 +1,7 @@
-from .serializers import LoopSerializer, ProfileSerializer
+from .serializers import LoopSerializer
 from .models import Loopship, Request
 from user_api.models import Profile
+from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -45,19 +46,35 @@ def unloop(request, idx):
     loopship_obj = Loopship.objects.get(user=unfriend, friend=user)
     loopship_obj.delete()
 
+    return Response("ok", status=status.HTTP_200_OK)
+    
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def get_list(request, idx):
     return_dict = {}
     friend_list = []
-    loop_obj = Loopship.objects.filter(user=idx)
-    loop_sz = LoopSerializer(loop_obj, many = True)
+    myfriend_list = []
 
-    for l in loop_sz.data:
+    my_loop_obj = Loopship.objects.filter(user=request.user.id)
+    my_sz = LoopSerializer(my_loop_obj, many = True).data
+    for d in my_sz:
+        myfriend_list.append(d['friend'])
+
+    loop_obj = Loopship.objects.filter(user=idx)
+    loop_sz = LoopSerializer(loop_obj, many = True).data
+
+    for l in loop_sz:
         try:
             profile_obj = Profile.objects.get(user_id=l['friend'])
-            profile_sz = ProfileSerializer(profile_obj)
-            friend_list.append(profile_sz.data)
+            profile_sz = ProfileSerializer(profile_obj).data
+            if l['friend'] == request.user.id:
+                profile_sz.update({"is_user":1})
+            elif l['friend'] in myfriend_list:
+                profile_sz.update({"looped":1})
+            else:
+                profile_sz.update({"looped":0})
+
+            friend_list.append(profile_sz)
             
         except Profile.DoesNotExist:
             continue
