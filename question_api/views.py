@@ -4,8 +4,7 @@ from django.shortcuts import render
 from question_api.models import Question
 from user_api.models import Profile
 
-from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier
-from user_api.serializers import ProfileSerializer
+from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier, ProfileSerializer
 from tag.models import Tag, Question_Tag
 from tag.serializer import TagSerializer
 
@@ -44,80 +43,54 @@ def raise_question(request):
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
-def question_list_load(request):
-    if request.method == "GET":
+def question_list_load(request, type):
+    page = request.GET.get('page')
+    user_id = request.user.id
 
-        myQestionModel = Question.objects.filter(user = request.user.id, adopt = False)
-        myQuestionSZ = QuestionSerializer(myQestionModel.order_by('-id'), many=True)
+    if type == 'my':
+        q_obj = Question.objects.filter(user = user_id).order_by('-id')
+        q_obj = Paginator(q_obj, 5).get_page(page)
+        q_sz = QuestionSerializer(q_obj, many = True)
+        profile_sz = ProfileSerializer(Profile.objects.get(user = user_id))
+        for d in q_sz.data:
+            d.update(profile_sz.data)
+            d.update({"is_user":1})
 
-        qestionModel = Question.objects.all().order_by('-id')
+    elif type == "any":
+        q_obj = Question.objects.all().order_by('-id')
+        page_obj = Paginator(q_obj, 5).get_page(page)
+        q_sz = QuestionSerializer(page_obj, many=True)
+        for d in q_sz.data:
+            profile_sz = ProfileSerializer(Profile.objects.get(user=d['user']))
+            d.update(profile_sz.data)
+            if d['user'] == user_id:
+                d.update({"is_user":1})
 
-        page = request.GET.get('page')
-        page_obj = Paginator(qestionModel, 5).get_page(page)
-
-        questionSZ = QuestionSerializer(page_obj, many=True)
-
-        return_dict = {
-            'my_questions': myQuestionSZ.data,
-            'questions': questionSZ.data
-            }
-        
-        for i in myQuestionSZ.data:
-            profile_sz = ProfileSerializer(Profile.objects.get(user=i['user']))
-            i.update({
-                "real_name" : profile_sz.data['real_name'],
-                "profile_image" : profile_sz.data['profile_image'],
-                "is_user":1
-                })
-
-        for i in questionSZ.data:
-            profile_sz = ProfileSerializer(Profile.objects.get(user=i['user']))
-            if i['user'] == request.user.id:
-                i.update({
-                    "real_name" : profile_sz.data['real_name'],
-                    "profile_image" : profile_sz.data['profile_image'],
-                    "is_user" : 1
-                    })
-            else:
-                i.update({
-                    "real_name" : profile_sz.data['real_name'],
-                    "profile_image" : profile_sz.data['profile_image']
-                    })
-
-    return Response(return_dict)
+    return Response(q_sz.data, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def specific_question_load(request, question_idx):
-    if request.method == "GET":
-        qestionModel = Question.objects.get(id=question_idx)
-        questionSZ = QuestionSerializer(qestionModel)
+    user_id = request.user.id
 
-        profile_obj_question = Profile.objects.get(user=questionSZ.data['user'])
-        profile_sz_question = ProfileSerializer(profile_obj_question)
-        
-        for i in questionSZ.data['answers']:
-            profile_obj = Profile.objects.get(user=i['user'])
-            profile_sz = ProfileSerializer(profile_obj)
-            i.update({
-                "real_name" : profile_sz.data['real_name'],
-                "profile_image" : profile_sz.data['profile_image']
-                })
-            if profile_obj.user_id == request.user.id:
-                i.update({'is_user':1})
-        
-        return_dict={
-            "real_name": profile_sz_question.data['real_name'],
-            "profile_image": profile_sz_question.data['profile_image']
-        }
-        if qestionModel.user_id == request.user.id:
-            return_dict.update({'is_user':1})
+    q_obj = Question.objects.get(id=question_idx)
+    q_sz = QuestionSerializer(q_obj)
 
-        return_dict.update(questionSZ.data)
+    q_profile_obj = Profile.objects.get(user=q_sz.data['user'])
+    q_profile_sz = ProfileSerializer(q_profile_obj)
+    q_sz.data.update(q_profile_sz.data)
+    if user_id == q_profile_sz.data['user']:
+        q_sz.data.update({"is_user":1})
+    
+    for d in q_sz.data['answers']:
+        a_profile_obj = Profile.objects.get(user=d['user'])
+        a_profile_sz = ProfileSerializer(a_profile_obj)
+        d.update(a_profile_sz.data)
+        if a_profile_obj.user_id == user_id:
+            d.update({'is_user':1})
 
-    return Response(return_dict)
-
+    return Response(q_sz.data, status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -158,7 +131,7 @@ def question_update(request, question_idx):
             Question_Tag.objects.create(tag = tag_obj, project = question_obj)
         
         question_sz = QuestionSerializer(question_obj)
-        print(question_sz)
+
     return Response(question_sz.data, status=status.HTTP_200_OK)
 
 
@@ -182,19 +155,25 @@ def question_delete(request, question_idx):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def answer(request, question_idx):
-    if request.method == "POST":
-        answerSZ = AnswerSerializer(data={
-            'user': request.user.id,
-            'question': question_idx,
-            'content': request.data['content'],
-            'adopt': False
-        })
-        if answerSZ.is_valid():
-            answerSZ.save()
-        else:
-            return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+    profile_obj = Profile.objects.get(user=request.user.id)
+    profile_sz = ProfileSerializer(profile_obj)
 
-        Question.objects.filter(id=question_idx).update(adopt=True)
+    answerSZ = AnswerSerializer(data={
+        'user': request.user.id,
+        'question': question_idx,
+        'content': request.data['content'],
+        'adopt': False
+    })
+    if answerSZ.is_valid():
+        answerSZ.save()
+        
+    else:
+        return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+    data = answerSZ.data
+    data.update(profile_sz.data)
 
+    q_obj = Question.objects.get(id=question_idx)
+    q_obj.adopt = True
+    q_obj.save()
 
-    return Response(answerSZ.data)
+    return Response(data, status=status.HTTP_200_OK)
