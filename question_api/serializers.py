@@ -33,7 +33,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'user', 'questioner',
+        fields = ['id', 'user_id', 'questioner',
                   'content', 'answers', 'adopt', 'date', 'question_tag']
 
     def get_username_to_question(self, question):

@@ -60,7 +60,7 @@ def question_list_load(request, type):
         page_obj = Paginator(q_obj, 5).get_page(page)
         q_sz = QuestionSerializer(page_obj, many=True)
         for d in q_sz.data:
-            profile_sz = ProfileSerializer(Profile.objects.get(user=d['user']))
+            profile_sz = ProfileSerializer(Profile.objects.get(user=d['user_id']))
             d.update(profile_sz.data)
             if d['user'] == user_id:
                 d.update({"is_user":1})
@@ -76,10 +76,10 @@ def specific_question_load(request, question_idx):
     q_obj = Question.objects.get(id=question_idx)
     q_sz = QuestionSerializer(q_obj)
 
-    q_profile_obj = Profile.objects.get(user=q_sz.data['user'])
+    q_profile_obj = Profile.objects.get(user=q_sz.data['user_id'])
     q_profile_sz = ProfileSerializer(q_profile_obj)
     q_sz.data.update(q_profile_sz.data)
-    if user_id == q_profile_sz.data['user']:
+    if user_id == q_profile_sz.data['user_id']:
         q_sz.data.update({"is_user":1})
     
     for d in q_sz.data['answers']:
