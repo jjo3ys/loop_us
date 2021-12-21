@@ -83,7 +83,7 @@ def specific_question_load(request, question_idx):
         q_sz.data.update({"is_user":1})
     
     for d in q_sz.data['answers']:
-        a_profile_obj = Profile.objects.get(user=d['user'])
+        a_profile_obj = Profile.objects.get(user=d['user_id'])
         a_profile_sz = ProfileSerializer(a_profile_obj)
         d.update(a_profile_sz.data)
         if a_profile_obj.user_id == user_id:

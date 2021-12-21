@@ -108,7 +108,7 @@ def load_project_list(request, idx):
         print(project_sz)
         return_dict.update({'project':project_sz.data})
         for d in project_sz.data:
-            for i in d['posting']:
+            for i in d['post']:
                 likeNum = likeNum + len(i['like'])
 
         return_dict.update({'total_like': likeNum})
