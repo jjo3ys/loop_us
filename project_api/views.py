@@ -29,7 +29,7 @@ def create_project(request):
                                          end_date = end_date)
     
     for looper in request.data['looper']:
-        TagLooper.objects.create(project=project_obj, user_id=looper)
+        TagLooper.objects.create(project=project_obj, looper_id=looper)
 
     for tag in request.data['tag']:
         try:

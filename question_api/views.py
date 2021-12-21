@@ -4,7 +4,7 @@ from question_api.models import Question
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 
-from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier
+from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier, OnlyQSerializer
 from tag.models import Tag, Question_Tag
 
 from django.core.paginator import Paginator
@@ -49,7 +49,7 @@ def question_list_load(request, type):
     if type == 'my':
         q_obj = Question.objects.filter(user = user_id).order_by('-id')
         q_obj = Paginator(q_obj, 5).get_page(page)
-        q_sz = QuestionSerializer(q_obj, many = True)
+        q_sz = OnlyQSerializer(q_obj, many = True)
         profile_sz = ProfileSerializer(Profile.objects.get(user = user_id))
         for d in q_sz.data:
             d.update(profile_sz.data)
@@ -58,7 +58,7 @@ def question_list_load(request, type):
     elif type == "any":
         q_obj = Question.objects.all().order_by('-id')
         page_obj = Paginator(q_obj, 5).get_page(page)
-        q_sz = QuestionSerializer(page_obj, many=True)
+        q_sz = OnlyQSerializer(page_obj, many=True)
         for d in q_sz.data:
             profile_sz = ProfileSerializer(Profile.objects.get(user=d['user_id']))
             d.update(profile_sz.data)

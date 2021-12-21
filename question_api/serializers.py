@@ -28,14 +28,15 @@ class AnswerSerializer(serializers.ModelSerializer):
 
 class QuestionSerializer(serializers.ModelSerializer):
     question_tag = QuestionTagSerialier(many=True, read_only=True)
-    questioner = serializers.SerializerMethodField('get_username_to_question')
     answers = AnswerSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
-        fields = ['id', 'user_id', 'questioner',
-                  'content', 'answers', 'adopt', 'date', 'question_tag']
+        fields = ['id', 'user_id', 'content', 'answers', 'adopt', 'date', 'question_tag']
 
-    def get_username_to_question(self, question):
-        username = question.user.username
-        return username
+class OnlyQSerializer(serializers.ModelSerializer):
+    question_tag = QuestionTagSerialier(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        fields = ['id', 'user_id', 'content', 'adopt', 'date', 'question_tag']
