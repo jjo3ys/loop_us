@@ -18,7 +18,7 @@ class AnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Answer
-        fields = ['id', 'user', 'answerer',
+        fields = ['id', 'user_id', 'answerer',
                   'content', 'question', 'adopt', 'date']
 
     def get_username_to_answer(self, answer):
