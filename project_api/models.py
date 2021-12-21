@@ -12,3 +12,10 @@ class Project(models.Model):
 
     class Meta:
         db_table = 'project'
+
+class TagLooper(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'TagLooper'
