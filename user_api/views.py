@@ -198,6 +198,7 @@ def profile_load(request, idx):
 
     return_dict.update(profile_sz.data)
     return_dict.update({"project":project_sz.data})
+
     if str(request.user.id) == idx:
         return_dict.update({'is_user':1})
     for proj in return_dict['project']:
