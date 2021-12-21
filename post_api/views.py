@@ -21,13 +21,13 @@ def posting_upload(request, proj_idx):
     post_obj = Post.objects.create(user_id=request.user.id, 
                                    project_id=proj_idx,
                                    title=request.data['title'],
-                                   thumbnail=request.data['thumbnail'])
-    
+                                   thumbnail=request.FILES.get('thumbnail'))
+
     contents_obj = Contents.objects.create(post_id=post_obj.id,
                                            content=request.data['contents'])
-    
+
     for image in request.FILES.getlist('image'):
-        ContentsImage.objects.create(contents_id=contents_obj.id,
+        ContentsImage.objects.create(post_id=post_obj.id,
                                      image=image)
     
     return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)

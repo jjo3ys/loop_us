@@ -26,7 +26,7 @@ class Contents(models.Model):
         db_table = "post_contents"
 
 class ContentsImage(models.Model):
-    contents = models.ForeignKey(Contents, related_name='contents_image', on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, related_name='contents_image', on_delete=models.CASCADE)
     image = models.ImageField(null=True)
 
     class Meta:

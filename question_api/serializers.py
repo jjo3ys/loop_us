@@ -36,7 +36,11 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 class OnlyQSerializer(serializers.ModelSerializer):
     question_tag = QuestionTagSerialier(many=True, read_only=True)
+    count = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
-        fields = ['id', 'user_id', 'content', 'adopt', 'date', 'question_tag']
+        fields = ['id', 'user_id', 'content', 'adopt', 'date', 'question_tag', 'count']
+    
+    def get_count(self, obj):
+        return Answer.objects.filter(question_id=obj.id).count()
