@@ -26,10 +26,10 @@ class ProjectLooperSerializer(serializers.ModelSerializer):
         return SimpleProfileSerializer(profile).data
 
 class ProjectSerializer(serializers.ModelSerializer):
-    posting = PostingSerializer(many=True, read_only=True)
+    post = PostingSerializer(many=True, read_only=True)
     project_tag = ProjectTagSerializer(many=True, read_only=True)
     looper = ProjectLooperSerializer(many=True, read_only=True)
 
     class Meta:
         model = Project
-        fields = ['id', 'project_name', 'introduction', 'start_date', 'end_date', 'posting', 'project_tag', 'looper']
+        fields = ['id', 'project_name', 'introduction', 'start_date', 'end_date', 'post', 'project_tag', 'looper']

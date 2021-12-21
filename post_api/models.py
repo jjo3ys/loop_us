@@ -18,7 +18,7 @@ class Post(models.Model):
     
 
 class Contents(models.Model):
-    post = models.ForeignKey(Post, related_name='post', on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, related_name='contents', on_delete=models.CASCADE)
     content = models.TextField(null=True)
     date = models.DateTimeField(auto_now_add=True)
 

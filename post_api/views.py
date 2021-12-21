@@ -11,14 +11,30 @@ import json
 
 from .serializers import PostingContentsSerializer, PostingSerializer, PostingContentsImageSerializer, LikeSerializer
 
-from .models import Post, Contents, Like
+from .models import Post, Contents, ContentsImage, Like
 
 
 # Create your views here.
-
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def posting_upload(request, proj_idx):
+    post_obj = Post.objects.create(user_id=request.user.id, 
+                                   project_id=proj_idx,
+                                   title=request.data['title'],
+                                   thumbnail=request.data['thumbnail'])
+    
+    contents_obj = Contents.objects.create(post_id=post_obj.id,
+                                           content=request.data['contents'])
+    
+    for image in request.FILES.getlist('image'):
+        ContentsImage.objects.create(contents_id=contents_obj.id,
+                                     image=image)
+    
+    return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def posting_upload1(request, proj_idx):
     postingSZ = PostingSerializer(data={
         'user': request.user.id,
         'project': proj_idx,
@@ -277,14 +293,3 @@ def like(request, type, idx):
         except:
             Like.objects.create(posting=idx, user=request.user.id)
             return Response('liked posting', status=status.HTTP_202_ACCEPTED)
-
-    # if type == '':
-    #     try:
-    #         like_valid = Like.objects.get(posting=idx, user=request.user.id)
-    #         like_valid.delete()
-    #         return Response('disliked comment', status=status.HTTP_202_ACCEPTED)
-    #     except:
-    #         like_sz = LikeSerializer(like, data={'comment': idx})
-    #         if like_sz.is_valid():
-    #             like_sz.save()
-    #             return Response('liked comment', status=status.HTTP_202_ACCEPTED)

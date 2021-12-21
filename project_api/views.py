@@ -105,7 +105,6 @@ def load_project_list(request, idx):
     try:
         project_obj = Project.objects.filter(user_id=idx)
         project_sz = ProjectSerializer(project_obj, many=True)  
-        print(project_sz)
         return_dict.update({'project':project_sz.data})
         for d in project_sz.data:
             for i in d['post']:
@@ -127,7 +126,10 @@ def load_project_list(request, idx):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def load_project(request, idx):
+    like_count = 0
     project_obj = Project.objects.get(id=idx)
-    project_sz = ProjectSerializer(project_obj)
-    print(project_sz)
-    return Response(project_sz.data, status=status.HTTP_200_OK)
+    project = ProjectSerializer(project_obj).data
+    for d in project['post']:
+        like_count += len(d['like'])
+    project.update({"total_like":like_count})
+    return Response(project, status=status.HTTP_200_OK)
