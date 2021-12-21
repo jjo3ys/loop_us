@@ -1,4 +1,4 @@
-from .models import Posting, PostingContents, PostingContentsImage, Like
+from .models import Post, Contents, ContentsImage, Like
 from rest_framework import serializers
 
 
@@ -10,15 +10,15 @@ class LikeSerializer(serializers.ModelSerializer):
     
 class PostingContentsImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PostingContentsImage
-        fields = ['id', 'author', 'PostingContents',
+        model = ContentsImage
+        fields = ['id', 'user', 'PostingContents',
          'image']
 
 class PostingContentsSerializer(serializers.ModelSerializer):
     posting_image = PostingContentsImageSerializer(many=True, read_only=True)
 
     class Meta:
-        model = PostingContents
+        model = Contents
         fields = ['id', 'posting', 'contentType', 'content','date', 'posting_image']
 
 class PostingSerializer(serializers.ModelSerializer):
@@ -26,6 +26,6 @@ class PostingSerializer(serializers.ModelSerializer):
     like = LikeSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Posting
+        model = Post
         fields = ['id', 'user_id', 'project', 
          'thumbnail', 'title', 'date', 'like', 'posting_content']

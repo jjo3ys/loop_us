@@ -6,33 +6,35 @@ from project_api.models import Project
 # Create your models here.
 
 
-class Posting(models.Model):
+class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, related_name='posting', on_delete=models.CASCADE)
-    # sequance = models.CharField(max_length=100)
+    project = models.ForeignKey(Project, related_name='post', on_delete=models.CASCADE)
     title = models.TextField(null=True)
     thumbnail = models.ImageField(null=True)
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "posting"
+        db_table = "post"
     
 
-class PostingContents(models.Model):
-    posting = models.ForeignKey('Posting', related_name='posting_content', on_delete=models.CASCADE)
-    # sequance = models.CharField(max_length=100)
-    contentType = models.CharField(max_length=100)
+class Contents(models.Model):
+    post = models.ForeignKey(Post, related_name='post', on_delete=models.CASCADE)
     content = models.TextField(null=True)
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "posting_contents"
+        db_table = "post_contents"
 
-class PostingContentsImage(models.Model):
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    PostingContents = models.ForeignKey('PostingContents', related_name='posting_image', on_delete=models.CASCADE)
+class ContentsImage(models.Model):
+    contents = models.ForeignKey(Contents, related_name='contents_image', on_delete=models.CASCADE)
     image = models.ImageField(null=True)
 
+    class Meta:
+        db_table = "post_image"
+
 class Like(models.Model):
-    posting = models.ForeignKey(Posting, null=True, related_name='like', on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, null=True, related_name='like', on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "post_like"

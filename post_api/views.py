@@ -11,7 +11,7 @@ import json
 
 from .serializers import PostingContentsSerializer, PostingSerializer, PostingContentsImageSerializer, LikeSerializer
 
-from .models import Posting, PostingContents, Like
+from .models import Post, Contents, Like
 
 
 # Create your views here.
@@ -19,114 +19,110 @@ from .models import Posting, PostingContents, Like
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def posting_upload(request, proj_idx):
-    if request.method == "POST":
-        postingSZ = PostingSerializer(data={
-            'user': request.user.id,
-            'project': proj_idx,
-            'title' : request.data['title'], 
-            'thumbnail' : request.FILES.get('thumbnail')
-        })
-        if postingSZ.is_valid():
-            postingSZ.save()
-        else:
-            return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
-        postingContList = json.JSONDecoder().decode(request.data['posting_contents'])
-
-        return_list = []
-        i = 0
-
-        for line in postingContList:
-            if line['type'] == 'title' or line['type'] == 'content':
-                PostingContentSZ = PostingContentsSerializer(data={
-                    'posting': postingSZ.data['id'],
-                    'contentType': line['type'],
-                    'content': line['contents']
-            })
-                if PostingContentSZ.is_valid():
-                    PostingContentSZ.save()
-
-                else:
-                    return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
-
-                return_list.append(
-                    {
-                        "type": PostingContentSZ.data['contentType'],
-                        "contents": PostingContentSZ.data['content'],
-                        "date": PostingContentSZ.data['date'],
-                    }
-                )
-
-            elif line['type'] == 'imageURL':
-                PostingContentSZ = PostingContentsSerializer(data={
-                    'posting': postingSZ.data['id'],
-                    'contentType': line['type'],
-                    'content': line['contents']
-            })
-                if PostingContentSZ.is_valid():
-                    PostingContentSZ.save()
-                else:
-                    return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
-
-                try:
-                    return_list.append(
-                    {
-                        "type": PostingContentSZ.data['contentType'],
-                        "contents": PostingContentSZ.data['content'],
-                        "date": PostingContentSZ.data['date'],
-                    }
-                )
-                except:
-                    return Response('Error', status=status.HTTP_403_FORBIDDEN)
-            elif line['type'] == 'imageFILE':
-                PostingContentSZ = PostingContentsSerializer(data={
-                    'posting': postingSZ.data['id'],
-                    'contentType': line['type'],
-                    'content': line['contents']
-            })
-                if PostingContentSZ.is_valid():
-                    PostingContentSZ.save()
-                else:
-                    return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
-                postingContImg = request.FILES.getlist('image')[i]
-                i = i + 1
-                PostingContentImgSZ = PostingContentsImageSerializer(data={
-                    'user': request.user.id,
-                    'PostingContents': postingSZ.data['id'],
-                    'image': postingContImg})
-                PostingContentImgSZ.is_valid()
-
-                try:
-                    if PostingContentImgSZ.is_valid():
-                        PostingContentImgSZ.save()
-                    else:
-                        print("데이터가 저장되지 않았습니다.")
-                except:
-                    return Response('유효하지 않은 image 형식입니다.??', status=status.HTTP_403_FORBIDDEN)
-       
-                return_list.append(
-                    {
-                        "type": PostingContentSZ.data['contentType'],
-                        "contents": PostingContentImgSZ.data['image'],
-                        "date": PostingContentSZ.data['date']
-                    }
-                )
-                 # return Response('upload completed\nresponse_values:', return_list)
-        return Response(return_list)
-            
-
-        # except:
-        #     return Response('Request isn\'t valid.', status=status.HTTP_404_NOT_FOUND)
-
+    postingSZ = PostingSerializer(data={
+        'user': request.user.id,
+        'project': proj_idx,
+        'title' : request.data['title'], 
+        'thumbnail' : request.FILES.get('thumbnail')
+    })
+    if postingSZ.is_valid():
+        postingSZ.save()
     else:
-        return Response('Request iasn\'t valid', status=status.HTTP_404_NOT_FOUND)    
+        return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+    postingContList = json.JSONDecoder().decode(request.data['posting_contents'])
+
+    return_list = []
+    i = 0
+
+    for line in postingContList:
+        if line['type'] == 'title' or line['type'] == 'content':
+            PostingContentSZ = PostingContentsSerializer(data={
+                'posting': postingSZ.data['id'],
+                'contentType': line['type'],
+                'content': line['contents']
+        })
+            if PostingContentSZ.is_valid():
+                PostingContentSZ.save()
+
+            else:
+                return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
+
+            return_list.append(
+                {
+                    "type": PostingContentSZ.data['contentType'],
+                    "contents": PostingContentSZ.data['content'],
+                    "date": PostingContentSZ.data['date'],
+                }
+            )
+
+        elif line['type'] == 'imageURL':
+            PostingContentSZ = PostingContentsSerializer(data={
+                'posting': postingSZ.data['id'],
+                'contentType': line['type'],
+                'content': line['contents']
+        })
+            if PostingContentSZ.is_valid():
+                PostingContentSZ.save()
+            else:
+                return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
+
+            try:
+                return_list.append(
+                {
+                    "type": PostingContentSZ.data['contentType'],
+                    "contents": PostingContentSZ.data['content'],
+                    "date": PostingContentSZ.data['date'],
+                }
+            )
+            except:
+                return Response('Error', status=status.HTTP_403_FORBIDDEN)
+        elif line['type'] == 'imageFILE':
+            PostingContentSZ = PostingContentsSerializer(data={
+                'posting': postingSZ.data['id'],
+                'contentType': line['type'],
+                'content': line['contents']
+        })
+            if PostingContentSZ.is_valid():
+                PostingContentSZ.save()
+            else:
+                return Response('유효하지 않은 형식입니다.', status=status.HTTP_403_FORBIDDEN)
+            postingContImg = request.FILES.getlist('image')[i]
+            i = i + 1
+            PostingContentImgSZ = PostingContentsImageSerializer(data={
+                'user': request.user.id,
+                'PostingContents': postingSZ.data['id'],
+                'image': postingContImg})
+            PostingContentImgSZ.is_valid()
+
+            try:
+                if PostingContentImgSZ.is_valid():
+                    PostingContentImgSZ.save()
+                else:
+                    print("데이터가 저장되지 않았습니다.")
+            except:
+                return Response('유효하지 않은 image 형식입니다.??', status=status.HTTP_403_FORBIDDEN)
+    
+            return_list.append(
+                {
+                    "type": PostingContentSZ.data['contentType'],
+                    "contents": PostingContentImgSZ.data['image'],
+                    "date": PostingContentSZ.data['date']
+                }
+            )
+                # return Response('upload completed\nresponse_values:', return_list)
+    return Response(return_list)
+        
+
+    # except:
+    #     return Response('Request isn\'t valid.', status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def posting_list_load(request, proj_idx):
     if request.method == 'GET':
         try:
-            postings = Posting.objects.filter(project=proj_idx)    
-        except Posting.DoesNotExist:
+            postings = Post.objects.filter(project=proj_idx)    
+        except Post.DoesNotExist:
             return Response('The postings aren\'t valid', status=status.HTTP_404_NOT_FOUND)
 
         postingSZ = PostingSerializer(postings, many=True)
@@ -147,20 +143,20 @@ def specific_posting_load(request, posting_idx):
     if request.method == 'GET':
         user_id = request.user.id
         try:
-            posting = Posting.objects.get(id=posting_idx)
+            posting = Post.objects.get(id=posting_idx)
 
-        except Posting.DoesNotExist:
+        except Post.DoesNotExist:
             return Response('The posting isn\'t valid', status=status.HTTP_404_NOT_FOUND)
 
         try:
             postingContents = 'default'
-            postingContents = PostingContents.objects.filter(posting=posting_idx)
+            postingContents = Contents.objects.filter(posting=posting_idx)
         
             if postingContents == 'default':
                 return Response('Empty posting')
                 
 
-        except PostingContents.DoesNotExist:
+        except Contents.DoesNotExist:
             return Response('Contents aren\'t valid.', status=status.HTTP_404_NOT_FOUND)
     
     
@@ -181,7 +177,7 @@ def specific_posting_load(request, posting_idx):
 @permission_classes((IsAuthenticated,))
 def specific_posting_update(request, posting_idx):
     # if str(request.user.id) == user_idx:
-    postingcont = PostingContents.objects.filter(posting=posting_idx)
+    postingcont = Contents.objects.filter(posting=posting_idx)
     postingcont.delete()
     
     return_list = []
@@ -264,7 +260,7 @@ def specific_posting_update(request, posting_idx):
                         "date": PostingContentSZ.data['date']
                     }
                 )
-    except PostingContents.DoesNotExist:
+    except Contents.DoesNotExist:
         return Response('Contents aren\'t valid.', status=status.HTTP_404_NOT_FOUND)
     return Response(return_list)
 
