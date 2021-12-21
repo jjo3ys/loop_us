@@ -1,5 +1,6 @@
-from .serializers import ProjectSerializer, ProjectTagSerializer
-from .models import Project
+import re
+from .serializers import ProjectSerializer, ProjectTagSerializer, ProjectLooperSerializer
+from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
@@ -26,6 +27,9 @@ def create_project(request):
                                          introduction = request.data['introduction'],
                                          start_date = start_date,
                                          end_date = end_date)
+    
+    for looper in request.data['looper']:
+        TagLooper.objects.create(project=project_obj, user_id=looper)
 
     for tag in request.data['tag']:
         try:
@@ -94,13 +98,14 @@ def update_project(request, idx):
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
-def load_project(request, idx):
+def load_project_list(request, idx):
     return_dict = {}
     likeNum = 0
     user = request.user
     try:
         project_obj = Project.objects.filter(user_id=idx)
         project_sz = ProjectSerializer(project_obj, many=True)  
+        print(project_sz)
         return_dict.update({'project':project_sz.data})
         for d in project_sz.data:
             for i in d['posting']:
@@ -118,3 +123,11 @@ def load_project(request, idx):
         
     except Project.DoesNotExist:
         return Response("no project", status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def load_project(request, idx):
+    project_obj = Project.objects.get(id=idx)
+    project_sz = ProjectSerializer(project_obj)
+    print(project_sz)
+    return Response(project_sz.data, status=status.HTTP_200_OK)
