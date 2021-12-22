@@ -33,14 +33,15 @@ def posting_upload(request, proj_idx):
     images = PostingContentsImageSerializer(ContentsImage.objects.filter(post_id=post_obj.id), many=True).data
     image_id = 0
     contents = []
-    
-    for d in json.loads(request.data['contents']):
+    true = True
+    for d in eval(request.data['contents']):
         if type(d['insert']) == dict:
             d['insert'] = {"image":images[image_id]['image']}
             image_id += 1
+
         contents.append(d)
 
-    post_obj.contents = contents
+    post_obj.contents = str(contents)
     post_obj.save()
 
     return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
@@ -50,9 +51,9 @@ def posting_upload(request, proj_idx):
 def main_load(request):
     post_obj = Post.objects.all().order_by('-id')
     post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
-    data = PostingSerializer(post_obj, many=True).data
-    
-    return Response(data, status=status.HTTP_200_OK)
+    post = PostingSerializer(post_obj, many=True).data
+
+    return Response(post, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))

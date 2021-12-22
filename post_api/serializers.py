@@ -14,14 +14,14 @@ class PostingContentsImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'post_id', 'image']
 
 class PostingSerializer(serializers.ModelSerializer):
-    contents_image = PostingContentsImageSerializer(many=True, read_only=True)
     contents = serializers.SerializerMethodField()
     like = LikeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
         fields = ['id', 'user_id', 'project', 
-         'thumbnail', 'title', 'date', 'like', 'contents', 'contents_image']
+         'thumbnail', 'title', 'date', 'like', 'contents']
     
     def get_contents(self, obj):
-        return json.dumps(obj.contents)
+        true = True
+        return eval(obj.contents)
