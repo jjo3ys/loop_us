@@ -26,17 +26,17 @@ def log(request, type):
     query = request.GET['query']
     Log.objects.create(user_id=user_id, query=query)
     if type == 'post':
-        obj = Post.objects.filter(content__icontains=query).order_by('-id')
+        obj = Post.objects.filter(Q(content__icontains=query)|Q(title__icontains=query)).order_by('-id')
         obj = Paginator(obj, 5).get_page(1)
         return Response(PostingSerializer(obj, many=True).data, status=status.HTTP_200_OK)
 
     elif type == 'project':
-        obj = Project.objects.filter(content__icontains=query).order_by('-id')
+        obj = Project.objects.filter(Q(project_name__icontains=query)|Q(introduction__icontains=query)).order_by('-id')
         obj = Paginator(obj, 5).get_page(1)
         return Response(ProjectSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
 
     elif type == 'profile':
-        obj = Profile.objects.filter(content__icontains=query).order_by('-id')
+        obj = Profile.objects.filter(real_name__icontains=query).order_by('-id')
         obj = Paginator(obj, 5).get_page(1)
         return Response(ProfileSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
 
@@ -52,3 +52,27 @@ def log(request, type):
 @permission_classes((IsAuthenticated,))
 def search(request, type):
     query = request.GET['query']
+    page = request.GET['page']
+
+    if type == 'post':
+        obj = Post.objects.filter(Q(content__icontains=query)|Q(title__icontains=query)).order_by('-id')
+        obj = Paginator(obj, 5).get_page(page)
+        return Response(PostingSerializer(obj, many=True).data, status=status.HTTP_200_OK)
+
+    elif type == 'project':
+        obj = Project.objects.filter(Q(project_name__icontains=query)|Q(introduction__icontains=query)).order_by('-id')
+        obj = Paginator(obj, 5).get_page(page)
+        return Response(ProjectSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
+
+    elif type == 'profile':
+        obj = Profile.objects.filter(real_name__icontains=query).order_by('-id')
+        obj = Paginator(obj, 5).get_page(page)
+        return Response(ProfileSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
+
+    elif type == 'question':
+        obj = Question.objects.filter(content__icontains=query).order_by('-id')
+        obj = Paginator(obj, 5).get_page(page)
+        return Response(QuestionSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
+
+    elif type == 'notice':
+        return Response("unrealized", status=status.HTTP_204_NO_CONTENT)
