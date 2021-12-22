@@ -14,5 +14,6 @@ urlpatterns = [
     path('project_api/', include('project_api.urls')),
     path('question_api/', include('question_api.urls')),
     path('tag_api/', include('tag.urls')),
-    path('loop_api/', include('loop.urls'))
+    path('loop_api/', include('loop.urls')),
+    path('search_api/', include('search.urls'))
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
