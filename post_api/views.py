@@ -1,4 +1,7 @@
 from django.shortcuts import render
+from django.db.models import Q
+from django.core.paginator import Paginator
+
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 
@@ -9,9 +12,10 @@ from rest_framework import status
 import json
 
 from .serializers import PostingSerializer, PostingContentsImageSerializer, LikeSerializer
-
 from .models import Post, ContentsImage, Like
 
+from loop.models import Loopship
+from loop.serializers import LoopSerializer
 
 # Create your views here.
 @api_view(['POST', ])
@@ -41,6 +45,29 @@ def posting_upload(request, proj_idx):
     post_obj.save()
 
     return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def main_load(request):
+    post_obj = Post.objects.all().order_by('-id')
+    post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
+    data = PostingSerializer(post_obj, many=True).data
+    
+    return Response(data, status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def loop_load(request):
+    loop = Loopship.objects.filter(user_id=request.user.id)
+    loop = LoopSerializer(loop, many = True).data
+    loop_list = []
+    for l in loop:
+        loop_list.append(l['friend'])
+        
+    post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')
+    data = PostingSerializer(post_obj, many=True).data
+    
+    return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))

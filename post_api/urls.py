@@ -6,5 +6,7 @@ urlpatterns = [
     path('posting_list_load/<proj_idx>/', views.posting_list_load, name='posting_list_load'),
     path('specific_posting_load/<posting_idx>/', views.specific_posting_load, name='specific_posting_load'),
     path('specific_posting_update/<posting_idx>/', views.specific_posting_update, name='specific_posting_update'),
-    path('like/<type>/<idx>/', views.like, name='like')
+    path('like/<type>/<idx>/', views.like, name='like'),
+    path('main_load/', views.main_load),
+    path('loop_load/', views.loop_load)
 ]
