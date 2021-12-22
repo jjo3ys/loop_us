@@ -17,15 +17,15 @@ class AnswerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Answer
-        fields = ['id', 'user_id', 'content', 'question', 'adopt', 'date']
+        fields = ['id', 'user_id', 'content', 'question_id', 'adopt', 'date']
 
 class QuestionSerializer(serializers.ModelSerializer):
     question_tag = QuestionTagSerialier(many=True, read_only=True)
-    answers = AnswerSerializer(many=True, read_only=True)
+    answer = AnswerSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
-        fields = ['id', 'user_id', 'content', 'answers', 'adopt', 'date', 'question_tag']
+        fields = ['id', 'user_id', 'content', 'answer', 'adopt', 'date', 'question_tag']
 
 class OnlyQSerializer(serializers.ModelSerializer):
     question_tag = QuestionTagSerialier(many=True, read_only=True)
