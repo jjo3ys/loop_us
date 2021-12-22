@@ -58,12 +58,12 @@ def main_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def loop_load(request):
-    loop = Loopship.objects.filter(user_id=request.user.id)
-    loop = LoopSerializer(loop, many = True).data
+    loop = list(Loopship.objects.filter(user_id=request.user.id))
+    
     loop_list = []
     for l in loop:
-        loop_list.append(l['friend'])
-        
+        loop_list.append(l.friend_id)
+
     post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')
     data = PostingSerializer(post_obj, many=True).data
     
