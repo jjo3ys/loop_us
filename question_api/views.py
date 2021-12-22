@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from question_api.models import Question
+from question_api.models import Answer, Question
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 
@@ -156,17 +156,12 @@ def answer(request, question_idx):
     profile_obj = Profile.objects.get(user=request.user.id)
     profile_sz = ProfileSerializer(profile_obj)
 
-    answerSZ = AnswerSerializer(data={
-        'user': request.user.id,
-        'question': question_idx,
-        'content': request.data['content'],
-        'adopt': False
-    })
-    if answerSZ.is_valid():
-        answerSZ.save()
-        
-    else:
-        return Response('유효하지 않은 형식입니다.', status=status.HTTP_404_NOT_FOUND)
+    answer_obj = Answer.objects.create(user_id=request.user.id,
+                                        question_id=question_idx,
+                                        content=request.data['content'],
+                                        adopt=False)
+
+    answerSZ = AnswerSerializer(answer_obj)
     data = answerSZ.data
     data.update(profile_sz.data)
 

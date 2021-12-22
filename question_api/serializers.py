@@ -14,17 +14,10 @@ class QuestionTagSerialier(serializers.ModelSerializer):
 
 
 class AnswerSerializer(serializers.ModelSerializer):
-    answerer = serializers.SerializerMethodField('get_username_to_answer')
 
     class Meta:
         model = Answer
-        fields = ['id', 'user_id', 'answerer',
-                  'content', 'question', 'adopt', 'date']
-
-    def get_username_to_answer(self, answer):
-        username = answer.user.username
-        return username
-
+        fields = ['id', 'user_id', 'content', 'question', 'adopt', 'date']
 
 class QuestionSerializer(serializers.ModelSerializer):
     question_tag = QuestionTagSerialier(many=True, read_only=True)

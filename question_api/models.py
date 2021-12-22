@@ -5,8 +5,7 @@ from django.conf import settings
 
 
 class Question(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField(null=True)
     adopt = models.BooleanField(null=False)
     date = models.DateField(auto_now_add=True)
@@ -16,10 +15,8 @@ class Question(models.Model):
 
 
 class Answer(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
-    question = models.ForeignKey(
-        Question, related_name='answers', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, related_name='answer', on_delete=models.CASCADE)
     content = models.TextField(null=True)
     adopt = models.BooleanField(null=False)
     date = models.DateField(auto_now_add=True)
