@@ -15,7 +15,6 @@ from .serializers import PostingSerializer, PostingContentsImageSerializer, Like
 from .models import Post, ContentsImage, Like
 
 from loop.models import Loopship
-from loop.serializers import LoopSerializer
 
 # Create your views here.
 @api_view(['POST', ])
@@ -59,7 +58,7 @@ def main_load(request):
 @permission_classes((IsAuthenticated,))
 def loop_load(request):
     loop = list(Loopship.objects.filter(user_id=request.user.id))
-    
+
     loop_list = []
     for l in loop:
         loop_list.append(l.friend_id)
