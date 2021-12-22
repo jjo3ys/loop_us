@@ -10,20 +10,12 @@ class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, related_name='post', on_delete=models.CASCADE)
     title = models.TextField(null=True)
+    contents = models.TextField(null=True)
     thumbnail = models.ImageField(null=True)
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "post"
-    
-
-class Contents(models.Model):
-    post = models.ForeignKey(Post, related_name='contents', on_delete=models.CASCADE)
-    content = models.TextField(null=True)
-    date = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "post_contents"
 
 class ContentsImage(models.Model):
     post = models.ForeignKey(Post, related_name='contents_image', on_delete=models.CASCADE)

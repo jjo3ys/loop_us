@@ -1,4 +1,4 @@
-from .models import Post, Contents, ContentsImage, Like
+from .models import Post, ContentsImage, Like
 from rest_framework import serializers
 
 
@@ -13,14 +13,7 @@ class PostingContentsImageSerializer(serializers.ModelSerializer):
         model = ContentsImage
         fields = ['id', 'post_id', 'image']
 
-class PostingContentsSerializer(serializers.ModelSerializer):
-    
-    class Meta:
-        model = Contents
-        fields = ['id', 'post', 'content', 'date']
-
 class PostingSerializer(serializers.ModelSerializer):
-    contents = PostingContentsSerializer(many=True, read_only=True)
     contents_image = PostingContentsImageSerializer(many=True, read_only=True)
     like = LikeSerializer(many=True, read_only=True)
 
