@@ -23,13 +23,24 @@ def posting_upload(request, proj_idx):
                                    title=request.data['title'],
                                    thumbnail=request.FILES.get('thumbnail'))
 
-    contents_obj = Contents.objects.create(post_id=post_obj.id,
-                                           content=request.data['contents'])
 
     for image in request.FILES.getlist('image'):
         ContentsImage.objects.create(post_id=post_obj.id,
                                      image=image)
+
+    images = PostingContentsImageSerializer(ContentsImage.objects.filter(post_id=post_obj.id), many=True).data
+    image_id = 0
+    contents = []
     
+    for d in json.loads(request.data['contents']):
+        if type(d['insert']) == dict:
+            d['insert'] = {"image":images[image_id]['image']}
+            image_id += 1
+        contents.append(d)
+
+    Contents.objects.create(post_id=post_obj.id,
+                            content=contents)
+
     return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
