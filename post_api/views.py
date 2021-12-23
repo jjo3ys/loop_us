@@ -125,17 +125,6 @@ def loop_load(request):
 
     return Response(data, status=status.HTTP_200_OK)
 
-@api_view(['GET', ])
-@permission_classes((IsAuthenticated,))
-def posting_list_load(request, proj_idx):
-    try:
-        postings = Post.objects.filter(project=proj_idx)    
-    except Post.DoesNotExist:
-        return Response('The postings aren\'t valid', status=status.HTTP_404_NOT_FOUND)
-
-    posting = PostingSerializer(postings, many=True).data
-
-    return Response(posting, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
