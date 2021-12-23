@@ -1,7 +1,5 @@
-from rest_framework.utils import field_mapping
 from .models import Post, ContentsImage, Like
 from rest_framework import serializers
-import json
 
 class LikeSerializer(serializers.ModelSerializer):
     

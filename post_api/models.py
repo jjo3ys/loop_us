@@ -30,3 +30,10 @@ class Like(models.Model):
 
     class Meta:
         db_table = "post_like"
+
+class BookMark(models.Model):
+    post = models.ForeignKey(Post, related_name='bookmark', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "post_bookmark"

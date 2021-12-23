@@ -12,7 +12,7 @@ from rest_framework import status
 import json
 
 from .serializers import PostingSerializer, PostingContentsImageSerializer, LikeSerializer, MainloadSerializer
-from .models import Post, ContentsImage, Like
+from .models import Post, ContentsImage, Like, BookMark
 
 from loop.models import Loopship
 
@@ -46,12 +46,50 @@ def posting_upload(request, proj_idx):
 
     return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
 
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def specific_posting_update(request, posting_idx):
+    post_obj = Post.objects.get(id=posting_idx)
+    post_obj.title = request.data['title']
+    post_obj.thumbnail = request.FILES.get('thumbnail')
+
+
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def like(request, idx):
+    try:
+        like_valid = Like.objects.get(post_id=idx, user_id=request.user.id)
+        like_valid.delete()
+        return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+    except:
+        Like.objects.create(post_id=idx, user_id=request.user.id)
+        return Response('liked posting', status=status.HTTP_202_ACCEPTED)
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def bookmark(request, idx):
+    try:
+        book_obj = BookMark.objects.get(post_id=idx, user_id=request.user.id)
+        book_obj.delete()
+        return Response('unmarked posting', status=status.HTTP_202_ACCEPTED)
+    except:
+        BookMark.objects.create(post_id=idx, user_id=request.user.id)
+        return Response('marked posting', status=status.HTTP_202_ACCEPTED)
+
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def main_load(request):
     post_obj = Post.objects.all().order_by('-id')
     post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
     post = MainloadSerializer(post_obj, many=True).data
+
+    for d in post:
+        try:
+            Like.objects.get(user_id=request.user.id, post_id=d['id'])
+            d.update({"is_user":1})
+        except:
+            pass
 
     return Response(post, status=status.HTTP_200_OK)
 
@@ -66,7 +104,12 @@ def loop_load(request):
 
     post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')
     data = MainloadSerializer(post_obj, many=True).data
-    
+    for d in data:
+        try:
+            Like.objects.get(user_id=request.user.id, post_id=d['id'])
+            d.update({"is_user":1})
+        except:
+            pass
     return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
@@ -116,25 +159,3 @@ def posting_delete(request, idx):
     post_obj.delete()
 
     return Response("delete posting", status=status.HTTP_200_OK)
-
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def specific_posting_update(request, posting_idx):
-    post_obj = Post.objects.get(id=posting_idx)
-    post_obj.title = request.data['title']
-    post_obj.thumbnail = request.FILES.get('thumbnail')
-
-
-
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def like(request, type, idx):
-
-    if type == 'posting':
-        try:
-            like_valid = Like.objects.get(posting=idx, user=request.user.id)
-            like_valid.delete()
-            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
-        except:
-            Like.objects.create(posting=idx, user=request.user.id)
-            return Response('liked posting', status=status.HTTP_202_ACCEPTED)
