@@ -87,7 +87,13 @@ def main_load(request):
     for d in post:
         try:
             Like.objects.get(user_id=request.user.id, post_id=d['id'])
-            d.update({"is_user":1})
+            d.update({"is_liked":1})
+        except:
+            pass
+
+        try:
+            BookMark.objects.get(user_id=request.user.id, post_id=d['id'])
+            d.update({"is_marked":1})
         except:
             pass
 
@@ -107,9 +113,16 @@ def loop_load(request):
     for d in data:
         try:
             Like.objects.get(user_id=request.user.id, post_id=d['id'])
-            d.update({"is_user":1})
+            d.update({"is_liked":1})
         except:
             pass
+
+        try:
+            BookMark.objects.get(user_id=request.user.id, post_id=d['id'])
+            d.update({"is_marked":1})
+        except:
+            pass
+        
     return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
