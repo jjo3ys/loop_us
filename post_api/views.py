@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import json
 
-from .serializers import PostingSerializer, PostingContentsImageSerializer, LikeSerializer, MainloadSerializer
+from .serializers import PostingSerializer, PostingContentsImageSerializer, MainloadSerializer, SimpleProjectserializer
 from .models import Post, ContentsImage, Like, BookMark
 
 from loop.models import Loopship

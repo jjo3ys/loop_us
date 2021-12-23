@@ -1,5 +1,5 @@
 import re
-from .serializers import ProjectSerializer, ProjectTagSerializer, ProjectLooperSerializer
+from .serializers import ProjectSerializer, ProjectTagSerializer, ProjectPostSerializer
 from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
 from user_api.models import Profile
@@ -127,6 +127,6 @@ def load_project_list(request, idx):
 @permission_classes((IsAuthenticated,))
 def load_project(request, idx):
     project_obj = Project.objects.get(id=idx)
-    project = ProjectSerializer(project_obj).data
+    project = ProjectPostSerializer(project_obj).data
 
     return Response(project, status=status.HTTP_200_OK)

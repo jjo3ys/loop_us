@@ -1,7 +1,23 @@
 from .models import Post, ContentsImage, Like
 from project_api.models import Project
-from project_api.serializers import SimpleProjectserializer
+from tag.models import Project_Tag
 from rest_framework import serializers
+
+class ProjectTagSerializer(serializers.ModelSerializer):
+    tag = serializers.SerializerMethodField()
+    class Meta:
+        model = Project_Tag
+        fields = ['tag_id', 'tag']
+    
+    def get_tag(self, obj):
+        return obj.tag.tag
+
+class SimpleProjectserializer(serializers.ModelSerializer):
+    project_tag = ProjectTagSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Project
+        fields =['id', 'project_name', 'project_tag']
 
 class LikeSerializer(serializers.ModelSerializer):
     
@@ -20,15 +36,14 @@ class MainloadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'thumbnail', 'title', 'date', 'project', 'like_count']
+        fields = ['id', 'user_id', 'thumbnail', 'title', 'date', 'like_count', 'project']
     
     def get_like_count(self, obj):
         return Like.objects.filter(post_id=obj.id).count()
     
     def get_project(self, obj):
-        project = Project.objects.get(id=obj.project_id)
-        return SimpleProjectserializer(project).data
-
+        return SimpleProjectserializer(obj.project).data
+    
 class PostingSerializer(serializers.ModelSerializer):
     contents = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
