@@ -98,35 +98,10 @@ def update_project(request, idx):
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
-def load_project_list(request, idx):
-    return_dict = {}
-    likeNum = 0
-    user = request.user
-    try:
-        project_obj = Project.objects.filter(user_id=idx)
-        project_sz = ProjectSerializer(project_obj, many=True)  
-        return_dict.update({'project':project_sz.data})
-        for d in project_sz.data:
-            for i in d['post']:
-                likeNum = likeNum + len(i['like'])
-
-        return_dict.update({'total_like': likeNum})
-        profile_obj = Profile.objects.get(user_id=idx)
-        profile = ProfileSerializer(profile_obj).data
-        return_dict.update(profile)
-
-        if str(user.id) == idx:
-            return_dict.update({'is_user':1})
-
-        return Response(return_dict, status=status.HTTP_200_OK)
-        
-    except Project.DoesNotExist:
-        return Response("no project", status=status.HTTP_200_OK)
-
-@api_view(['GET', ])
-@permission_classes((IsAuthenticated,))
 def load_project(request, idx):
     project_obj = Project.objects.get(id=idx)
     project = ProjectPostSerializer(project_obj).data
+    if request.user.id == project_obj.user_id:
+        project.update({"is_user":1})
 
     return Response(project, status=status.HTTP_200_OK)
