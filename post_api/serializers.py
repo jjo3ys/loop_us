@@ -1,3 +1,4 @@
+from rest_framework.utils import field_mapping
 from .models import Post, ContentsImage, Like
 from rest_framework import serializers
 import json
@@ -12,6 +13,16 @@ class PostingContentsImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContentsImage
         fields = ['id', 'post_id', 'image']
+
+class MainloadSerializer(serializers.ModelSerializer):
+    like_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Post
+        fields = ['id', 'user_id', 'thumbnail', 'title', 'date', 'like_count']
+    
+    def get_like_count(self, obj):
+        return Like.objects.filter(post_id=obj.id).count()
 
 class PostingSerializer(serializers.ModelSerializer):
     contents = serializers.SerializerMethodField()

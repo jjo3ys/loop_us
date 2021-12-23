@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework import status
 import json
 
-from .serializers import PostingSerializer, PostingContentsImageSerializer, LikeSerializer
+from .serializers import PostingSerializer, PostingContentsImageSerializer, LikeSerializer, MainloadSerializer
 from .models import Post, ContentsImage, Like
 
 from loop.models import Loopship
@@ -51,7 +51,7 @@ def posting_upload(request, proj_idx):
 def main_load(request):
     post_obj = Post.objects.all().order_by('-id')
     post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
-    post = PostingSerializer(post_obj, many=True).data
+    post = MainloadSerializer(post_obj, many=True).data
 
     return Response(post, status=status.HTTP_200_OK)
 
@@ -65,7 +65,7 @@ def loop_load(request):
         loop_list.append(l.friend_id)
 
     post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')
-    data = PostingSerializer(post_obj, many=True).data
+    data = MainloadSerializer(post_obj, many=True).data
     
     return Response(data, status=status.HTTP_200_OK)
 
@@ -109,6 +109,13 @@ def specific_posting_load(request, posting_idx):
         return_dict.update({"is_user":1})
 
     return Response(return_dict)
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def posting_delete(request, idx):
+    post_obj = Post.objects.get(id=idx)
+    post_obj.delete()
+
+    return Response("delete posting", status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
