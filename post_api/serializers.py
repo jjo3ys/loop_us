@@ -31,13 +31,21 @@ class MainloadSerializer(serializers.ModelSerializer):
 
 class PostingSerializer(serializers.ModelSerializer):
     contents = serializers.SerializerMethodField()
-    like = LikeSerializer(many=True, read_only=True)
+    like_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = ['id', 'user_id', 'project', 
-         'thumbnail', 'title', 'date', 'like', 'contents']
+         'thumbnail', 'title', 'date', 'like_count', 'contents']
     
     def get_contents(self, obj):
         true = True
         return eval(str(obj.contents))
+    
+    def get_like_count(self, obj):
+        count = 0
+        post = Post.objects.filter(id=obj.id)
+        for p in post:
+            count += Like.objects.filter(post_id=p.id).count()
+        
+        return count
