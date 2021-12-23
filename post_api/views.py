@@ -122,7 +122,7 @@ def loop_load(request):
             d.update({"is_marked":1})
         except:
             pass
-        
+
     return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
@@ -165,6 +165,18 @@ def specific_posting_load(request, posting_idx):
         return_dict.update({"is_user":1})
 
     return Response(return_dict)
+    
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def like_list_load(request, idx):
+    like_obj = Like.objects.filter(post_id=idx)
+    like_list = []
+    for l in like_obj:
+       like_list.append(Profile.objects.get(user_id=l.user_id))
+    
+    return Response(ProfileSerializer(like_list, many=True).data, status=status.HTTP_200_OK)
+        
+
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def posting_delete(request, idx):
