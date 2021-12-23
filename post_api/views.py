@@ -133,15 +133,9 @@ def posting_list_load(request, proj_idx):
     except Post.DoesNotExist:
         return Response('The postings aren\'t valid', status=status.HTTP_404_NOT_FOUND)
 
-    postingSZ = PostingSerializer(postings, many=True)
+    posting = PostingSerializer(postings, many=True).data
 
-    return_dict = {
-        'posting_list' : postingSZ.data
-    }
-
-    for posting in return_dict['posting_list']:
-        posting.update({'like_num': len(posting['like'])})
-    return Response(return_dict)
+    return Response(posting, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
@@ -165,7 +159,7 @@ def specific_posting_load(request, posting_idx):
         return_dict.update({"is_user":1})
 
     return Response(return_dict)
-    
+
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def like_list_load(request, idx):
