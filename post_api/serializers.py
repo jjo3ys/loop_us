@@ -24,4 +24,4 @@ class PostingSerializer(serializers.ModelSerializer):
     
     def get_contents(self, obj):
         true = True
-        return eval(obj.contents)
+        return eval(str(obj.contents))
