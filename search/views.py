@@ -26,7 +26,7 @@ def log(request, type):
     query = request.GET['query']
     Log.objects.create(user_id=user_id, query=query)
     if type == 'post':
-        obj = Post.objects.filter(Q(content__icontains=query)|Q(title__icontains=query)).order_by('-id')
+        obj = Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)).order_by('-id')
         obj = Paginator(obj, 5).get_page(1)
         return Response(PostingSerializer(obj, many=True).data, status=status.HTTP_200_OK)
 

@@ -16,15 +16,14 @@ from rest_framework.permissions import IsAuthenticated
 def loop_request(request, idx):
     user = request.user
     try:
-        friend = User.objects.get(id=idx)  
-        Request.objects.create(From=user, To=friend)
+        Request.objects.create(From=user, To_id=idx)
     
         return Response("ok", status=status.HTTP_200_OK)
     
     except:
         return Response("Nan", status=status.HTTP_404_NOT_FOUND)
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def loop(request, idx):
     user = request.user
@@ -35,7 +34,7 @@ def loop(request, idx):
  
     return Response("ok", status=status.HTTP_200_OK)
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def unloop(request, idx):
     user = request.user

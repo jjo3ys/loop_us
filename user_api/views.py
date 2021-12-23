@@ -201,13 +201,5 @@ def profile_load(request, idx):
 
     if str(request.user.id) == idx:
         return_dict.update({'is_user':1})
-    for proj in return_dict['project']:
-        postings_like_sum = 0
-        if len(proj['post']) != 0:
-            for posting in proj['post']:
-                postings_like_sum = postings_like_sum + len(posting['like'])
-        else:
-            pass
-        proj.update({'Total project Like':postings_like_sum}) 
     
     return Response(return_dict, status=status.HTTP_200_OK)
