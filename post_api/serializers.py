@@ -1,4 +1,6 @@
 from .models import Post, ContentsImage, Like
+from project_api.models import Project
+from project_api.serializers import SimpleProjectserializer
 from rest_framework import serializers
 
 class LikeSerializer(serializers.ModelSerializer):
@@ -14,13 +16,18 @@ class PostingContentsImageSerializer(serializers.ModelSerializer):
 
 class MainloadSerializer(serializers.ModelSerializer):
     like_count = serializers.SerializerMethodField()
+    project = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'thumbnail', 'title', 'date', 'like_count']
+        fields = ['id', 'user_id', 'thumbnail', 'title', 'date', 'project', 'like_count']
     
     def get_like_count(self, obj):
         return Like.objects.filter(post_id=obj.id).count()
+    
+    def get_project(self, obj):
+        project = Project.objects.get(id=obj.project_id)
+        return SimpleProjectserializer(project).data
 
 class PostingSerializer(serializers.ModelSerializer):
     contents = serializers.SerializerMethodField()
