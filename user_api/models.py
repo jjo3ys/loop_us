@@ -10,5 +10,5 @@ class Profile(models.Model):
     type = models.SmallIntegerField(default=0)
     class_num = models.CharField(max_length=100)
     profile_image = models.ImageField(null = True)
-    department = models.IntegerField(default=0, choices=DEPARTMENT_CHOICES)
+    department = models.CharField(default='기타', max_length=15)
 
