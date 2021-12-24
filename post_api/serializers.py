@@ -14,10 +14,14 @@ class ProjectTagSerializer(serializers.ModelSerializer):
 
 class SimpleProjectserializer(serializers.ModelSerializer):
     project_tag = ProjectTagSerializer(many=True, read_only=True)
-    
+    project_id = serializers.SerializerMethodField()
+
     class Meta:
         model = Project
-        fields =['id', 'project_name', 'project_tag']
+        fields =['project_id', 'project_name', 'project_tag']
+    
+    def get_project_id(self, obj):
+        return obj.id
 
 class LikeSerializer(serializers.ModelSerializer):
     
@@ -50,7 +54,7 @@ class PostingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'project', 
+        fields = ['id', 'user_id', 'project_id', 
          'thumbnail', 'title', 'date', 'like_count', 'contents']
     
     def get_contents(self, obj):

@@ -17,6 +17,7 @@ from user_api.models import Profile
 from user_api.serializers import ProfileSerializer
 from question_api.models import Question
 from question_api.serializers import QuestionSerializer
+from tag.models import Project_Tag
 # Create your views here.
 
 @api_view(['GET', ])
@@ -44,6 +45,16 @@ def log(request, type):
         obj = Question.objects.filter(content__icontains=query).order_by('-id')
         obj = Paginator(obj, 5).get_page(1)
         return Response(QuestionSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
+
+    elif type == 'tag':
+        obj = Project_Tag.objects.filter(tag_id=int(query))
+        obj = Paginator(obj, 5).get_page(1)
+        result = []
+        for o in obj:
+            if o.project not in result:
+                result.append(o.project)
+        result.reverse()
+        return Response(ProjectSerializer(result, many=True).data, status=status.HTTP_200_OK)
 
     elif type == 'notice':
         return Response("unrealized", status=status.HTTP_204_NO_CONTENT)
@@ -73,6 +84,16 @@ def search(request, type):
         obj = Question.objects.filter(content__icontains=query).order_by('-id')
         obj = Paginator(obj, 5).get_page(page)
         return Response(QuestionSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
+
+    elif type == 'tag':
+        obj = Project_Tag.objects.filter(tag_id=int(query))
+        obj = Paginator(obj, 5).get_page(1)
+        result = []
+        for o in obj:
+            if o.project not in result:
+                result.append(o.project)
+        result.reverse()
+        return Response(ProjectSerializer(result, many=True).data, status=status.HTTP_200_OK)
 
     elif type == 'notice':
         return Response("unrealized", status=status.HTTP_204_NO_CONTENT)

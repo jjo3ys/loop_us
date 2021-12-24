@@ -107,6 +107,7 @@ def loop_load(request):
         loop_list.append(l.friend_id)
 
     post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')
+    post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
     post = MainloadSerializer(post_obj, many=True).data
     for i in range(len(post_obj)):
         profile_obj = Profile.objects.get(user=post_obj[i].user)
