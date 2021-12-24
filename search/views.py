@@ -15,8 +15,8 @@ from project_api.models import Project
 from project_api.serializers import ProjectSerializer
 from user_api.models import Profile
 from user_api.serializers import ProfileSerializer
-from question_api.models import Question, Answer
-from question_api.serializers import QuestionSerializer, AnswerSerializer
+from question_api.models import Question
+from question_api.serializers import QuestionSerializer
 # Create your views here.
 
 @api_view(['GET', ])

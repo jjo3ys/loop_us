@@ -64,6 +64,8 @@ def question_list_load(request, type):
             d.update(profile_sz.data)
             if d['user_id'] == user_id:
                 d.update({"is_user":1})
+            else:
+                d.update({"is_user":0})
 
     return Response(q_sz.data, status=status.HTTP_200_OK)
 
@@ -80,6 +82,8 @@ def specific_question_load(request, question_idx):
     q_sz.update(q_profile_sz.data)
     if user_id == q_profile_sz.data['user_id']:
         q_sz.update({"is_user":1})
+    else:
+        q_sz.update({"is_user":0})
 
     for d in q_sz['answer']:
         a_profile_obj = Profile.objects.get(user=d['user_id'])
@@ -87,6 +91,8 @@ def specific_question_load(request, question_idx):
         d.update(a_profile_sz.data)
         if a_profile_obj.user_id == user_id:
             d.update({'is_user':1})
+        else:
+            d.update({"is_user":0})
 
     return Response(q_sz, status=status.HTTP_200_OK)
 
