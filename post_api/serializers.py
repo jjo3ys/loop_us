@@ -57,10 +57,5 @@ class PostingSerializer(serializers.ModelSerializer):
         true = True
         return eval(str(obj.contents))
     
-    def get_like_count(self, obj):
-        count = 0
-        post = Post.objects.filter(id=obj.id)
-        for p in post:
-            count += Like.objects.filter(post_id=p.id).count()
-        
-        return count
+    def get_like_count(self, obj):        
+        return Like.objects.filter(post_id=obj.id).count()

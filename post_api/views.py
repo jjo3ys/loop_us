@@ -1,5 +1,3 @@
-from django.shortcuts import render
-from django.db.models import Q
 from django.core.paginator import Paginator
 
 from user_api.models import Profile
@@ -9,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-import json
 
 from .serializers import PostingSerializer, PostingContentsImageSerializer, MainloadSerializer, SimpleProjectserializer
 from .models import Post, ContentsImage, Like, BookMark
@@ -44,7 +41,7 @@ def posting_upload(request, proj_idx):
     post_obj.contents = str(contents)
     post_obj.save()
 
-    return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
+    return Response("ok", status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -52,8 +49,6 @@ def specific_posting_update(request, posting_idx):
     post_obj = Post.objects.get(id=posting_idx)
     post_obj.title = request.data['title']
     post_obj.thumbnail = request.FILES.get('thumbnail')
-
-
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -84,18 +79,21 @@ def main_load(request):
     post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
     post = MainloadSerializer(post_obj, many=True).data
 
-    for d in post:
+    for i in range(len(post_obj)):
+        profile_obj = Profile.objects.get(user=post_obj[i].user)
+        post[i].update(SimpleProjectserializer(post_obj[i].project).data)    
+        post[i].update(ProfileSerializer(profile_obj).data)
         try:
-            Like.objects.get(user_id=request.user.id, post_id=d['id'])
-            d.update({"is_liked":1})
+            Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
+            post[i].update({"is_liked":1})
         except:
-            pass
+            post[i].update({"is_liked":0})
 
         try:
-            BookMark.objects.get(user_id=request.user.id, post_id=d['id'])
-            d.update({"is_marked":1})
+            BookMark.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
+            post[i].update({"is_marked":1})
         except:
-            pass
+            post[i].update({"is_marked":0})
 
     return Response(post, status=status.HTTP_200_OK)
 
@@ -109,21 +107,24 @@ def loop_load(request):
         loop_list.append(l.friend_id)
 
     post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')
-    data = MainloadSerializer(post_obj, many=True).data
-    for d in data:
+    post = MainloadSerializer(post_obj, many=True).data
+    for i in range(len(post_obj)):
+        profile_obj = Profile.objects.get(user=post_obj[i].user)
+        post[i].update(SimpleProjectserializer(post_obj[i].project).data)    
+        post[i].update(ProfileSerializer(profile_obj).data)
         try:
-            Like.objects.get(user_id=request.user.id, post_id=d['id'])
-            d.update({"is_liked":1})
+            Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
+            post[i].update({"is_liked":1})
         except:
-            pass
+            post[i].update({"is_liked":0})
 
         try:
-            BookMark.objects.get(user_id=request.user.id, post_id=d['id'])
-            d.update({"is_marked":1})
+            BookMark.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
+            post[i].update({"is_marked":1})
         except:
-            pass
+            post[i].update({"is_marked":0})
 
-    return Response(data, status=status.HTTP_200_OK)
+    return Response(post, status=status.HTTP_200_OK)
 
 
 @api_view(['GET', ])
@@ -144,8 +145,23 @@ def specific_posting_load(request, posting_idx):
         'posting_info': postingSZ.data,
     }
     return_dict.update(profile)
+    return_dict.update(SimpleProjectserializer(post_obj.project).data)
     if user_id == post_obj.user_id:
         return_dict.update({"is_user":1})
+    else:
+        return_dict.update({"is_user":0})
+
+    try:
+        Like.objects.get(user_id=request.user.id, post_id=posting_idx)
+        return_dict.update({"is_liked":1})
+    except:
+        return_dict.update({"is_liked":0})
+
+    try:
+        BookMark.objects.get(user_id=request.user.id, post_id=posting_idx)
+        return_dict.update({"is_marked":1})
+    except:
+        return_dict.update({"is_marked":0})
 
     return Response(return_dict)
 

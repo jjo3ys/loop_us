@@ -201,5 +201,7 @@ def profile_load(request, idx):
 
     if str(request.user.id) == idx:
         return_dict.update({'is_user':1})
+    else:
+        return_dict.update({'is_user':0})
     
     return Response(return_dict, status=status.HTTP_200_OK)

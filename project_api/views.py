@@ -103,5 +103,7 @@ def load_project(request, idx):
     project = ProjectPostSerializer(project_obj).data
     if request.user.id == project_obj.user_id:
         project.update({"is_user":1})
+    else:
+        project.update({"is_user":0})
 
     return Response(project, status=status.HTTP_200_OK)
