@@ -1,15 +1,17 @@
 from django.http import request
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
 from django.views import View
 
 from project_api.serializers import ProjectSerializer
-from .text import message
+from .text import message, pwmessage
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
+from django.utils import timezone
 from django.utils.http import (
     urlsafe_base64_encode,
     urlsafe_base64_decode,
@@ -35,6 +37,7 @@ from project_api.models import Project
 
 import jwt
 import time
+import random
 
 @api_view(['POST', ])
 def check_email(request):
@@ -98,7 +101,7 @@ def signup(request):
                                                  type = request.data['type'],
                                                  real_name = request.data['real_name'],
                                                  class_num = request.data['class_num'],
-                                                 profile_image = request.data['image'])
+                                                 profile_image = request.FILES.get('image'))
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -130,12 +133,51 @@ def login(request):
     )
     if user is not None:
         token = Token.objects.get(user=user)
+        user = User.objects.get(id=user.id)
+        user.last_login = timezone.now()
+        user.save()
 
         return Response({'Token':token.key,
                          'user_id':str(token.user_id)})
     
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def new_password(request):
+    user = request.user
+
+    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+    char = [ '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+' , ',',  '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', ']', '^', '_', '`', '{', '|', '}', '~']
+    new_password = ''
+
+    for i in range(5):
+        alpha = random.choice(alphabet)
+        ch = random.choice(char)
+        new_password = new_password + alpha + ch
+
+    user.set_password(new_password)
+    user.save()
+
+    profile_obj = Profile.objects.get(user_id=user.id)
+    real_name = profile_obj.real_name
+    EmailMessage("새로운 비밀번호입니다.", pwmessage(real_name, new_password), to=[user.email]).send()
+
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def change_password(request):
+    user = request.user
+    
+    if check_password(request.data['origin_pw'], user.password):
+        new_pw = request.data['new_pw']
+        user.set_password(new_pw)
+        user.save()
+        return Response("pw is changed", status=status.HTTP_200_OK)
+    else:
+        return Response("origin_pw is not matched with data", status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -149,7 +191,7 @@ def update_profile(request):
         pass
     
     else:
-        profile.profile_image = request.data['image']
+        profile.profile_image = request.FILES.get('image')
     
     profile.save()
 
