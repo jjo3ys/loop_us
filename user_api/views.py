@@ -6,6 +6,7 @@ from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
 from django.views import View
+from django.db.utils import IntegrityError
 
 from project_api.serializers import ProjectSerializer
 from user_api import department
@@ -46,13 +47,16 @@ def check_email(request):
     email_obj = request.data['email']
     password_obj = request.data['password']
     username_obj = email_obj
-
-    user = User.objects.create_user(
-        username = username_obj,
-        email = email_obj,
-        password = password_obj,
-        is_active = False
-    )
+    try:
+        user = User.objects.create_user(
+            username = username_obj,
+            email = email_obj,
+            password = password_obj,
+            is_active = False
+        )
+    
+    except IntegrityError:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     current_site = get_current_site(request)
     domain = current_site.domain
