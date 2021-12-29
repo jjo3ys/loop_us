@@ -32,7 +32,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'project_name', 'introduction', 'start_date', 'end_date', 'project_tag', 'looper', 'like_count']
+        fields = ['id', 'user_id', 'project_name', 'introduction', 'start_date', 'end_date', 'project_tag', 'looper', 'like_count']
     
     def get_like_count(self, obj):
         post = Post.objects.filter(project_id=obj.id)
