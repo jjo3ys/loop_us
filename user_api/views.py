@@ -8,6 +8,7 @@ from django.conf.global_settings import SECRET_KEY
 from django.views import View
 
 from project_api.serializers import ProjectSerializer
+from user_api import department
 from .text import message, pwmessage
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
@@ -56,8 +57,8 @@ def check_email(request):
     current_site = get_current_site(request)
     domain = current_site.domain
     uidb4 = urlsafe_base64_encode(force_bytes(user.id))
-    # token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
-    token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
+    token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
+    # token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
     message_data = message(domain, uidb4, token)
 
     main_title = '이메일 인증을 완료해주세요.'
@@ -101,7 +102,8 @@ def signup(request):
                                                  type = request.data['type'],
                                                  real_name = request.data['real_name'],
                                                  class_num = request.data['class_num'],
-                                                 profile_image = request.FILES.get('image'))
+                                                 profile_image = request.FILES.get('image'),
+                                                 department = request.data['department'])
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -187,6 +189,7 @@ def update_profile(request):
     profile.type = request.data['type']
     profile.real_name = request.data['real_name']
     profile.class_num = request.data['class_num']
+    profile.department = request.data['department']
     if type(request.data['image']) == str:
         pass
     
