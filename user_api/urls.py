@@ -9,6 +9,5 @@ urlpatterns = [
     path('update_profile/', views.update_profile),
     path('profile_load/<idx>', views.profile_load),
     path('new_password/', views.new_password),
-    path('change_password/', views.change_password),
-    path('send', views.send)
+    path('change_password/', views.change_password)
 ]
