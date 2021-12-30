@@ -1,6 +1,6 @@
 from django.http import request
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.shortcuts import redirect
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 # for email check
@@ -9,10 +9,10 @@ from django.views import View
 from django.db.utils import IntegrityError
 
 from project_api.serializers import ProjectSerializer
-from user_api import department
-from .text import message, pwmessage
+from .text import pwmessage
+
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.utils import timezone
 from django.utils.http import (
     urlsafe_base64_encode,
@@ -32,7 +32,7 @@ from rest_framework import status
 
 # from .department import DEPARTMENT
 from .models import Profile
-from .serializers import ProfileSerializer, ProfileTagSerializer #, ProfileSerializer, UserSerializer
+from .serializers import ProfileSerializer, ProfileTagSerializer
 
 from tag.models import Tag, Profile_Tag
 from project_api.models import Project
@@ -63,11 +63,12 @@ def check_email(request):
     uidb4 = urlsafe_base64_encode(force_bytes(user.id))
     token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
     # token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
-    message_data = message(domain, uidb4, token)
-
-    main_title = '이메일 인증을 완료해주세요.'
-    mail_to = email_obj
-    EmailMessage(main_title, message_data, to=[mail_to]).send()
+    html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href=http://{domain}/user_api/activate/{uidb4}/{token}>http://{domain}/user_api/activate/{uidb4}/{token}.</a><br><br><h3>감사합니다.</h3>'
+    main_title = 'LOOP US 이메일 인증'
+    mail_to = user.email
+    msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하세요", to=[mail_to])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
 
     for i in range(36):
         time.sleep(5)
