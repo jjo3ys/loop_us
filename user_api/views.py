@@ -49,16 +49,26 @@ def check_email(request):
     password_obj = request.data['password']
     username_obj = email_obj
     try:
-        user = User.objects.create_user(
-            username = username_obj,
-            email = email_obj,
-            password = password_obj,
-            is_active = False
-        )
-    
-    except IntegrityError:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        user = User.objects.get(username=email_obj)
+        try:
+            Token.objects.get(user_id=user.id)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
+        except Token.DoesNotExist:
+            user.delete()
+            
+    except User.DoesNotExist:
+        pass
+    
+    except:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+        
+    user = User.objects.create_user(
+        username = username_obj,
+        email = email_obj,
+        password = password_obj,
+        is_active = False)
+            
     current_site = get_current_site(request)
     domain = current_site.domain
     uidb4 = urlsafe_base64_encode(force_bytes(user.id))
@@ -112,7 +122,6 @@ def signup(request):
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
-
         for tag in request.data['tag']:
             try:
                 tag_obj = Tag.objects.get(tag=tag)
