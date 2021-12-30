@@ -32,7 +32,7 @@ def search(request, type):
         obj = Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)).order_by('-id')
         obj = Paginator(obj, 5).get_page(page)
         data_list = PostingSerializer(obj, many=True).data
-        for i in range(5):
+        for i in range(len(data_list)):
             profile = Profile.objects.get(user=obj[i].user)
             data_list[i].update(SimpleProjectserializer(obj[i].project).data)
             data_list[i].update(SimpleProfileSerializer(profile).data)
@@ -42,21 +42,21 @@ def search(request, type):
         obj = Project.objects.filter(Q(project_name__icontains=query)|Q(introduction__icontains=query)).order_by('-id')
         obj = Paginator(obj, 5).get_page(page)
         data_list = ProjectSerializer(obj, many=True).data
-        for i in range(5):
+        for i in range(len(data_list)):
             profile = Profile.objects.get(user=obj[i].user)
             data_list[i].update(SimpleProfileSerializer(profile).data)
         return Response(data_list, status=status.HTTP_200_OK)  
 
     elif type == 'profile':
         obj = Profile.objects.filter(real_name__icontains=query).order_by('-id')
-        obj = Paginator(obj, 5).get_page(page)
+        obj = Paginator(obj, 10).get_page(page)
         return Response(ProfileSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
 
     elif type == 'question':
         obj = Question.objects.filter(content__icontains=query).order_by('-id')
         obj = Paginator(obj, 5).get_page(page)
         data_list = QuestionSerializer(obj, many=True).data
-        for i in range(5):
+        for i in range(len(data_list)):
             profile = Profile.objects.get(user=obj[i].user)
             data_list[i].update(SimpleProfileSerializer(profile).data)
         return Response(data_list, status=status.HTTP_200_OK)  
