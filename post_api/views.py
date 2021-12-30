@@ -93,7 +93,7 @@ def bookmark_list_load(request):
             post[i].update({"is_liked":1})
         except:
             post[i].update({"is_liked":0})
-        post[i].update({"is_marked":0})
+        post[i].update({"is_marked":1})
 
     return Response(post, status=status.HTTP_200_OK)
 
