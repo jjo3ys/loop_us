@@ -113,7 +113,7 @@ def signup(request):
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
 
-        for tag in request.FILES.getlist('tag'):
+        for tag in request.data['tag']:
             try:
                 tag_obj = Tag.objects.get(tag=tag)
                 tag_obj.count = tag_obj.count + 1
@@ -193,7 +193,7 @@ def resign(request):
     user_obj = User.objects.get(id=user.id)
     user_obj.delete()
     return Response("resign from loop", status=status.HTTP_200_OK)
-
+    
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def update_profile(request):
@@ -214,7 +214,7 @@ def update_profile(request):
     for tag in old_sz.data:
         old_tag_list.append(tag['tag'])
 
-        if tag['tag'] not in request.FILES.getlist('tag'):
+        if tag['tag'] not in request.data['tag']:
             Profile_Tag.objects.get(tag_id=tag['tag_id'], profile=profile).delete()
             tag_obj = Tag.objects.get(id=tag['tag_id'])
             tag_obj.count = tag_obj.count - 1
@@ -223,7 +223,7 @@ def update_profile(request):
             else:    
                 tag_obj.save()
     
-    for tag in request.FILES.getlist('tag'):
+    for tag in request.data['tag']:
         if tag in old_tag_list:
             continue
         else:
