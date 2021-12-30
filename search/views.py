@@ -9,8 +9,8 @@ from rest_framework import status
 
 from .models import Log
 
-from post_api.models import Post
-from post_api.serializers import PostingSerializer, SimpleProjectserializer
+from post_api.models import Post, Like, BookMark
+from post_api.serializers import SimpleProjectserializer, MainloadSerializer
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
 from user_api.models import Profile
@@ -30,12 +30,24 @@ def search(request, type):
 
     if type == 'post':
         obj = Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)).order_by('-id')
-        obj = Paginator(obj, 5).get_page(page)
-        data_list = PostingSerializer(obj, many=True).data
+        post_obj = Paginator(obj, 5).get_page(page)
+        data_list = MainloadSerializer(post_obj, many=True).data
         for i in range(len(data_list)):
             profile = Profile.objects.get(user=obj[i].user)
             data_list[i].update(SimpleProjectserializer(obj[i].project).data)
             data_list[i].update(SimpleProfileSerializer(profile).data)
+            try:
+                Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
+                data_list[i].update({"is_liked":1})
+            except:
+                data_list[i].update({"is_liked":0})
+
+            try:
+                BookMark.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
+                data_list[i].update({"is_marked":1})
+            except:
+                data_list[i].update({"is_marked":0})
+
         return Response(data_list, status=status.HTTP_200_OK)
 
     elif type == 'project':
