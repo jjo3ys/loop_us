@@ -190,10 +190,6 @@ def change_password(request):
 @permission_classes((IsAuthenticated,))
 def update_profile(request):
     profile = Profile.objects.get(user_id=request.user.id)
-
-    profile.type = request.data['type']
-    profile.real_name = request.data['real_name']
-    profile.class_num = request.data['class_num']
     profile.department = request.data['department']
     if type(request.data['image']) == str:
         pass
