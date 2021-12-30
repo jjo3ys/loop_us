@@ -232,8 +232,8 @@ def update_profile(request):
                 tag_obj = Tag.objects.create(tag = tag)
 
             Profile_Tag.objects.create(tag = tag_obj, profile = profile)
-
-    return Response("ok", status=status.HTTP_200_OK)
+    
+    return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
