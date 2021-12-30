@@ -16,8 +16,8 @@ from project_api.serializers import ProjectSerializer
 from user_api.models import Profile
 from user_api.serializers import ProfileSerializer, SimpleProfileSerializer
 from question_api.models import Question
-from question_api.serializers import QuestionSerializer
-from tag.models import Project_Tag
+from question_api.serializers import OnlyQSerializer as QuestionSerializer
+from tag.models import Project_Tag, Question_Tag
 # Create your views here.
 
 @api_view(['GET', ])
@@ -50,15 +50,6 @@ def search(request, type):
 
         return Response(data_list, status=status.HTTP_200_OK)
 
-    elif type == 'project':
-        obj = Project.objects.filter(Q(project_name__icontains=query)|Q(introduction__icontains=query)).order_by('-id')
-        obj = Paginator(obj, 5).get_page(page)
-        data_list = ProjectSerializer(obj, many=True).data
-        for i in range(len(data_list)):
-            profile = Profile.objects.get(user=obj[i].user)
-            data_list[i].update(SimpleProfileSerializer(profile).data)
-        return Response(data_list, status=status.HTTP_200_OK)  
-
     elif type == 'profile':
         obj = Profile.objects.filter(real_name__icontains=query).order_by('-id')
         obj = Paginator(obj, 10).get_page(page)
@@ -73,8 +64,8 @@ def search(request, type):
             data_list[i].update(SimpleProfileSerializer(profile).data)
         return Response(data_list, status=status.HTTP_200_OK)  
 
-    elif type == 'tag':
-        obj = Project_Tag.objects.filter(tag_id=int(query))
+    elif type == 'tag_project':
+        obj = Project_Tag.objects.filter(tag_id=int(query)).order_by('-id')
         obj = Paginator(obj, 5).get_page(page)
         result = []
         for o in obj:
@@ -82,6 +73,25 @@ def search(request, type):
                 result.append(o.project)
         result.reverse()
         data_list = ProjectSerializer(result, many=True).data
+        for i in range(len(result)):
+            try:
+                profile = Profile.objects.get(user_id=data_list[i]['user_id'])
+                data_list[i].update(SimpleProfileSerializer(profile).data)
+            except Profile.DoesNotExist:
+                data_list[i].update({"real_name":"DoesNotExist",
+                                     "profile_image":None,
+                                     "department":"DoesNotExist"})
+        return Response(data_list, status=status.HTTP_200_OK)
+    
+    elif type == 'tag_question':
+        obj = Question_Tag.objects.filter(tag_id=int(query)).order_by('-id')
+        obj = Paginator(obj, 5).get_page(page)
+        result = []
+        for o in obj:
+            if o.question not in result:
+                result.append(o.question)
+        result.reverse()
+        data_list = QuestionSerializer(result, many=True).data
         for i in range(len(result)):
             try:
                 profile = Profile.objects.get(user_id=data_list[i]['user_id'])
