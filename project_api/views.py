@@ -3,7 +3,7 @@ from .serializers import ProjectSerializer, ProjectTagSerializer, ProjectPostSer
 from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
 from user_api.models import Profile
-from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
+from user_api.serializers import SimpleProfileSerializer
 
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -101,6 +101,9 @@ def update_project(request, idx):
 def load_project(request, idx):
     project_obj = Project.objects.get(id=idx)
     project = ProjectPostSerializer(project_obj).data
+    profile_obj = Profile.objects.get(user=project_obj.user)
+    profile_obj = SimpleProfileSerializer(profile_obj).data
+    project.update(profile_obj)
     if request.user.id == project_obj.user_id:
         project.update({"is_user":1})
     else:

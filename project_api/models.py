@@ -9,6 +9,7 @@ class Project(models.Model):
     introduction = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
+    pj_thumbnail = models.ImageField(null=True, default=True)
 
     class Meta:
         db_table = 'project'
