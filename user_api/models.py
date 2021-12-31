@@ -17,3 +17,5 @@ class Company_Inform(models.Model):
     corp_name = models.TextField()
     tel_num = models.CharField(max_length=13)
 
+    class Meta:
+        db_table = "company_inform"
