@@ -31,7 +31,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 # from .department import DEPARTMENT
-from .models import Profile
+from .models import Profile, Company_Inform
 from .serializers import ProfileSerializer, ProfileTagSerializer
 
 from tag.models import Tag, Profile_Tag
@@ -132,6 +132,12 @@ def signup(request):
                 tag_obj = Tag.objects.create(tag = tag)
             
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
+        
+        if request.data['type'] == 1:
+            Company_Inform.objects.create(profile = profile_obj,
+                                          corp_num = request.data['corp_num'],
+                                          corp_name = request.data['corp_name'],
+                                          tel_num = request.data['tel_num'])
 
         return Response({'message':'singup success',
                          'token':str(token),
