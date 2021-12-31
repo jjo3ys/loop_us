@@ -1,4 +1,6 @@
 from django.core.paginator import Paginator
+from project_api.models import TagLooper
+from tag.models import Project_Tag
 
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
@@ -12,6 +14,8 @@ from .serializers import PostingSerializer, PostingContentsImageSerializer, Main
 from .models import Post, ContentsImage, Like, BookMark
 
 from loop.models import Loopship
+
+import random
 
 # Create your views here.
 @api_view(['POST', ])
@@ -167,11 +171,37 @@ def specific_posting_load(request, posting_idx):
 
     profile_obj = Profile.objects.get(user_id=post_obj.user_id)
     profile = ProfileSerializer(profile_obj).data
+    project = SimpleProjectserializer(post_obj.project).data
     return_dict = {
         'posting_info': postingSZ.data,
     }
     return_dict.update(profile)
-    return_dict.update(SimpleProjectserializer(post_obj.project).data)
+    return_dict.update(project)
+
+    tag_list = []
+    for tag in project['project_tag']:
+        tag_list.append(int(tag['tag_id']))
+
+    recommend = Project_Tag.objects.filter(tag_id__in=tag_list)
+    recommend_post = []
+
+    for pj_tag in recommend:
+        re_post = Post.objects.filter(project=pj_tag.project)
+        recommend_post += re_post
+
+    recommend_list = []
+    for i in range(min(3, len(recommend_post))):
+        while True:
+            post = random.choice(recommend_post)
+            if post.id == post_obj.id:
+                continue
+            elif post not in recommend_list:
+                recommend_list.append(post)
+                break
+    
+    recommend_post = MainloadSerializer(recommend_list, many=True).data
+    return_dict.update({"recommend_post":recommend_post})
+
     if user_id == post_obj.user_id:
         return_dict.update({"is_user":1})
     else:
