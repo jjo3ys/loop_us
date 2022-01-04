@@ -26,7 +26,8 @@ def create_project(request):
     project_obj = Project.objects.create(user=user, project_name = request.data['project_name'], 
                                          introduction = request.data['introduction'],
                                          start_date = start_date,
-                                         end_date = end_date)
+                                         end_date = end_date,
+                                         pj_thumbnail = request.FILES.get('thumbnail'))
     
     for looper in request.data['looper']:
         TagLooper.objects.create(project=project_obj, looper_id=looper)
@@ -60,6 +61,7 @@ def update_project(request, idx):
     project_obj.introduction = request.data['introduction']
     project_obj.start_date = start_date
     project_obj.end_date = end_date
+    project_obj.pj_thumbnail = request.FILES.get('thumbnail')
     project_obj.save()
 
     old_tag = Project_Tag.objects.filter(project=idx)
