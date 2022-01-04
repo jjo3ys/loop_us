@@ -15,7 +15,18 @@ class Company_Inform(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     corp_num = models.CharField(max_length=10)
     corp_name = models.TextField()
-    tel_num = models.CharField(max_length=13)
 
     class Meta:
-        db_table = "Prof_company_inform"
+        db_table = "Corp_inform"
+
+class Activation(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    corp_num = models.CharField(max_length=10)
+    corp_name = models.TextField()
+    email = models.TextField()
+    real_name = models.CharField(max_length=10)
+    tel_num = models.TextField()
+    
+    class Meta:
+        db_table = "Corp_active"
+

@@ -29,7 +29,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 # from .department import DEPARTMENT
-from .models import Profile, Company_Inform
+from .models import Profile, Company_Inform, Activation
 from .serializers import ProfileSerializer, ProfileTagSerializer
 
 from tag.models import Tag, Profile_Tag
@@ -122,28 +122,41 @@ def check_corp_num(request):
                         headers=headers, 
                         params=params, 
                         data=data)
-    print(res)
+
     if res.json()['data'][0]['tax_type'] == '국세청에 등록되지 않은 사업자등록번호입니다.':
         return Response("국세청에 등록되지 않은 사업자등록번호입니다.", status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)              
+    
     else:
-        User.objects.create_user(username=request.data['email'],
-                                 password=request.data['password'],
-                                 email=request.data['email'],
-                                 is_active=False)
+        user_obj = User.objects.create_user(username=request.data['id'],
+                                            password=request.data['password'],
+                                            email=request.data['email'],
+                                            is_active=False)
+
+        Activation.objects.create(user = user_obj,
+                                  corp_num = request.data['corp_num'],
+                                  corp_name = request.data['corp_name'],
+                                  email = request.data['email'],
+                                  name = request.data['name'],
+                                  tel_num = request.data['tel_num'])
 
         return Response("인증 대기중입니다.", status=status.HTTP_201_CREATED)
 
 @api_view(['POST', ])
 def signup(request):
+    type = request.data['type']
 
-    user_obj = User.objects.get(username=request.data['email'])
+    if type == 1:
+        user_obj = User.objects.get(username=request.data['id'])
+    else:
+        user_obj = User.objects.get(username=request.data['email'])
+    
 
     if user_obj.is_active:
         token = Token.objects.create(user=user_obj)
 
         try:
             profile_obj = Profile.objects.create(user = user_obj,
-                                                 type = request.data['type'],
+                                                 type = type,
                                                  real_name = request.data['real_name'],
                                                  profile_image = None,
                                                  department = request.data['department'])
@@ -160,12 +173,13 @@ def signup(request):
                 tag_obj = Tag.objects.create(tag = tag)
             
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
-        
-        if request.data['type'] == 1:
+
+        if type == 1:
+            corp = Activation.objects.get(user=user_obj)
             Company_Inform.objects.create(profile = profile_obj,
-                                          corp_num = request.data['corp_num'],
-                                          corp_name = request.data['corp_name'],
-                                          tel_num = request.data['tel_num'])
+                                          corp_num = corp.corp_num,
+                                          corp_name = corp.corp_name)
+            corp.delete()
 
         return Response({'message':'singup success',
                          'token':str(token),
