@@ -58,7 +58,6 @@ class PostingSerializer(serializers.ModelSerializer):
          'thumbnail', 'title', 'date', 'like_count', 'contents']
     
     def get_contents(self, obj):
-        true = True
         return eval(str(obj.contents))
     
     def get_like_count(self, obj):        

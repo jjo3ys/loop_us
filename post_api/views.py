@@ -34,10 +34,10 @@ def posting_upload(request, proj_idx):
     images = PostingContentsImageSerializer(ContentsImage.objects.filter(post_id=post_obj.id), many=True).data
     image_id = 0
     contents = []
-    true = True
+
     for d in eval(request.data['contents']):
-        if type(d['insert']) == dict:
-            d['insert'] = {"image":images[image_id]['image']}
+        if d['content'] == 'image':
+            d['content'] = images[image_id]['image']
             image_id += 1
 
         contents.append(d)
