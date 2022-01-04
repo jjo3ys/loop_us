@@ -41,6 +41,17 @@ import jwt
 import json
 import time
 import random
+import requests
+
+headers = {
+    'Accpet':'application/json',
+    'Authorization':'frbSEAcXD+a6UEOUq1lkWcWmFoDku20SZvLeO++pP9e5yQo5GIqTkbVbctqafewScJuzLLcTW/l4d/Lw/wjOig==',
+    'Content-Type': 'application/json',
+}
+
+params = (
+    ('serviceKey', 'frbSEAcXD+a6UEOUq1lkWcWmFoDku20SZvLeO++pP9e5yQo5GIqTkbVbctqafewScJuzLLcTW/l4d/Lw/wjOig=='),
+)
 
 @api_view(['POST', ])
 def check_email(request):
@@ -148,22 +159,43 @@ def signup(request):
                          'isAuthoriztion':0})
 
 @api_view(['POST', ])
+def check_corp_num(request):
+    data = '{"b_no":["{0}"]]}'.format(request.data['corp_num'])
+    res = requests.post('http://api.odcloud.kr/api/nts-businessman/v1/status',
+                        headers=headers, 
+                        params=params, 
+                        data=data)
+
+    if res.json()['data'][0]['tax_type'] == '국세청에 등록되지 않은 사업자등록번호입니다.':
+        return Response("국세청에 등록되지 않은 사업자등록번호입니다.", status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)              
+    else:
+        User.objects.create_user(username=request.data['email'],
+                                 password=request.data['password'],
+                                 email=request.data['email'],
+                                 is_active=False)
+
+        return Response("인증 대기중입니다.", status=status.HTTP_201_CREATED)
+
+@api_view(['POST', ])
+def company_signup(request):
+
+@api_view(['POST', ])
 def login(request):
     user = authenticate(
         username=request.data['username'],
         password=request.data['password'],
     )
-    if user is not None:
+    if user is not None and user.is_active:
         token = Token.objects.get(user=user)
         user = User.objects.get(id=user.id)
         user.last_login = timezone.now()
         user.save()
 
         return Response({'Token':token.key,
-                         'user_id':str(token.user_id)})
+                         'user_id':str(token.user_id)}, status=status.HTTP_202_ACCEPTED)
     
     else:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
