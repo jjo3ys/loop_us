@@ -11,7 +11,6 @@ from .models import Log
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import SimpleProjectserializer, MainloadSerializer
-from project_api.models import Project
 from project_api.serializers import ProjectSerializer
 from user_api.models import Profile
 from user_api.serializers import ProfileSerializer, SimpleProfileSerializer
