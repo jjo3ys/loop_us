@@ -117,6 +117,24 @@ class Activate(View):
         return Response({'message': 'email check fail...'})
 
 @api_view(['POST', ])
+def check_corp_num(request):
+    data = '{"b_no":["{0}"]]}'.format(request.data['corp_num'])
+    res = requests.post('http://api.odcloud.kr/api/nts-businessman/v1/status',
+                        headers=headers, 
+                        params=params, 
+                        data=data)
+
+    if res.json()['data'][0]['tax_type'] == '국세청에 등록되지 않은 사업자등록번호입니다.':
+        return Response("국세청에 등록되지 않은 사업자등록번호입니다.", status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)              
+    else:
+        User.objects.create_user(username=request.data['email'],
+                                 password=request.data['password'],
+                                 email=request.data['email'],
+                                 is_active=False)
+
+        return Response("인증 대기중입니다.", status=status.HTTP_201_CREATED)
+
+@api_view(['POST', ])
 def signup(request):
 
     user_obj = User.objects.get(username=request.data['email'])
@@ -158,26 +176,6 @@ def signup(request):
         return Response({'message':'login failed',
                          'isAuthoriztion':0})
 
-@api_view(['POST', ])
-def check_corp_num(request):
-    data = '{"b_no":["{0}"]]}'.format(request.data['corp_num'])
-    res = requests.post('http://api.odcloud.kr/api/nts-businessman/v1/status',
-                        headers=headers, 
-                        params=params, 
-                        data=data)
-
-    if res.json()['data'][0]['tax_type'] == '국세청에 등록되지 않은 사업자등록번호입니다.':
-        return Response("국세청에 등록되지 않은 사업자등록번호입니다.", status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)              
-    else:
-        User.objects.create_user(username=request.data['email'],
-                                 password=request.data['password'],
-                                 email=request.data['email'],
-                                 is_active=False)
-
-        return Response("인증 대기중입니다.", status=status.HTTP_201_CREATED)
-
-@api_view(['POST', ])
-def company_signup(request):
 
 @api_view(['POST', ])
 def login(request):
