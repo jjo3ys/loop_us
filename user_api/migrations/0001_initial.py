@@ -20,9 +20,12 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('real_name', models.CharField(max_length=10)),
                 ('type', models.SmallIntegerField(default=0)),
-                ('class_num', models.CharField(max_length=100)),
+                ('department', models.CharField(default='기타', max_length=15)),
                 ('profile_image', models.ImageField(null=True, upload_to='')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
+            options={
+                'db_table': 'Profile',
+            },
         ),
     ]

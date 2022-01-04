@@ -20,6 +20,8 @@ from django.utils.encoding import (
     force_bytes,
     force_text
 )
+from django.db.utils import IntegrityError
+
 from django.conf.global_settings import SECRET_KEY
 
 from rest_framework.response import Response
@@ -29,7 +31,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 # from .department import DEPARTMENT
-from .models import Profile, Company_Inform, Activation
+from .models import Profile, Activation, Company_Inform
 from .serializers import ProfileSerializer, ProfileTagSerializer
 
 from tag.models import Tag, Profile_Tag
@@ -71,12 +73,16 @@ def check_email(request):
     
     except:
         return Response(status=status.HTTP_400_BAD_REQUEST)
-        
-    user = User.objects.create_user(
-        username = username_obj,
-        email = email_obj,
-        password = password_obj,
-        is_active = False)
+
+    try:    
+        user = User.objects.create_user(
+            username = username_obj,
+            email = email_obj,
+            password = password_obj,
+            is_active = False)
+
+    except IntegrityError:
+        return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
             
     current_site = get_current_site(request)
     domain = current_site.domain
@@ -127,10 +133,13 @@ def check_corp_num(request):
         return Response("국세청에 등록되지 않은 사업자등록번호입니다.", status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)              
     
     else:
-        user_obj = User.objects.create_user(username=request.data['id'],
-                                            password=request.data['password'],
-                                            email=request.data['email'],
-                                            is_active=False)
+        try:
+            user_obj = User.objects.create_user(username=request.data['id'],
+                                                password=request.data['password'],
+                                                email=request.data['email'],
+                                                is_active=False)
+        except IntegrityError:
+            return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)
 
         Activation.objects.create(user = user_obj,
                                   corp_num = request.data['corp_num'],

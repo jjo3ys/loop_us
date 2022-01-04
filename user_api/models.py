@@ -12,7 +12,7 @@ class Profile(models.Model):
         db_table = "Profile"
 
 class Company_Inform(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='company_inform')
     corp_num = models.CharField(max_length=10)
     corp_name = models.TextField()
 
@@ -24,7 +24,7 @@ class Activation(models.Model):
     corp_num = models.CharField(max_length=10)
     corp_name = models.TextField()
     email = models.TextField()
-    real_name = models.CharField(max_length=10)
+    name = models.CharField(max_length=10)
     tel_num = models.TextField()
     
     class Meta:
