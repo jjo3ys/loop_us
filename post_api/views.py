@@ -197,6 +197,8 @@ def specific_posting_load(request, posting_idx):
                 continue
             elif post not in recommend_list:
                 recommend_list.append(post)
+
+            elif post in recommend_list:
                 break
     
     recommend_post = MainloadSerializer(recommend_list, many=True).data
