@@ -15,7 +15,7 @@ class Post(models.Model):
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "Post_posting"
+        db_table = "Posting"
 
 class ContentsImage(models.Model):
     post = models.ForeignKey(Post, related_name='contents_image', on_delete=models.CASCADE)
