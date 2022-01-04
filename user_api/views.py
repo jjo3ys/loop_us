@@ -1,4 +1,3 @@
-from django.http import request
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -6,7 +5,6 @@ from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
 from django.views import View
-from django.db.utils import IntegrityError
 
 from project_api.serializers import ProjectSerializer
 from .text import pwmessage
@@ -118,12 +116,13 @@ class Activate(View):
 
 @api_view(['POST', ])
 def check_corp_num(request):
-    data = '{"b_no":["{0}"]]}'.format(request.data['corp_num'])
+    data = {"b_no":["{0}".format(request.data['corp_num'])]}
+    data = json.dumps(data)
     res = requests.post('http://api.odcloud.kr/api/nts-businessman/v1/status',
                         headers=headers, 
                         params=params, 
                         data=data)
-
+    print(res)
     if res.json()['data'][0]['tax_type'] == '국세청에 등록되지 않은 사업자등록번호입니다.':
         return Response("국세청에 등록되지 않은 사업자등록번호입니다.", status=status.HTTP_203_NON_AUTHORITATIVE_INFORMATION)              
     else:
