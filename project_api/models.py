@@ -12,11 +12,11 @@ class Project(models.Model):
     pj_thumbnail = models.ImageField(null=True, default=None)
 
     class Meta:
-        db_table = 'project'
+        db_table = 'Project'
 
 class TagLooper(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='looper')
     looper = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='looper')
 
     class Meta:
-        db_table = 'LooperTag'
+        db_table = 'Proj_LooperTag'

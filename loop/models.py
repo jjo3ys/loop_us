@@ -8,11 +8,11 @@ class Request(models.Model):
     is_active = models.BooleanField(default=False)
 
     class Meta:
-        db_table = "loop request"
+        db_table = "Loop_request"
 
 class Loopship(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
     friend = models.ForeignKey(User, on_delete=models.CASCADE, related_name='loop')
 
     class Meta:
-        db_table = "loopship"
+        db_table = "Loopship"

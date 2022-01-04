@@ -11,7 +11,7 @@ class Question(models.Model):
     date = models.DateField(auto_now_add=True)
 
     class Meta:
-        db_table = "Question_question"
+        db_table = "Q_question"
 
 
 class Answer(models.Model):
@@ -22,4 +22,4 @@ class Answer(models.Model):
     date = models.DateField(auto_now_add=True)
 
     class Meta:
-        db_table = "Question_answer"
+        db_table = "Q_answer"

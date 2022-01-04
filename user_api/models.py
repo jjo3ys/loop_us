@@ -9,7 +9,7 @@ class Profile(models.Model):
     department = models.CharField(default='기타', max_length=15)
 
     class Meta:
-        db_table = "profile"
+        db_table = "Profile"
 
 class Company_Inform(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
@@ -18,4 +18,4 @@ class Company_Inform(models.Model):
     tel_num = models.CharField(max_length=13)
 
     class Meta:
-        db_table = "company_inform"
+        db_table = "Prof_company_inform"
