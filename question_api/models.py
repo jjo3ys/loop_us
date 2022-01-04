@@ -24,10 +24,9 @@ class Answer(models.Model):
         db_table = "Q_answer"
 
 class P2PQuestion(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user_question', on_delete=models.CASCADE)
-    to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='to_question', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='q_user', on_delete=models.CASCADE)
+    to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='q_to', on_delete=models.CASCADE)
     content = models.TextField(null=True)
-    adopt = models.BooleanField(null=False)
     date = models.DateField(auto_now_add=True)
 
     class Meta:
@@ -37,7 +36,6 @@ class P2PAnswer(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     question = models.ForeignKey(P2PQuestion, related_name='p2panswer', on_delete=models.CASCADE)
     content = models.TextField(null=True)
-    adopt = models.BooleanField(null=False)
     date = models.DateField(auto_now_add=True)
 
     class Meta:

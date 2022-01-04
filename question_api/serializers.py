@@ -1,6 +1,7 @@
-from .models import Question, Answer
+from .models import Question, Answer, P2PQuestion, P2PAnswer
 from tag.models import Question_Tag
 from user_api.models import Profile
+from user_api.serializers import SimpleProfileSerializer
 from rest_framework import serializers
 
 class QuestionTagSerialier(serializers.ModelSerializer):
@@ -37,3 +38,31 @@ class OnlyQSerializer(serializers.ModelSerializer):
     
     def get_count(self, obj):
         return Answer.objects.filter(question_id=obj.id).count()
+
+class P2PAnswerSerializer(serializers.ModelSerializer):
+    user_profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = P2PAnswer
+        fields = ['id', 'user_profile', 'content', 'question_id', 'date']
+
+    def get_user_profile(self, obj):
+        profile_obj = Profile.objects.get(user_id=obj.user.id)
+        return SimpleProfileSerializer(profile_obj).data
+
+class P2PQuestionSerializer(serializers.ModelSerializer):
+    p2panswer = P2PAnswerSerializer(many=True, read_only=True)
+    user_profile = serializers.SerializerMethodField()
+    to_profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = P2PQuestion
+        fields = ['id', 'user_profile', 'to_profile', 'content', 'date', 'p2panswer']
+    
+    def get_user_profile(self, obj):
+        profile_obj = Profile.objects.get(user_id=obj.user.id)
+        return SimpleProfileSerializer(profile_obj).data
+    
+    def get_to_profile(self, obj):
+        profile_obj = Profile.objects.get(user_id=obj.to.id)
+        return SimpleProfileSerializer(profile_obj).data
