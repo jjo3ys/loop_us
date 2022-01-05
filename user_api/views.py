@@ -135,7 +135,7 @@ def check_corp_num(request):
     
     else:
         try:
-            user_obj = User.objects.create_user(username=request.data['id'],
+            user_obj = User.objects.create_user(username=request.data['username'],
                                                 password=request.data['password'],
                                                 email=request.data['email'],
                                                 is_active=False)
@@ -156,7 +156,7 @@ def signup(request):
     type = request.data['type']
 
     if type == 1:
-        user_obj = User.objects.get(username=request.data['id'])
+        user_obj = User.objects.get(username=request.data['username'])
     else:
         user_obj = User.objects.get(username=request.data['email'])
     
@@ -323,8 +323,8 @@ def update_profile(request):
 def profile_load(request, idx):
     return_dict = {}
 
-    profile = Profile.objects.get(user=idx)
-    project_obj = Project.objects.filter(user=idx)
+    profile = Profile.objects.get(user_id=idx)
+    project_obj = Project.objects.filter(user_id=idx)
 
     project_sz = ProjectSerializer(project_obj, many=True)
     profile_sz = ProfileSerializer(profile)
