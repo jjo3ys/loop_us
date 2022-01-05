@@ -29,7 +29,7 @@ def create_project(request):
                                          end_date = end_date,
                                          pj_thumbnail = request.FILES.get('thumbnail'))
     
-    for looper in request.data['looper']:
+    for looper in eval(request.data['looper']):
         TagLooper.objects.create(project=project_obj, looper_id=looper)
 
     for tag in eval(request.data['tag']):
