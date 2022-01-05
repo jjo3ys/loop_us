@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator
+from django.db.models import Q
 from project_api.models import TagLooper
 from tag.models import Project_Tag
 
@@ -186,22 +187,14 @@ def specific_posting_load(request, posting_idx):
     recommend_post = []
 
     for pj_tag in recommend:
-        re_post = Post.objects.filter(project=pj_tag.project)
-        recommend_post += re_post
+        post = Post.objects.filter(project=pj_tag.project)
+        for p in post:
+            if p.id != post_obj.id:
+                recommend_post.append(p)
 
-    recommend_list = []
-    for i in range(min(3, len(recommend_post))):
-        while True:
-            post = random.choice(recommend_post)
-            if post.id == post_obj.id:
-                continue
-            elif post not in recommend_list:
-                recommend_list.append(post)
-
-            elif post in recommend_list:
-                break
+    recommend_post = random.sample(recommend_post, min(3, len(recommend_post)))
     
-    recommend_post = MainloadSerializer(recommend_list, many=True).data
+    recommend_post = MainloadSerializer(recommend_post, many=True).data
     return_dict.update({"recommend_post":recommend_post})
 
     if user_id == post_obj.user_id:
