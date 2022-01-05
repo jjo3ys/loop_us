@@ -36,6 +36,7 @@ from .serializers import ProfileSerializer, ProfileTagSerializer
 
 from tag.models import Tag, Profile_Tag
 from project_api.models import Project
+from fcm.models import FcmToken
 
 import jwt
 import json
@@ -141,7 +142,7 @@ def check_corp_num(request):
         except IntegrityError:
             return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)
 
-        Activation.objects.create(user = user_obj,
+        Activation.objects.create(user_id = user_obj.id,
                                   corp_num = request.data['corp_num'],
                                   corp_name = request.data['corp_name'],
                                   email = request.data['email'],
@@ -161,10 +162,10 @@ def signup(request):
     
 
     if user_obj.is_active:
-        token = Token.objects.create(user=user_obj)
+        token = Token.objects.create(user_id=user_obj.id)
 
         try:
-            profile_obj = Profile.objects.create(user = user_obj,
+            profile_obj = Profile.objects.create(user_id = user_obj.id,
                                                  type = type,
                                                  real_name = request.data['real_name'],
                                                  profile_image = None,
@@ -184,11 +185,16 @@ def signup(request):
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
 
         if type == 1:
-            corp = Activation.objects.get(user=user_obj)
-            Company_Inform.objects.create(profile = profile_obj,
+            corp = Activation.objects.get(user_id=user_obj.id)
+            Company_Inform.objects.create(profile_id = profile_obj.id,
                                           corp_num = corp.corp_num,
                                           corp_name = corp.corp_name)
             corp.delete()
+        try:
+            FcmToken.objects.create(user=user_obj,
+                                    token=request.data['fcm_token'])
+        except:
+            pass
 
         return Response({'message':'singup success',
                          'token':str(token),
@@ -207,9 +213,18 @@ def login(request):
     )
     if user is not None and user.is_active:
         token = Token.objects.get(user=user)
-        user = User.objects.get(id=user.id)
         user.last_login = timezone.now()
         user.save()
+        
+        try:
+            token_obj = FcmToken.objects.get(user_id=user.id)
+            if token_obj.token != request.data['fcm_token']:
+                token_obj.token = request.data['fcm_token']
+                token_obj.save()
+
+        except FcmToken.DoesNotExist:
+            FcmToken.objects.create(user_id=user.id,
+                                    token=request.data['fcm_token'])
 
         return Response({'Token':token.key,
                          'user_id':str(token.user_id)}, status=status.HTTP_202_ACCEPTED)

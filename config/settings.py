@@ -14,7 +14,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-cred_path = os.path.join(BASE_DIR, "firebase.json")
+cred_path = os.path.join(BASE_DIR, "serviceAccountKey.json")
 cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 # Application definition
