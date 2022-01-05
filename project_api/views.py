@@ -32,7 +32,7 @@ def create_project(request):
     for looper in request.data['looper']:
         TagLooper.objects.create(project=project_obj, looper_id=looper)
 
-    for tag in request.data['tag']:
+    for tag in eval(request.data['tag']):
         try:
             tag_obj = Tag.objects.get(tag=tag)
             tag_obj.count = tag_obj.count + 1
@@ -51,7 +51,7 @@ def create_project(request):
 def update_project(request, idx):
     start_date = request.data['start_date']
     end_date = request.data['end_date']
-    tag_list = request.data['tag']
+    tag_list = eval(request.data['tag'])
 
     if request.data['end_date'] == '':
         end_date = None
