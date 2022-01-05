@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
     'search.apps.SearchConfig',
+    'chat',
     
     'rest_framework',
     'rest_framework.authtoken',

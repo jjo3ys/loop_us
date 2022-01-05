@@ -16,5 +16,6 @@ urlpatterns = [
     path('tag_api/', include('tag.urls')),
     path('loop_api/', include('loop.urls')),
     path('search_api/', include('search.urls')),
-    path('alarm/', include('fcm.urls'))
+    path('alarm/', include('fcm.urls')),
+    path('chat/', include('chat.urls'))
 ]+ static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
