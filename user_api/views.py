@@ -190,11 +190,6 @@ def signup(request):
                                           corp_num = corp.corp_num,
                                           corp_name = corp.corp_name)
             corp.delete()
-        try:
-            FcmToken.objects.create(user=user_obj,
-                                    token=request.data['fcm_token'])
-        except:
-            pass
 
         return Response({'message':'singup success',
                          'token':str(token),
