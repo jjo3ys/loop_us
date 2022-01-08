@@ -37,6 +37,7 @@ from .serializers import ProfileSerializer, ProfileTagSerializer
 from tag.models import Tag, Profile_Tag
 from project_api.models import Project
 from fcm.models import FcmToken
+from fcm.push_fcm import notification_fcm
 
 import jwt
 import json
@@ -338,3 +339,14 @@ def profile_load(request, idx):
         return_dict.update({'is_user':0})
     
     return Response(return_dict, status=status.HTTP_200_OK)
+
+
+@api_view(['GET', ])
+def noti(request):
+    token_list = []
+    token_obj = FcmToken.objects.all()
+    for token in token_obj:
+        token_list.append(token.token)
+    
+    notification_fcm(token_list)
+    return Response(status=status.HTTP_200_OK)
