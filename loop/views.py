@@ -2,7 +2,7 @@ from .serializers import LoopSerializer
 from .models import Loopship, Request
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
-from fcm.push_fcm import send_fcm
+from fcm.push_fcm import loop_fcm
 from fcm.models import FcmToken
 
 from django.contrib.auth.models import User
@@ -21,7 +21,7 @@ def loop_request(request, idx):
         Request.objects.create(From_id=user.id, To_id=idx, is_active=False)
         profile = Profile.objects.get(user_id=user.id)
         token_obj = FcmToken.objects.get(user_id=idx)
-        send_fcm(token_obj.token, profile.real_name)
+        loop_fcm(token_obj.token, profile.real_name)
         return Response("ok", status=status.HTTP_200_OK)
     
     except:
