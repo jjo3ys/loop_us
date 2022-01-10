@@ -61,7 +61,11 @@ def update_project(request, idx):
     project_obj.introduction = request.data['introduction']
     project_obj.start_date = start_date
     project_obj.end_date = end_date
-    project_obj.pj_thumbnail = request.FILES.get('thumbnail')
+    if type(request.data['thumbnail'])==str:
+        pass
+    else:
+        project_obj.pj_thumbnail = request.FILES.get('thumbnail')
+        
     project_obj.save()
 
     old_tag = Project_Tag.objects.filter(project=idx)
