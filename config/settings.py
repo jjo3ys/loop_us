@@ -95,17 +95,29 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+DATABASE_ROUTERS = ['config.router.Router']
+
 DATABASES = {
     'default': {
 
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'main',
-        # 'NAME': 'for_profile',
         'USER': 'LoopUS',
         'PASSWORD': 'rlagudxo',
         'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
         'PORT': '3306',
 
+    },
+    'chatting':{
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'chatting',
+        'USER': 'LoopUS',
+        'PASSWORD': 'rlagudxo',
+        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
     }
 }
 
