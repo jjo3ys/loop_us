@@ -87,7 +87,7 @@ def update_project(request, idx):
         looper, valid = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
         if valid:
             try:
-                token = FcmToken.objects.get(user_id=looper)
+                token = FcmToken.objects.get(user_id=looper.looper_id)
                 tag_fcm(token.token, profile_obj.real_name)
             except:
                 pass
@@ -96,10 +96,9 @@ def update_project(request, idx):
     old_sz = ProjectTagSerializer(old_tag, many=True)
     old_tag = old_sz.data
     old_list = []
-
+    
     for tag in old_tag:
         old_list.append(tag['tag'])
-
         if tag['tag'] not in tag_list:
             project_tag = Project_Tag.objects.get(tag_id = tag['tag_id'], project = project_obj)
             project_tag.tag.count = project_tag.tag.count - 1
@@ -107,6 +106,7 @@ def update_project(request, idx):
                 project_tag.tag.delete()
             else:    
                 project_tag.tag.save()
+            project_tag.delete()
 
     for tag in tag_list:
         if tag not in old_list: 
