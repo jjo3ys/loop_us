@@ -118,6 +118,17 @@ DATABASES = {
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
         }
+    },
+    'log':{
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'log',
+        'USER': 'LoopUS',
+        'PASSWORD': 'rlagudxo',
+        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
+        'PORT': '3306',
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
     }
 }
 
