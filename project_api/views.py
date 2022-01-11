@@ -102,6 +102,13 @@ def update_project(request, idx):
     project_sz = ProjectSerializer(project_obj)
     return Response(project_sz.data, status=status.HTTP_200_OK)
 
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def delete_project(request, idx):
+    project_obj = Project.objects.get(id=idx)
+    project_obj.delete()
+    return Response("is deleted", status=status.HTTP_200_OK)
+
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def load_project(request, idx):
