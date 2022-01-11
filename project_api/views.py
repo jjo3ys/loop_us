@@ -60,10 +60,12 @@ def update_project(request, idx):
     start_date = request.data['start_date']
     end_date = request.data['end_date']
     tag_list = eval(request.data['tag'])
+    looper_list = eval(request.data['looper'])
 
     if request.data['end_date'] == '':
         end_date = None
-        
+    
+    profile_obj = Profile.objects.get(user_id=request.user.id)
     project_obj = Project.objects.get(id=idx)
     project_obj.project_name = request.data['project_name']
     project_obj.introduction = request.data['introduction']
@@ -75,6 +77,20 @@ def update_project(request, idx):
         project_obj.pj_thumbnail = request.FILES.get('thumbnail')
         
     project_obj.save()
+    old_looper = TagLooper.objects.filter(project_id=project_obj.id)
+    
+    for looper in old_looper:
+        if looper.user.id not in looper_list:
+            looper.delete()
+
+    for looper in looper_list:
+        looper, valid = TagLooper.objects.get_or_create(project_id=project_obj.id, user_id=looper)
+        if valid:
+            try:
+                token = FcmToken.objects.get(user_id=looper)
+                tag_fcm(token.token, profile_obj.real_name)
+            except:
+                pass
 
     old_tag = Project_Tag.objects.filter(project=idx)
     old_sz = ProjectTagSerializer(old_tag, many=True)
@@ -85,18 +101,15 @@ def update_project(request, idx):
         old_list.append(tag['tag'])
 
         if tag['tag'] not in tag_list:
-            Project_Tag.objects.get(tag_id = tag['tag_id'], project = project_obj).delete()
-            tag_obj = Tag.objects.get(id=tag['tag_id'])
-            tag_obj.count = tag_obj.count - 1
-            if tag_obj.count == 0:
-                tag_obj.delete()
+            project_tag = Project_Tag.objects.get(tag_id = tag['tag_id'], project = project_obj)
+            project_tag.tag.count = project_tag.tag.count - 1
+            if project_tag.tag.count == 0:
+                project_tag.tag.delete()
             else:    
-                tag_obj.save()
+                project_tag.tag.save()
 
     for tag in tag_list:
-        if tag in old_list:
-            continue
-        else: 
+        if tag not in old_list: 
             try:
                 tag_obj = Tag.objects.get(tag=tag)
                 tag_obj.count = tag_obj.count + 1
