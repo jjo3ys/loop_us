@@ -10,6 +10,15 @@ def loop_fcm(token, req_from):
     )
     messaging.send(message)
 
+def like_fcm(token, req_from):
+    message = messaging.Message(notification=messaging.Notification(
+        title='알림',
+        body='{0}님이 회원님의 포스팅을 좋아합니다.'.format(req_from)
+    ),
+    token = token,
+    )
+    messaging.send(message)
+
 def chat_fcm(token, req_from, msg):
     message = messaging.Message(notification=messaging.Notification(
         title='{0}님이 메세지를 남겼습니다.'.format(req_from),

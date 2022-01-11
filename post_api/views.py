@@ -2,7 +2,8 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from project_api.models import TagLooper
 from tag.models import Project_Tag
-
+from fcm.models import FcmToken
+from fcm.push_fcm import like_fcm
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 
@@ -63,6 +64,13 @@ def like(request, idx):
         like.delete()
         return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
     else:
+        try:
+            token = FcmToken.objects.get(user_id=like.post.user_id)
+            real_name = Profile.objects.get(user_id=request.user.id).real_name
+            like_fcm(token.token, real_name)
+        except:
+            pass
+
         return Response('liked posting', status=status.HTTP_202_ACCEPTED)
 
 @api_view(['POST', ])
