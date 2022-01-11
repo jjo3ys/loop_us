@@ -4,6 +4,8 @@ from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
+from fcm.models import FcmToken
+from fcm.push_fcm import tag_fcm
 
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -22,7 +24,8 @@ def create_project(request):
 
     if request.data['end_date'] == '':
         end_date = None
-        
+
+    profile_obj = Profile.objects.get(user_id=user.id)    
     project_obj = Project.objects.create(user=user, project_name = request.data['project_name'], 
                                          introduction = request.data['introduction'],
                                          start_date = start_date,
@@ -31,6 +34,11 @@ def create_project(request):
     
     for looper in eval(request.data['looper']):
         TagLooper.objects.create(project=project_obj, looper_id=looper)
+        try:
+            token = FcmToken.objects.get(user_id=looper)
+            tag_fcm(token.token, profile_obj.real_name)
+        except:
+            pass
 
     for tag in eval(request.data['tag']):
         try:

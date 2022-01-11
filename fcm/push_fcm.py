@@ -10,6 +10,16 @@ def loop_fcm(token, req_from):
     )
     messaging.send(message)
 
+def tag_fcm(token, req_from):
+    message = messaging.Message(notification=messaging.Notification(
+        title='태그',
+        body='{0}님이 활동에 회원님을 태그하였습니다.'.format(req_from)
+    ),
+    token = token,
+    # topic='37'
+    )
+    messaging.send(message)
+
 def like_fcm(token, req_from):
     message = messaging.Message(notification=messaging.Notification(
         title='알림',
