@@ -24,7 +24,7 @@ from tag.models import Project_Tag, Question_Tag
 @permission_classes((IsAuthenticated,))
 def connection(request):
     user_id = request.user.id
-    Connect_log.objects.create(id=user_id)
+    Connect_log.objects.create(user_id=user_id)
     
     return Response(status=status.HTTP_200_OK)
 
@@ -32,8 +32,8 @@ def connection(request):
 def connection_log(request):
     date = request.GET['date']
     sum = Connect_log.objects.all().count()
-    daily = Connect_log.objects.filter(date=date).order_by('id')
-    daily_user = daily.values_list('id', flat=True).distinct()
+    daily = Connect_log.objects.filter(date=date).order_by('user_id')
+    daily_user = daily.values_list('user_id', flat=True).distinct().count()
     return_dict = {
         "누적 접속 건수":sum,
         "{0} 접속 건수".format(date):daily.count(),
