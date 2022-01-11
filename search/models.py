@@ -18,3 +18,7 @@ class Connect_log(models.Model):
     class Meta:
         app_label = 'log'
         db_table = 'Connection_log'
+
+#chat model migrate 할 때 Meta의 app_label부분 주석처리 상태에서  
+#python manage.py migrate chat --database=log 실행,
+#이후 python manage.py migrate --fake
