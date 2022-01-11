@@ -327,7 +327,7 @@ def profile_load(request, idx):
 
     profile = Profile.objects.get(user_id=idx)
     project_obj = Project.objects.filter(user_id=idx).order_by('-id')
-    loop_count = Loopship.objects.filter(user_idx=idx).count()
+    loop_count = Loopship.objects.filter(user_id=idx).count()
     project_sz = ProjectSerializer(project_obj, many=True)
     profile_sz = ProfileSerializer(profile)
     post_count = 0
@@ -345,7 +345,7 @@ def profile_load(request, idx):
         return_dict.update({'is_user':0})
     
     try:
-        Loopship.objects.get(user_idx=idx, friend_idx=request.user.id)
+        Loopship.objects.get(user_id=idx, friend_id=request.user.id)
         return_dict.update({'looped':1})
     
     except:
