@@ -56,69 +56,76 @@ def create_project(request):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def update_project(request, idx):
-    start_date = request.data['start_date']
-    end_date = request.data['end_date']
-    tag_list = eval(request.data['tag'])
-    looper_list = eval(request.data['looper'])
-
-    if request.data['end_date'] == '':
-        end_date = None
-    
+def update_project(request, type, idx):
     profile_obj = Profile.objects.get(user_id=request.user.id)
     project_obj = Project.objects.get(id=idx)
-    project_obj.project_name = request.data['project_name']
-    project_obj.introduction = request.data['introduction']
-    project_obj.start_date = start_date
-    project_obj.end_date = end_date
-    if type(request.data['thumbnail'])==str:
-        pass
-    else:
-        project_obj.pj_thumbnail = request.FILES.get('thumbnail')
+    if type == 'project_name':
+        project_obj.project_name = request.data['project_name']
+
+    elif type == 'date':
+        start_date = request.data['start_date']
+        end_date = request.data['end_date']
+        if request.data['end_date'] == '':
+            end_date = None
+
+        project_obj.start_date = start_date
+        project_obj.end_date = end_date
+    
+
+    
+    elif type == 'introduction':
+        project_obj.introduction = request.data['introduction']
+
+    elif type =='thumbnail':
+        project_obj.pj_thumbnail = request.FILES.get('thumbnail') 
+
+    elif type == 'tag':
+        tag_list = eval(request.data['tag'])      
+        old_tag = Project_Tag.objects.filter(project=idx)
+        old_sz = ProjectTagSerializer(old_tag, many=True)
+        old_tag = old_sz.data
+        old_list = []
+        
+        for tag in old_tag:
+            old_list.append(tag['tag'])
+            if tag['tag'] not in tag_list:
+                project_tag = Project_Tag.objects.get(tag_id = tag['tag_id'], project = project_obj)
+                project_tag.tag.count = project_tag.tag.count - 1
+                if project_tag.tag.count == 0:
+                    project_tag.tag.delete()
+                else:    
+                    project_tag.tag.save()
+                project_tag.delete()
+
+        for tag in tag_list:
+            if tag not in old_list: 
+                try:
+                    tag_obj = Tag.objects.get(tag=tag)
+                    tag_obj.count = tag_obj.count + 1
+                    tag_obj.save()
+
+                except Tag.DoesNotExist:
+                    tag_obj = Tag.objects.create(tag = tag)
+
+                Project_Tag.objects.create(tag = tag_obj, project = project_obj)
+    
+    elif type == 'looper':
+        looper_list = eval(request.data['looper'])
+        old_looper = TagLooper.objects.filter(project_id=project_obj.id)
+        for looper in old_looper:
+            if looper.looper.id not in looper_list:
+                looper.delete()
+
+        for looper in looper_list:
+            looper, valid = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
+            if valid:
+                try:
+                    token = FcmToken.objects.get(user_id=looper.looper_id)
+                    tag_fcm(token.token, profile_obj.real_name)
+                except:
+                    pass
         
     project_obj.save()
-    old_looper = TagLooper.objects.filter(project_id=project_obj.id)
-
-    for looper in old_looper:
-        if looper.looper.id not in looper_list:
-            looper.delete()
-
-    for looper in looper_list:
-        looper, valid = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
-        if valid:
-            try:
-                token = FcmToken.objects.get(user_id=looper.looper_id)
-                tag_fcm(token.token, profile_obj.real_name)
-            except:
-                pass
-
-    old_tag = Project_Tag.objects.filter(project=idx)
-    old_sz = ProjectTagSerializer(old_tag, many=True)
-    old_tag = old_sz.data
-    old_list = []
-    
-    for tag in old_tag:
-        old_list.append(tag['tag'])
-        if tag['tag'] not in tag_list:
-            project_tag = Project_Tag.objects.get(tag_id = tag['tag_id'], project = project_obj)
-            project_tag.tag.count = project_tag.tag.count - 1
-            if project_tag.tag.count == 0:
-                project_tag.tag.delete()
-            else:    
-                project_tag.tag.save()
-            project_tag.delete()
-
-    for tag in tag_list:
-        if tag not in old_list: 
-            try:
-                tag_obj = Tag.objects.get(tag=tag)
-                tag_obj.count = tag_obj.count + 1
-                tag_obj.save()
-
-            except Tag.DoesNotExist:
-                tag_obj = Tag.objects.create(tag = tag)
-
-            Project_Tag.objects.create(tag = tag_obj, project = project_obj)
 
     project_sz = ProjectSerializer(project_obj)
     return Response(project_sz.data, status=status.HTTP_200_OK)
