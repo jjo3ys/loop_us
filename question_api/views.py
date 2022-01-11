@@ -3,6 +3,8 @@ from django.shortcuts import render
 from question_api.models import Answer, Question, P2PAnswer, P2PQuestion
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
+from fcm.models import FcmToken
+from fcm.push_fcm import answer_fcm, adopt_fcm
 
 from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier, OnlyQSerializer, P2PAnswerSerializer, P2PQuestionSerializer
 from tag.models import Tag, Question_Tag
@@ -209,7 +211,12 @@ def answer_adopt(request, answer_id):
     answer_obj.adopt = True
     answer_obj.question.adopt = True
     answer_obj.save()
-
+    try:
+        token = FcmToken.objects.get(user_id=answer_obj.user_id)
+        adopt_fcm(token)
+    except:
+        pass
+    
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
@@ -230,6 +237,11 @@ def answer(request, question_idx):
                                         question_id=question_idx,
                                         content=request.data['content'],
                                         adopt=False)
+    try:
+        token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
+        answer_fcm(token.token, profile_obj.real_name)
+    except:
+        pass
 
     answerSZ = AnswerSerializer(answer_obj)
     data = answerSZ.data
@@ -243,7 +255,14 @@ def answer_to(request, question_idx):
     answer_obj = P2PAnswer.objects.create(user=request.user,
                                           question_id = question_idx,
                                           content=request.data['content'])
+    answer = P2PAnswerSerializer(answer_obj).data
+    
+    try:
+        token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
+        answer_fcm(token.token, answer['user_profile']['real_name'])
+    except:
+        pass
 
-    return Response(P2PAnswerSerializer(answer_obj).data, status=status.HTTP_200_OK)
+    return Response(answer, status=status.HTTP_200_OK)
 
     

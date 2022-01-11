@@ -1,5 +1,23 @@
 from firebase_admin import messaging
 
+def answer_fcm(token, req_from):
+    message = messaging.Message(notification=messaging.Notification(
+        title='답글',
+        body='회원님의 질문에 {0}님이 답변을 남겼습니다.'.format(req_from)
+    ),
+    token = token,
+    )
+    messaging.send(message)
+
+def adopt_fcm(token):
+    message = messaging.Message(notification=messaging.Notification(
+        title='채택',
+        body='회원님의 답글이 채택되었습니다.'
+    ),
+    token = token,
+    )
+    messaging.send(message)
+
 def loop_fcm(token, req_from):
     message = messaging.Message(notification=messaging.Notification(
         title='루프요청',
