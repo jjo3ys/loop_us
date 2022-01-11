@@ -31,10 +31,10 @@ def loop_request(request, idx):
 @permission_classes((IsAuthenticated,))
 def loop(request, idx):
     user = request.user
-    friend = User.objects.get(id=idx)
+    Request.objects.get(From_id=idx, To_id=user.id).delete()
 
-    Loopship.objects.create(user=user, friend=friend)
-    Loopship.objects.create(user=friend, friend=user)
+    Loopship.objects.create(user_id=user.id, friend_id=idx)
+    Loopship.objects.create(user_id=idx, friend_id=user.id)
  
     return Response("ok", status=status.HTTP_200_OK)
 
@@ -78,7 +78,12 @@ def get_list(request, idx):
             else:
                 profile_sz.update({"is_user":0})
                 profile_sz.update({"looped":0})
-
+                try:
+                    Request.objects.get(From_id=request.user.id, To_id=idx)
+                    profile_sz.update({"requested":1})
+                except:
+                    profile_sz.update({"requested":0})
+                    
             friend_list.append(profile_sz)
             
         except Profile.DoesNotExist:
