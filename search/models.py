@@ -19,6 +19,7 @@ class Connect_log(models.Model):
         app_label = 'log'
         db_table = 'Connection_log'
 
-#chat model migrate 할 때 Meta의 app_label부분 주석처리 상태에서  
+#chat model migrate 할 때 Meta의 app_label부분 주석처리 상태에서 makemigrations,
 #python manage.py migrate chat --database=log 실행,
 #이후 python manage.py migrate --fake
+#모든 migrate 끝나고 app_label 주석 해제
