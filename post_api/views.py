@@ -58,23 +58,21 @@ def specific_posting_update(request, posting_idx):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def like(request, idx):
-    try:
-        like_valid = Like.objects.get(post_id=idx, user_id=request.user.id)
-        like_valid.delete()
+    like, valid = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+    if not valid:
+        like.delete()
         return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
-    except:
-        Like.objects.create(post_id=idx, user_id=request.user.id)
+    else:
         return Response('liked posting', status=status.HTTP_202_ACCEPTED)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def bookmark(request, idx):
-    try:
-        book_obj = BookMark.objects.get(post_id=idx, user_id=request.user.id)
-        book_obj.delete()
+    book, valid = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
+    if not valid:
+        book.delete()
         return Response('unmarked posting', status=status.HTTP_202_ACCEPTED)
-    except:
-        BookMark.objects.create(post_id=idx, user_id=request.user.id)
+    else:
         return Response('marked posting', status=status.HTTP_202_ACCEPTED)
 
 @api_view(['GET', ])
