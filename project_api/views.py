@@ -78,13 +78,13 @@ def update_project(request, idx):
         
     project_obj.save()
     old_looper = TagLooper.objects.filter(project_id=project_obj.id)
-    
+
     for looper in old_looper:
-        if looper.user.id not in looper_list:
+        if looper.looper.id not in looper_list:
             looper.delete()
 
     for looper in looper_list:
-        looper, valid = TagLooper.objects.get_or_create(project_id=project_obj.id, user_id=looper)
+        looper, valid = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
         if valid:
             try:
                 token = FcmToken.objects.get(user_id=looper)
