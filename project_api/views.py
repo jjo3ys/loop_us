@@ -5,6 +5,7 @@ from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
 from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
+from post_api.models import Like, BookMark
 
 from django.contrib.auth.models import User
 from rest_framework import status
@@ -145,4 +146,17 @@ def load_project(request, idx):
     else:
         project.update({"is_user":0})
 
+    for post in project['post']:
+        try:
+            Like.objects.get(post_id=post['id'], user_id=request.user.id)
+            post.update({"is_liked":1})
+        except:
+            post.update({"is_liked":0})
+        
+        try:
+            BookMark.objects.get(post_id=post['id'], user_id=request.user.id)
+            post.update({"is_marked":1})
+        except:
+            post.update({"is_marked":0})
+            
     return Response(project, status=status.HTTP_200_OK)
