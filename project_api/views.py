@@ -1,4 +1,3 @@
-import re
 from .serializers import ProjectSerializer, ProjectTagSerializer, ProjectPostSerializer
 from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
@@ -51,8 +50,7 @@ def create_project(request):
         
         Project_Tag.objects.create(project=project_obj, tag=tag_obj)
 
-    project_sz = ProjectSerializer(project_obj)
-    return Response(project_sz.data, status=status.HTTP_201_CREATED)
+    return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_201_CREATED)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -70,8 +68,6 @@ def update_project(request, type, idx):
 
         project_obj.start_date = start_date
         project_obj.end_date = end_date
-    
-
     
     elif type == 'introduction':
         project_obj.introduction = request.data['introduction']
@@ -127,8 +123,7 @@ def update_project(request, type, idx):
         
     project_obj.save()
 
-    project_sz = ProjectSerializer(project_obj)
-    return Response(project_sz.data, status=status.HTTP_200_OK)
+    return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
