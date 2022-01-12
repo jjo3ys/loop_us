@@ -124,7 +124,7 @@ def update_project(request, type, idx):
         
     project_obj.save()
 
-    return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -158,5 +158,5 @@ def load_project(request, idx):
             post.update({"is_marked":1})
         except:
             post.update({"is_marked":0})
-            
+
     return Response(project, status=status.HTTP_200_OK)
