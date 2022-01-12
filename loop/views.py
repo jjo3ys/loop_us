@@ -79,7 +79,7 @@ def get_list(request, idx):
                 profile_sz.update({"is_user":0})
                 profile_sz.update({"looped":0})
                 try:
-                    Request.objects.get(From_id=request.user.id, To_id=idx)
+                    Request.objects.get(From_id=request.user.id, To_id=l['friend'])
                     profile_sz.update({"requested":1})
                 except:
                     profile_sz.update({"requested":0})
