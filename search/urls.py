@@ -4,5 +4,5 @@ from . import views
 urlpatterns = [
     path('connect', views.connection),
     path('connect_log', views.connection_log),
-    path('search/<type>/', views.search)
+    path('search/<type>', views.search)
 ]
