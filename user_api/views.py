@@ -31,6 +31,7 @@ from rest_framework import status
 from .models import Profile, Activation, Company_Inform
 from .serializers import ProfileSerializer, ProfileTagSerializer
 from .department import R_DEPARTMENT
+from .university import UNIVERSITY
 from .text import pwmessage
 
 from tag.models import Tag, Profile_Tag
@@ -353,6 +354,10 @@ def profile_load(request, idx):
 @permission_classes((IsAuthenticated,))
 def project_load(request, idx):
     return Response(ProjectSerializer(Project.objects.filter(user_id=idx).order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
+def university_list(request):
+    return Response(UNIVERSITY)
     
 @api_view(['GET', ])
 def noti(request):

@@ -13,5 +13,6 @@ urlpatterns = [
     path('project_load/<idx>', views.project_load),
     path('new_password', views.new_password),
     path('change_password', views.change_password),
+    path('university_list', views.university_list),
     path('noti', views.noti)
 ]
