@@ -1,5 +1,4 @@
 import os
-import boto3
 import firebase_admin
 
 from pathlib import Path
@@ -27,7 +26,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_cleanup.apps.CleanupConfig',
 
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
@@ -203,9 +201,5 @@ AWS_S3_CUSTOM_DOMAIN = '%s.s3.%s.amazonaws.com' % (
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024000000  # value in bytes 1GB here
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1024000000
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-s3conn = boto3.client(
-    's3',
-    aws_access_key_id = AWS_ACCESS_KEY_ID,
-    aws_secret_access_key = AWS_SECRET_ACCESS_KEY
-    )
+
 # AUTH_USER_MODEL = 'user_api.UserCustom'
