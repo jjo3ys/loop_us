@@ -6,8 +6,8 @@ EMAIL = {
 'EMAIL_USE_TLS' : True,
 'EMAIL_PORT' : 587,
 'EMAIL_HOST' : 'smtp.gmail.com',   
-'EMAIL_HOST_USER' : 'loopus2021@gmail.com',                    
-'EMAIL_HOST_PASSWORD' : 'fnvjtm483',
+'EMAIL_HOST_USER' : 'loopus@loopus.co.kr',                    
+'EMAIL_HOST_PASSWORD' : 'LOOP20200901loop!',
 # 'REDIRECT_PAGE' : 'http://10.58.5.40:3000/signin'
 }
 S3 = {
