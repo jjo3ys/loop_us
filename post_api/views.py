@@ -1,5 +1,7 @@
 from django.core.paginator import Paginator
 from django.db.models import Q
+
+from config.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME
 from project_api.models import TagLooper
 from tag.models import Project_Tag
 from fcm.models import FcmToken
@@ -18,6 +20,7 @@ from .models import Post, ContentsImage, Like, BookMark
 from loop.models import Loopship
 
 import random
+import boto3
 # Create your views here.
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -239,10 +242,22 @@ def like_list_load(request, idx):
     return Response(ProfileSerializer(like_list, many=True).data, status=status.HTTP_200_OK)
         
 
-@api_view(['GET', ])
+@api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def posting_delete(request, idx):
     post_obj = Post.objects.get(id=idx)
-    post_obj.delete()
+    # s3conn = boto3.client(
+    # 's3',
+    # endpoint_url= 'https://loopus.s3.ap-northeast-2.amazonaws.com',
+    # aws_access_key_id = AWS_ACCESS_KEY_ID,
+    # aws_secret_access_key = AWS_SECRET_ACCESS_KEY
+    # )
 
+    # images = ContentsImage.objects.filter(post_id=idx)
+    # for image in images:
+    #     print(str(image.image))
+    #     a = s3conn.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=str(image.image))
+    #     print(a)
+
+    post_obj.delete()
     return Response("delete posting", status=status.HTTP_200_OK)
