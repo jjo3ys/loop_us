@@ -327,8 +327,6 @@ def update_profile(request, type):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def profile_load(request, idx):
-    return_dict = {}
-
     profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
 
     if str(request.user.id) == idx:
@@ -358,7 +356,7 @@ def project_load(request, idx):
 @api_view(['GET', ])
 def university_list(request):
     return Response(UNIVERSITY)
-    
+
 @api_view(['GET', ])
 def noti(request):
     token_list = []
