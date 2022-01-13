@@ -111,9 +111,11 @@ def bookmark_list_load(request):
 @permission_classes((IsAuthenticated,))
 def main_load(request):
     if request.GET['last'] == '0':
-        post_obj = Post.objects.all().order_by('-id')[:5]
+        post_obj = list(Post.objects.all())[-5:]
     else:
-        post_obj = Post.objects.filter(id__lt=request.GET['last']).order_by('-id')[:5]
+        post_obj = list(Post.objects.filter(id__lt=request.GET['last']))[-5:]#.order_by('-id')[:5]
+
+    post_obj.reverse()
     post = MainloadSerializer(post_obj, many=True).data
 
     for i in range(len(post_obj)):
@@ -142,10 +144,13 @@ def loop_load(request):
     loop_list = []
     for l in loop:
         loop_list.append(l.friend_id)
+
     if request.GET['last'] == '0':
-        post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')[:5]
+        post_obj = list(Post.objects.filter(user_id__in=loop_list))[-5:]
     else:
-        post_obj = Post.objects.filter(user_id__in=loop_list, id__lt=request.GET['last']).order_by('-id')[:5]
+        post_obj = list(Post.objects.filter(id__lt=request.GET['last'], user_id__in=loop_list))[-5:]
+
+    post_obj.reverse()
     post = MainloadSerializer(post_obj, many=True).data
     for i in range(len(post_obj)):
         profile_obj = Profile.objects.get(user=post_obj[i].user)
