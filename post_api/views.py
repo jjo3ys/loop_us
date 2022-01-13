@@ -18,7 +18,6 @@ from .models import Post, ContentsImage, Like, BookMark
 from loop.models import Loopship
 
 import random
-
 # Create your views here.
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -195,7 +194,7 @@ def specific_posting_load(request, posting_idx):
     for pj_tag in recommend:
         post = Post.objects.filter(project=pj_tag.project)
         for p in post:
-            if p.id != post_obj.id:
+            if p.id != post_obj.id and p not in recommend_post:
                 recommend_post.append(p)
 
     recommend_post = random.sample(recommend_post, min(3, len(recommend_post)))
@@ -219,7 +218,6 @@ def specific_posting_load(request, posting_idx):
         return_dict.update({"is_marked":1})
     except:
         return_dict.update({"is_marked":0})
-
     return Response(return_dict)
 
 @api_view(['GET', ])
