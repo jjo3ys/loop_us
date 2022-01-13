@@ -6,8 +6,7 @@ from django.contrib.auth.hashers import check_password
 from django.conf.global_settings import SECRET_KEY
 from django.views import View
 
-from project_api.serializers import ProjectSerializer
-from .text import pwmessage
+
 
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage, EmailMultiAlternatives
@@ -22,8 +21,6 @@ from django.utils.encoding import (
 )
 from django.db.utils import IntegrityError
 
-from django.conf.global_settings import SECRET_KEY
-
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -33,9 +30,13 @@ from rest_framework import status
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform
 from .serializers import ProfileSerializer, ProfileTagSerializer
+from .department import R_DEPARTMENT
+from .text import pwmessage
 
 from tag.models import Tag, Profile_Tag
 from project_api.models import Project
+from project_api.serializers import ProjectSerializer
+from post_api.models import Post
 from loop.models import Loopship, Request
 from fcm.models import FcmToken
 from fcm.push_fcm import notification_fcm
@@ -167,11 +168,12 @@ def signup(request):
         token = Token.objects.create(user_id=user_obj.id)
 
         try:
+            department_id = R_DEPARTMENT[request.data['department']]
             profile_obj = Profile.objects.create(user_id = user_obj.id,
                                                  type = type,
                                                  real_name = request.data['real_name'],
                                                  profile_image = None,
-                                                 department = request.data['department'])
+                                                 department = department_id)
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -275,49 +277,50 @@ def resign(request):
     
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def update_profile(request):
+def update_profile(request, type):
     profile = Profile.objects.get(user_id=request.user.id)
-    profile.department = request.data['department']
-    if type(request.data['image']) == str:
-        pass
-    
-    else:
+
+    if type == 'image':
         profile.profile_image = request.FILES.get('image')
     
+    elif type == 'department':
+        profile.department = R_DEPARTMENT[request.data['department']]
+    
+    elif type == 'tag':
+        tag_list = eval(request.data['tag'])
+
+        old_tag = Profile_Tag.objects.filter(profile_id=profile.id)
+        old_sz = ProfileTagSerializer(old_tag, many=True)
+        old_tag_list = []
+
+        for tag in old_sz.data:
+            old_tag_list.append(tag['tag'])
+
+            if tag['tag'] not in tag_list:
+                Profile_Tag.objects.get(tag_id=tag['tag_id'], profile=profile).delete()
+                tag_obj = Tag.objects.get(id=tag['tag_id'])
+                tag_obj.count = tag_obj.count - 1
+                if tag_obj.count == 0:
+                    tag_obj.delete()
+                else:    
+                    tag_obj.save()
+        
+        for tag in tag_list:
+            if tag in old_tag_list:
+                continue
+            else:
+                try:
+                    tag_obj = Tag.objects.get(tag=tag)
+                    tag_obj.count = tag_obj.count + 1
+                    tag_obj.save()
+
+                except Tag.DoesNotExist:
+                    tag_obj = Tag.objects.create(tag = tag)
+
+                Profile_Tag.objects.create(tag = tag_obj, profile = profile)
+
     profile.save()
 
-    tag_list = eval(request.data['tag'])
-
-    old_tag = Profile_Tag.objects.filter(profile_id=profile.id)
-    old_sz = ProfileTagSerializer(old_tag, many=True)
-    old_tag_list = []
-
-    for tag in old_sz.data:
-        old_tag_list.append(tag['tag'])
-
-        if tag['tag'] not in tag_list:
-            Profile_Tag.objects.get(tag_id=tag['tag_id'], profile=profile).delete()
-            tag_obj = Tag.objects.get(id=tag['tag_id'])
-            tag_obj.count = tag_obj.count - 1
-            if tag_obj.count == 0:
-                tag_obj.delete()
-            else:    
-                tag_obj.save()
-    
-    for tag in tag_list:
-        if tag in old_tag_list:
-            continue
-        else:
-            try:
-                tag_obj = Tag.objects.get(tag=tag)
-                tag_obj.count = tag_obj.count + 1
-                tag_obj.save()
-
-            except Tag.DoesNotExist:
-                tag_obj = Tag.objects.create(tag = tag)
-
-            Profile_Tag.objects.create(tag = tag_obj, profile = profile)
-    
     return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
@@ -325,40 +328,32 @@ def update_profile(request):
 def profile_load(request, idx):
     return_dict = {}
 
-    profile = Profile.objects.get(user_id=idx)
-    project_obj = Project.objects.filter(user_id=idx).order_by('-id')
-    loop_count = Loopship.objects.filter(user_id=idx).count()
-    project_sz = ProjectSerializer(project_obj, many=True)
-    profile_sz = ProfileSerializer(profile)
-    post_count = 0
-    for project in project_sz.data:
-        post_count += project['project_post']['post_count']
-
-    return_dict.update(profile_sz.data)
-    return_dict.update({"loop_count":loop_count,
-                        "total_post_count":post_count})
-    return_dict.update({"project":project_sz.data})
+    profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
 
     if str(request.user.id) == idx:
-        return_dict.update({'is_user':1})
+        profile.update({'is_user':1})
     else:
-        return_dict.update({'is_user':0})
+        profile.update({'is_user':0})
     
     try:
         Loopship.objects.get(user_id=idx, friend_id=request.user.id)
-        return_dict.update({'looped':1})
+        profile.update({'looped':1})
     
     except:
-        return_dict.update({'looped':0})
+        profile.update({'looped':0})
         try:
             Request.objects.get(From_id=request.user.id, To_id=idx)
-            return_dict.update({'requested':1})
+            profile.update({'requested':1})
         except:
-            return_dict.update({'requested':0})
+            profile.update({'requested':0})
 
-    return Response(return_dict, status=status.HTTP_200_OK)
+    return Response(profile, status=status.HTTP_200_OK)
 
-
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def project_load(request, idx):
+    return Response(ProjectSerializer(Project.objects.filter(user_id=idx).order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+    
 @api_view(['GET', ])
 def noti(request):
     token_list = []
