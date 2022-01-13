@@ -28,13 +28,13 @@ class ProjectLooperSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     project_tag = ProjectTagSerializer(many=True, read_only=True)
     looper = ProjectLooperSerializer(many=True, read_only=True)
-    project_post = serializers.SerializerMethodField()
+    count = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
-        fields = ['id', 'user_id', 'project_name', 'introduction', 'pj_thumbnail', 'start_date', 'end_date', 'project_tag', 'looper', 'project_post']
+        fields = ['id', 'user_id', 'project_name', 'introduction', 'pj_thumbnail', 'start_date', 'end_date', 'project_tag', 'looper', 'count']
 
-    def get_project_post(self, obj):
+    def get_count(self, obj):
         post = Post.objects.filter(project_id=obj.id)
         count = 0
         for p in post:
