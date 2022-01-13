@@ -110,8 +110,10 @@ def bookmark_list_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def main_load(request):
-    post_obj = Post.objects.all().order_by('-id')
-    post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
+    if request.GET['last'] == '0':
+        post_obj = Post.objects.all().order_by('-id')[:5]
+    else:
+        post_obj = Post.objects.filter(id__lt=request.GET['last']).order_by('-id')[:5]
     post = MainloadSerializer(post_obj, many=True).data
 
     for i in range(len(post_obj)):
@@ -140,9 +142,10 @@ def loop_load(request):
     loop_list = []
     for l in loop:
         loop_list.append(l.friend_id)
-
-    post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')
-    post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
+    if request.GET['last'] == '0':
+        post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')[:5]
+    else:
+        post_obj = Post.objects.filter(user_id__in=loop_list, id__lt=request.GET['last']).order_by('-id')[:5]
     post = MainloadSerializer(post_obj, many=True).data
     for i in range(len(post_obj)):
         profile_obj = Profile.objects.get(user=post_obj[i].user)
