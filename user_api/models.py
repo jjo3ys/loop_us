@@ -6,7 +6,7 @@ class Profile(models.Model):
     real_name = models.CharField(max_length=10)
     type = models.SmallIntegerField(default=0)
     profile_image = models.ImageField(null = True)
-    department = models.CharField(default='기타', max_length=15)
+    department = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         db_table = "Profile"
