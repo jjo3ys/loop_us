@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Log, Connect_log
+from .models import Log#, Connect_log
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import SimpleProjectserializer, MainloadSerializer
@@ -20,27 +20,27 @@ from question_api.serializers import OnlyQSerializer as QuestionSerializer
 from tag.models import Project_Tag, Question_Tag
 # Create your views here.
 
-@api_view(['POST'])
-@permission_classes((IsAuthenticated,))
-def connection(request):
-    user_id = request.user.id
-    Connect_log.objects.create(user_id=user_id)
+# @api_view(['POST'])
+# @permission_classes((IsAuthenticated,))
+# def connection(request):
+#     user_id = request.user.id
+#     Connect_log.objects.create(user_id=user_id)
     
-    return Response(status=status.HTTP_200_OK)
+#     return Response(status=status.HTTP_200_OK)
 
-@api_view(['GET'])
-def connection_log(request):
-    date = request.GET['date']
-    sum = Connect_log.objects.all().count()
-    daily = Connect_log.objects.filter(date=date).order_by('user_id')
-    daily_user = daily.values_list('user_id', flat=True).distinct().count()
-    return_dict = {
-        "누적 접속 건수":sum,
-        "{0} 접속 건수".format(date):daily.count(),
-        "{0} 이용자 수".format(date):daily_user
-    }
+# @api_view(['GET'])
+# def connection_log(request):
+#     date = request.GET['date']
+#     sum = Connect_log.objects.all().count()
+#     daily = Connect_log.objects.filter(date=date).order_by('user_id')
+#     daily_user = daily.values_list('user_id', flat=True).distinct().count()
+#     return_dict = {
+#         "누적 접속 건수":sum,
+#         "{0} 접속 건수".format(date):daily.count(),
+#         "{0} 이용자 수".format(date):daily_user
+#     }
 
-    return Response(return_dict, status=status.HTTP_200_OK)
+#     return Response(return_dict, status=status.HTTP_200_OK)
     
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))

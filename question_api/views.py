@@ -52,13 +52,16 @@ def question_to(request, to_idx):
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
-def question_list_load(request, type):
-    page = request.GET.get('page')
+def question_list_load(request, type):   
     user_id = request.user.id
 
     if type == 'my':
-        q_obj = Question.objects.filter(user = user_id).order_by('-id')
-        q_obj = Paginator(q_obj, 5).get_page(page)
+        if request.GET['last'] == '0':
+            q_obj = list(Question.objects.filter(user = user_id))[-5:]
+        else:
+            q_obj = list(Question.objects.filter(id__lt=request.GET['last'], user = user_id))[-5:]
+        q_obj.reverse()
+
         q_sz = OnlyQSerializer(q_obj, many = True)
         profile_sz = ProfileSerializer(Profile.objects.get(user = user_id))
         for d in q_sz.data:
@@ -66,9 +69,13 @@ def question_list_load(request, type):
             d.update({"is_user":1})
 
     elif type == "any":
-        q_obj = Question.objects.all().order_by('-id')
-        page_obj = Paginator(q_obj, 5).get_page(page)
-        q_sz = OnlyQSerializer(page_obj, many=True)
+        if request.GET['last'] == '0':
+            q_obj = list(Question.objects.all())[-5:]
+        else:
+            q_obj = list(Question.objects.filter(id__lt=request.GET['last'])[-5:])    
+        q_obj.reverse()
+        
+        q_sz = OnlyQSerializer(q_obj, many=True)
         for d in q_sz.data:
             profile_sz = ProfileSerializer(Profile.objects.get(user=d['user_id']))
             d.update(profile_sz.data)

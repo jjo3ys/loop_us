@@ -1,5 +1,7 @@
 from django.core.paginator import Paginator
 from django.db.models import Q
+
+from config.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_STORAGE_BUCKET_NAME
 from project_api.models import TagLooper
 from tag.models import Project_Tag
 from fcm.models import FcmToken
@@ -18,7 +20,7 @@ from .models import Post, ContentsImage, Like, BookMark
 from loop.models import Loopship
 
 import random
-
+import boto3
 # Create your views here.
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -111,8 +113,12 @@ def bookmark_list_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def main_load(request):
-    post_obj = Post.objects.all().order_by('-id')
-    post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
+    if request.GET['last'] == '0':
+        post_obj = list(Post.objects.all())[-5:]
+    else:
+        post_obj = list(Post.objects.filter(id__lt=request.GET['last']))[-5:]#.order_by('-id')[:5]
+
+    post_obj.reverse()
     post = MainloadSerializer(post_obj, many=True).data
 
     for i in range(len(post_obj)):
@@ -142,8 +148,12 @@ def loop_load(request):
     for l in loop:
         loop_list.append(l.friend_id)
 
-    post_obj = Post.objects.filter(user_id__in=loop_list).order_by('-id')
-    post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
+    if request.GET['last'] == '0':
+        post_obj = list(Post.objects.filter(user_id__in=loop_list))[-5:]
+    else:
+        post_obj = list(Post.objects.filter(id__lt=request.GET['last'], user_id__in=loop_list))[-5:]
+
+    post_obj.reverse()
     post = MainloadSerializer(post_obj, many=True).data
     for i in range(len(post_obj)):
         profile_obj = Profile.objects.get(user=post_obj[i].user)
@@ -195,7 +205,7 @@ def specific_posting_load(request, posting_idx):
     for pj_tag in recommend:
         post = Post.objects.filter(project=pj_tag.project)
         for p in post:
-            if p.id != post_obj.id:
+            if p.id != post_obj.id and p not in recommend_post:
                 recommend_post.append(p)
 
     recommend_post = random.sample(recommend_post, min(3, len(recommend_post)))
@@ -219,7 +229,6 @@ def specific_posting_load(request, posting_idx):
         return_dict.update({"is_marked":1})
     except:
         return_dict.update({"is_marked":0})
-
     return Response(return_dict)
 
 @api_view(['GET', ])
@@ -233,10 +242,22 @@ def like_list_load(request, idx):
     return Response(ProfileSerializer(like_list, many=True).data, status=status.HTTP_200_OK)
         
 
-@api_view(['GET', ])
+@api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def posting_delete(request, idx):
     post_obj = Post.objects.get(id=idx)
-    post_obj.delete()
+    # s3conn = boto3.client(
+    # 's3',
+    # endpoint_url= 'https://loopus.s3.ap-northeast-2.amazonaws.com',
+    # aws_access_key_id = AWS_ACCESS_KEY_ID,
+    # aws_secret_access_key = AWS_SECRET_ACCESS_KEY
+    # )
 
+    # images = ContentsImage.objects.filter(post_id=idx)
+    # for image in images:
+    #     print(str(image.image))
+    #     a = s3conn.delete_object(Bucket=AWS_STORAGE_BUCKET_NAME, Key=str(image.image))
+    #     print(a)
+
+    post_obj.delete()
     return Response("delete posting", status=status.HTTP_200_OK)

@@ -200,6 +200,6 @@ AWS_S3_CUSTOM_DOMAIN = '%s.s3.%s.amazonaws.com' % (
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024000000  # value in bytes 1GB here
 FILE_UPLOAD_MAX_MEMORY_SIZE = 1024000000
-
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
 # AUTH_USER_MODEL = 'user_api.UserCustom'

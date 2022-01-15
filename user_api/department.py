@@ -61,3 +61,5 @@ DEPARTMENT  =  {0:'기타',
                 58:'동북아통상전공',
                 59:'한국통상전공',
                 60:'법학부'}
+
+R_DEPARTMENT = dict(map(reversed, DEPARTMENT.items()))
