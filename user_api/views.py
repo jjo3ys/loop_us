@@ -68,7 +68,7 @@ def check_email(request):
         user = User.objects.get(username=email_obj)
         try:
             Token.objects.get(user_id=user.id)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response("이미 있는 아이디 입니다.", status=status.HTTP_400_BAD_REQUEST)
 
         except Token.DoesNotExist:
             user.delete()
