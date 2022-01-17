@@ -6,12 +6,16 @@ from rest_framework import serializers
 
 class QuestionTagSerialier(serializers.ModelSerializer):
     tag = serializers.SerializerMethodField()
+    count = serializers.SerializerMethodField()
     class Meta:
         model = Question_Tag
-        fields = ['tag_id', 'tag']
+        fields = ['tag_id', 'tag', 'count']
     
     def get_tag(self, obj):
         return obj.tag.tag
+
+    def get_count(self, obj):
+        return obj.tag.count
 
 
 class AnswerSerializer(serializers.ModelSerializer):

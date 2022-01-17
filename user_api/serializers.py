@@ -8,12 +8,16 @@ from rest_framework import serializers
 
 class ProfileTagSerializer(serializers.ModelSerializer):
     tag = serializers.SerializerMethodField()
+    count = serializers.SerializerMethodField()
     class Meta:
         model = Profile_Tag
-        fields = ['tag_id', 'tag']
+        fields = ['tag_id', 'tag', '']
     
     def get_tag(self, obj):
         return obj.tag.tag
+    
+    def get_count(self, obj):
+        return obj.tag.count
 
 class ProfileSerializer(serializers.ModelSerializer):
     profile_tag = ProfileTagSerializer(many=True, read_only=True)
