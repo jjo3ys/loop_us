@@ -8,15 +8,15 @@ from post_api.serializers import PostingSerializer
 
 class ProjectTagSerializer(serializers.ModelSerializer):
     tag = serializers.SerializerMethodField()
-    count = serializers.SerializerMethodField()
+    tag_count = serializers.SerializerMethodField()
     class Meta:
         model = Project_Tag
-        fields = ['tag_id', 'tag', 'count']
+        fields = ['tag_id', 'tag', 'tag_count']
     
     def get_tag(self, obj):
         return obj.tag.tag
 
-    def get_count(self, obj):
+    def get_tag_count(self, obj):
         return obj.tag.count
 
 class ProjectLooperSerializer(serializers.ModelSerializer):
