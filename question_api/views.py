@@ -72,7 +72,7 @@ def question_list_load(request, type):
         if request.GET['last'] == '0':
             q_obj = list(Question.objects.all())[-5:]
         else:
-            q_obj = list(Question.objects.filter(id__lt=request.GET['last'])[-5:])    
+            q_obj = list(Question.objects.filter(id__lt=request.GET['last']))[-5:]  
         q_obj.reverse()
         
         q_sz = OnlyQSerializer(q_obj, many=True)
