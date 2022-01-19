@@ -130,6 +130,11 @@ def update_project(request, type, idx):
 @permission_classes((IsAuthenticated,))
 def delete_project(request, idx):
     project_obj = Project.objects.get(id=idx)
+    project_tag = Project_Tag.objects.filter(project_id=idx)
+    for tag in project_tag:
+        tag.tag.count = tag.tag.count-1
+        tag.tag.save()
+        
     project_obj.delete()
     return Response("is deleted", status=status.HTTP_200_OK)
 

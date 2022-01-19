@@ -199,10 +199,16 @@ def question_delete(request, question_idx):
     if request.method == "POST":
         try:
             QuestionModel = Question.objects.get(id = question_idx)
+            q_tag = Question_Tag.objects.filter(question_id=question_idx)
+            for tag in q_tag:
+                tag.tag.count = tag.tag.count-1
+                tag.tag.save()
+                
             if QuestionModel.user.id == request.user.id :
                 QuestionModel.delete()
             else:
                 return Response('No permission to modify')
+
         except:
             return Response('Question not found')
 
