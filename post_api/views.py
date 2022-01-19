@@ -1,5 +1,4 @@
 from django.core.paginator import Paginator
-from django.db.models import Q
 
 from tag.models import Project_Tag
 from fcm.models import FcmToken

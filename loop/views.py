@@ -6,7 +6,6 @@ from fcm.push_fcm import loop_fcm
 from fcm.models import FcmToken
 
 from django.contrib.auth.models import User
-from django.db.models import Q
 
 from rest_framework import status
 from rest_framework.response import Response

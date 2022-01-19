@@ -1,4 +1,4 @@
-from .serializers import ProjectSerializer, ProjectTagSerializer, ProjectPostSerializer
+from .serializers import ProjectTagSerializer, ProjectPostSerializer
 from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
 from user_api.models import Profile
@@ -7,7 +7,6 @@ from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
 from post_api.models import Like, BookMark
 
-from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes

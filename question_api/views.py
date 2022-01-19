@@ -1,8 +1,6 @@
-from django.shortcuts import render
-
 from question_api.models import Answer, Question#, P2PAnswer, P2PQuestion
 from user_api.models import Profile
-from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
+from user_api.serializers import SimpleProfileSerializer
 from fcm.models import FcmToken
 from fcm.push_fcm import answer_fcm, adopt_fcm
 
@@ -61,7 +59,7 @@ def question_list_load(request, type):
         q_obj.reverse()
 
         q_sz = OnlyQSerializer(q_obj, many = True)
-        profile_sz = ProfileSerializer(Profile.objects.get(user = user_id))
+        profile_sz = SimpleProfileSerializer(Profile.objects.get(user = user_id))
         for d in q_sz.data:
             d.update(profile_sz.data)
             d.update({"is_user":1})
@@ -75,7 +73,7 @@ def question_list_load(request, type):
         
         q_sz = OnlyQSerializer(q_obj, many=True)
         for d in q_sz.data:
-            profile_sz = ProfileSerializer(Profile.objects.get(user=d['user_id']))
+            profile_sz = SimpleProfileSerializer(Profile.objects.get(user=d['user_id']))
             d.update(profile_sz.data)
             if d['user_id'] == user_id:
                 d.update({"is_user":1})
@@ -93,7 +91,7 @@ def specific_question_load(request, question_idx):
     q_obj = Question.objects.get(id=question_idx)
     q_sz = QuestionSerializer(q_obj).data
     q_profile_obj = Profile.objects.get(user=q_sz['user_id'])
-    q_profile_sz = ProfileSerializer(q_profile_obj)
+    q_profile_sz = SimpleProfileSerializer(q_profile_obj)
     q_sz.update(q_profile_sz.data)
     if q_obj.adopt:
         q_sz.update({"is_adopted":1})
@@ -107,7 +105,7 @@ def specific_question_load(request, question_idx):
 
     for d in q_sz['answer']:
         a_profile_obj = Profile.objects.get(user=d['user_id'])
-        a_profile_sz = ProfileSerializer(a_profile_obj)
+        a_profile_sz = SimpleProfileSerializer(a_profile_obj)
         d.update(a_profile_sz.data)
         if a_profile_obj.user_id == user_id:
             d.update({'is_user':1})
@@ -242,7 +240,7 @@ def answer_adopt(request, answer_id):
 @permission_classes((IsAuthenticated,))
 def answer(request, question_idx):
     profile_obj = Profile.objects.get(user=request.user.id)
-    profile_sz = ProfileSerializer(profile_obj)
+    profile_sz = SimpleProfileSerializer(profile_obj)
 
     answer_obj = Answer.objects.create(user_id=request.user.id,
                                         question_id=question_idx,

@@ -1,7 +1,5 @@
-from django.shortcuts import render
 from django.db.models import Q
 from django.core.paginator import Paginator
-from rest_framework import response
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes

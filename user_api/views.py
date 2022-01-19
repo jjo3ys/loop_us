@@ -37,7 +37,6 @@ from .text import pwmessage
 from tag.models import Tag, Profile_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
-from post_api.models import Post
 from loop.models import Loopship, Request
 from fcm.models import FcmToken
 from fcm.push_fcm import notification_fcm
