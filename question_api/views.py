@@ -1,15 +1,13 @@
 from django.shortcuts import render
 
-from question_api.models import Answer, Question, P2PAnswer, P2PQuestion
+from question_api.models import Answer, Question#, P2PAnswer, P2PQuestion
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer as ProfileSerializer
 from fcm.models import FcmToken
 from fcm.push_fcm import answer_fcm, adopt_fcm
 
-from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier, OnlyQSerializer, P2PAnswerSerializer, P2PQuestionSerializer
+from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier, OnlyQSerializer#, P2PAnswerSerializer, P2PQuestionSerializer
 from tag.models import Tag, Question_Tag
-
-from django.core.paginator import Paginator
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -41,14 +39,14 @@ def raise_question(request):
         questionSZ = QuestionSerializer(question_obj)
         return Response(questionSZ.data)
 
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def question_to(request, to_idx):
-    q_obj = P2PQuestion.objects.create(user=request.user,
-                                       to_id=to_idx,
-                                       content=request.data['content'])
+# @api_view(['POST', ])
+# @permission_classes((IsAuthenticated,))
+# def question_to(request, to_idx):
+#     q_obj = P2PQuestion.objects.create(user=request.user,
+#                                        to_id=to_idx,
+#                                        content=request.data['content'])
     
-    return Response(P2PQuestionSerializer(q_obj).data, status=status.HTTP_200_OK)
+#     return Response(P2PQuestionSerializer(q_obj).data, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
@@ -118,31 +116,31 @@ def specific_question_load(request, question_idx):
 
     return Response(q_sz, status=status.HTTP_200_OK)
 
-@api_view(['GET', ])
-@permission_classes((IsAuthenticated,))
-def question_to_load(request, question_idx):
-    user_id = request.user.id
+# @api_view(['GET', ])
+# @permission_classes((IsAuthenticated,))
+# def question_to_load(request, question_idx):
+#     user_id = request.user.id
 
-    q_obj = P2PQuestion.objects.get(id=question_idx)
-    data = P2PQuestionSerializer(q_obj).data
+#     q_obj = P2PQuestion.objects.get(id=question_idx)
+#     data = P2PQuestionSerializer(q_obj).data
 
-    if user_id == data['user_profile']['user_id']:
-        data.update({"is_user":1})
-    else:
-        data.update({"is_user":0})
+#     if user_id == data['user_profile']['user_id']:
+#         data.update({"is_user":1})
+#     else:
+#         data.update({"is_user":0})
 
-    if user_id == data['to_profile']['user_id']:
-        data.update({"is_to":1})
-    else:
-        data.update({"is_to":0})
+#     if user_id == data['to_profile']['user_id']:
+#         data.update({"is_to":1})
+#     else:
+#         data.update({"is_to":0})
 
-    for d in data['p2panswer']:
-        if d['user_profile']['user_id'] == user_id:
-            d.update({'is_user':1})
-        else:
-            d.update({"is_user":0})
+#     for d in data['p2panswer']:
+#         if d['user_profile']['user_id'] == user_id:
+#             d.update({'is_user':1})
+#         else:
+#             d.update({"is_user":0})
 
-    return Response(data, status=status.HTTP_200_OK)
+#     return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -186,14 +184,14 @@ def question_update(request, question_idx):
 
     return Response(question_sz.data, status=status.HTTP_200_OK)
 
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def question_to_update(request, question_idx):
-    question_obj = P2PQuestion.objects.get(id=question_idx)
-    question_obj.content = request.data['content']
-    question_obj.save()
+# @api_view(['POST', ])
+# @permission_classes((IsAuthenticated,))
+# def question_to_update(request, question_idx):
+#     question_obj = P2PQuestion.objects.get(id=question_idx)
+#     question_obj.content = request.data['content']
+#     question_obj.save()
 
-    return Response(P2PQuestionSerializer(question_obj).data, status=status.HTTP_200_OK)
+#     return Response(P2PQuestionSerializer(question_obj).data, status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -226,13 +224,13 @@ def answer_adopt(request, answer_id):
     
     return Response(status=status.HTTP_200_OK)
 
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def question_to_delete(request, question_idx):
-    q_obj = P2PQuestion.objects.get(id=question_idx)
-    q_obj.delete()
+# @api_view(['POST', ])
+# @permission_classes((IsAuthenticated,))
+# def question_to_delete(request, question_idx):
+#     q_obj = P2PQuestion.objects.get(id=question_idx)
+#     q_obj.delete()
 
-    return Response(status=status.HTTP_200_OK)
+#     return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -256,20 +254,20 @@ def answer(request, question_idx):
 
     return Response(data, status=status.HTTP_200_OK)
 
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def answer_to(request, question_idx):
-    answer_obj = P2PAnswer.objects.create(user=request.user,
-                                          question_id = question_idx,
-                                          content=request.data['content'])
-    answer = P2PAnswerSerializer(answer_obj).data
+# @api_view(['POST', ])
+# @permission_classes((IsAuthenticated,))
+# def answer_to(request, question_idx):
+#     answer_obj = P2PAnswer.objects.create(user=request.user,
+#                                           question_id = question_idx,
+#                                           content=request.data['content'])
+#     answer = P2PAnswerSerializer(answer_obj).data
     
-    try:
-        token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
-        answer_fcm(token.token, answer['user_profile']['real_name'])
-    except:
-        pass
+#     try:
+#         token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
+#         answer_fcm(token.token, answer['user_profile']['real_name'])
+#     except:
+#         pass
 
-    return Response(answer, status=status.HTTP_200_OK)
+#     return Response(answer, status=status.HTTP_200_OK)
 
     
