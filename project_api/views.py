@@ -55,8 +55,7 @@ def create_project(request):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def update_project(request, type, idx):
-    profile_obj = Profile.objects.get(user_id=request.user.id)
+def update_project(request, type, idx):  
     project_obj = Project.objects.get(id=idx)
     if type == 'project_name':
         project_obj.project_name = request.data['project_name']
@@ -107,6 +106,7 @@ def update_project(request, type, idx):
                 Project_Tag.objects.create(tag = tag_obj, project = project_obj)
     
     elif type == 'looper':
+        profile_obj = Profile.objects.get(user_id=request.user.id)
         looper_list = eval(request.data['looper'])
         old_looper = TagLooper.objects.filter(project_id=project_obj.id)
         for looper in old_looper:
