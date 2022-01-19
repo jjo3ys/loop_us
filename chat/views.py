@@ -54,8 +54,8 @@ def get_list(request):
     room = Room.objects.filter(member__icontains=request.user.id)
     return_list = []
     for r in room:
-        last = ChatSerializer(list(Msg.objects.filter(room_id=r.id))[-1]).data
-        not_read = Msg.objects.filter(room_id=r.id, is_read=False).count()
+        last = ChatSerializer(Msg.objects.filter(room_id=r.id).last()).data
+        not_read = Msg.objects.filter(room_id=r.id, receiver_id=request.user.id, is_read=False).count()
         r.member.remove(request.user.id)
         profile = SimpleProfileSerializer(Profile.objects.get(user_id=r.member[0])).data
         return_list.append({"profile":profile,
