@@ -86,7 +86,7 @@ def bookmark(request, idx):
 @permission_classes((IsAuthenticated,))
 def bookmark_list_load(request):
     user = request.user
-    bookmark_list = BookMark.objects.filter(user=user)
+    bookmark_list = BookMark.objects.filter(user_id=user.id)
     post_list = []
     for bookmark in bookmark_list:
         post_list.append(bookmark.post)
@@ -103,7 +103,8 @@ def bookmark_list_load(request):
             post[i].update({"is_liked":1})
         except:
             post[i].update({"is_liked":0})
-        post[i].update({"is_marked":1})
+        post[i].update({"is_marked":1,
+                        "is_user":1})
 
     return Response(post, status=status.HTTP_200_OK)
 
@@ -122,6 +123,11 @@ def main_load(request):
         profile_obj = Profile.objects.get(user=post_obj[i].user)
         post[i].update(SimpleProjectserializer(post_obj[i].project).data)    
         post[i].update(ProfileSerializer(profile_obj).data)
+        if post_obj[i].user.id == request.user.id:
+            post[i].update({"is_user":1})
+        else:
+            post[i].update({"is_user":0})
+
         try:
             Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
             post[i].update({"is_liked":1})
@@ -156,6 +162,11 @@ def loop_load(request):
         profile_obj = Profile.objects.get(user=post_obj[i].user)
         post[i].update(SimpleProjectserializer(post_obj[i].project).data)    
         post[i].update(ProfileSerializer(profile_obj).data)
+        if post_obj[i].user.id == request.user.id:
+            post[i].update({"is_user":1})
+        else:
+            post[i].update({"is_user":0})
+
         try:
             Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
             post[i].update({"is_liked":1})
