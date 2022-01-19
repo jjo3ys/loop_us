@@ -73,17 +73,16 @@ def get_list(request, idx):
             if l['friend'] == request.user.id:
                 profile_sz.update({"is_user":1})
             elif l['friend'] in myfriend_list:
-                profile_sz.update({"is_user":0})
-                profile_sz.update({"looped":1})
+                profile_sz.update({"is_user":0,
+                                   "looped":1})
             else:
-                profile_sz.update({"is_user":0})
-                profile_sz.update({"looped":0})
                 try:
                     Request.objects.get(From_id=request.user.id, To_id=l['friend'])
-                    profile_sz.update({"requested":1})
+                    profile_sz.update({"is_user":0,
+                                       "looped":2})
                 except:
-                    profile_sz.update({"requested":0})
-                    
+                    profile_sz.update({"is_user":0,
+                                       "looped":0})
             friend_list.append(profile_sz)
             
         except Profile.DoesNotExist:
