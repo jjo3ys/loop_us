@@ -40,13 +40,10 @@ def create_project(request):
             pass
 
     for tag in eval(request.data['tag']):
-        try:
-            tag_obj = Tag.objects.get(tag=tag)
+        tag_obj, valid = Tag.objects.get_or_create(tag=tag)
+        if not valid:
             tag_obj.count = tag_obj.count + 1
             tag_obj.save()
-
-        except Tag.DoesNotExist:
-            tag_obj = Tag.objects.create(tag = tag)
         
         Project_Tag.objects.create(project=project_obj, tag=tag_obj)
 
@@ -74,36 +71,22 @@ def update_project(request, type, idx):
     elif type =='thumbnail':
         project_obj.pj_thumbnail = request.FILES.get('thumbnail') 
 
-    elif type == 'tag':
-        tag_list = eval(request.data['tag'])      
+    elif type == 'tag':        
         old_tag = Project_Tag.objects.filter(project=idx)
-        old_sz = ProjectTagSerializer(old_tag, many=True)
-        old_tag = old_sz.data
-        old_list = []
-        
         for tag in old_tag:
-            old_list.append(tag['tag'])
-            if tag['tag'] not in tag_list:
-                project_tag = Project_Tag.objects.get(tag_id = tag['tag_id'], project = project_obj)
-                project_tag.tag.count = project_tag.tag.count - 1
-                if project_tag.tag.count == 0:
-                    project_tag.tag.delete()
-                else:    
-                    project_tag.tag.save()
-                project_tag.delete()
+            tag.delete()
+            tag.tag.count = tag.tag.count-1
+            if tag.tag.count == 0:
+                tag.tag.delete()
 
+        tag_list = eval(request.data['tag'])      
         for tag in tag_list:
-            if tag not in old_list: 
-                try:
-                    tag_obj = Tag.objects.get(tag=tag)
-                    tag_obj.count = tag_obj.count + 1
-                    tag_obj.save()
+            tag, valid = Tag.objects.get_or_create(tag=tag)
+            Project_Tag.objects.create(tag = tag, project_id = project_obj.id)
+            if not valid:
+                tag.count = tag.count+1
+                tag.save()
 
-                except Tag.DoesNotExist:
-                    tag_obj = Tag.objects.create(tag = tag)
-
-                Project_Tag.objects.create(tag = tag_obj, project = project_obj)
-    
     elif type == 'looper':
         profile_obj = Profile.objects.get(user_id=request.user.id)
         looper_list = eval(request.data['looper'])
@@ -132,8 +115,11 @@ def delete_project(request, idx):
     project_tag = Project_Tag.objects.filter(project_id=idx)
     for tag in project_tag:
         tag.tag.count = tag.tag.count-1
-        tag.tag.save()
-        
+        if tag.tag.count == 0:
+            tag.tag.save()
+        else:
+            tag.tag.save()
+            
     project_obj.delete()
     return Response("is deleted", status=status.HTTP_200_OK)
 

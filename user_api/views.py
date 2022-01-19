@@ -271,6 +271,15 @@ def change_password(request):
 @permission_classes((IsAuthenticated,))
 def resign(request):  
     user = request.user
+    profile = Profile.objects.get(user_id=user.id)
+    tag_list = Profile_Tag.objects.filter(profile_id=profile.id)
+    for tag in tag_list:
+        tag.tag.count = tag.tag.count-1
+        if tag.tag.count == 0:
+            tag.tag.delete()
+        else:
+            tag.tag.save()
+            
     user_obj = User.objects.get(id=user.id)
     user_obj.delete()
     return Response("resign from loop", status=status.HTTP_200_OK)
@@ -290,34 +299,19 @@ def update_profile(request, type):
         tag_list = eval(request.data['tag'])
 
         old_tag = Profile_Tag.objects.filter(profile_id=profile.id)
-        old_sz = ProfileTagSerializer(old_tag, many=True)
-        old_tag_list = []
+        for tag in old_tag:
+            tag.delete()
+            tag.tag.count = tag.tag.count-1
+            if tag.tag.count == 0:
+                tag.tag.delete()
 
-        for tag in old_sz.data:
-            old_tag_list.append(tag['tag'])
-
-            if tag['tag'] not in tag_list:
-                Profile_Tag.objects.get(tag_id=tag['tag_id'], profile=profile).delete()
-                tag_obj = Tag.objects.get(id=tag['tag_id'])
-                tag_obj.count = tag_obj.count - 1
-                if tag_obj.count == 0:
-                    tag_obj.delete()
-                else:    
-                    tag_obj.save()
-        
+        tag_list = eval(request.data['tag'])      
         for tag in tag_list:
-            if tag in old_tag_list:
-                continue
-            else:
-                try:
-                    tag_obj = Tag.objects.get(tag=tag)
-                    tag_obj.count = tag_obj.count + 1
-                    tag_obj.save()
-
-                except Tag.DoesNotExist:
-                    tag_obj = Tag.objects.create(tag = tag)
-
-                Profile_Tag.objects.create(tag = tag_obj, profile = profile)
+            tag, valid = Tag.objects.get_or_create(tag=tag)
+            Profile_Tag.objects.create(tag = tag, project_id = profile.id)
+            if not valid:
+                tag.count = tag.count+1
+                tag.save()
 
     profile.save()
 

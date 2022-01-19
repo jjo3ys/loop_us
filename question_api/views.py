@@ -149,34 +149,19 @@ def question_update(request, question_idx):
         question_obj.save()
 
         old_tag = Question_Tag.objects.filter(question=question_idx)
-        old_sz = QuestionTagSerialier(old_tag, many=True)
-        old_list = []
-        
-        for tag in old_sz.data:
-            old_list.append(tag['tag'])
+        for tag in old_tag:
+            tag.delete()
+            tag.tag.count = tag.tag.count-1
+            if tag.tag.count == 0:
+                tag.tag.delete()
 
-            if tag['tag'] not in request.data['tag']:
-                Question_Tag.objects.get(tag_id = tag['tag_id'], question=question_obj).delete()
-                tag_obj = Tag.objects.get(id=tag['tag_id'])
-                tag_obj.count = tag_obj.count + 1
-                if tag_obj.count == 0:
-                    tag_obj.delete()
-                else:
-                    tag_obj.save()
-        
-        for tag in request.data['tag']:
-            if tag in old_list:
-                continue
-            else:
-                try:
-                    tag_obj = Tag.objects.get(tag=tag)
-                    tag_obj.count = tag_obj.count + 1
-                    tag_obj.save()
-
-                except Tag.DoesNotExist:
-                    tag_obj = Tag.objects.create(tag = tag)
-
-            Question_Tag.objects.create(tag = tag_obj, project = question_obj)
+        tag_list = eval(request.data['tag'])      
+        for tag in tag_list:
+            tag, valid = Tag.objects.get_or_create(tag=tag)
+            Question_Tag.objects.create(tag = tag, question_id = question_obj.id)
+            if not valid:
+                tag.count = tag.count+1
+                tag.save()
         
         question_sz = QuestionSerializer(question_obj)
 
@@ -200,7 +185,10 @@ def question_delete(request, question_idx):
             q_tag = Question_Tag.objects.filter(question_id=question_idx)
             for tag in q_tag:
                 tag.tag.count = tag.tag.count-1
-                tag.tag.save()
+                if tag.tag.count == 0:
+                    tag.tag.delete()
+                else:
+                    tag.tag.save()
                 
             if QuestionModel.user.id == request.user.id :
                 QuestionModel.delete()
