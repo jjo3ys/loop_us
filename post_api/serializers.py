@@ -76,7 +76,7 @@ class PostingSerializer(serializers.ModelSerializer):
     def get_thumbnail(self, obj):
         if obj.thumbnail == '':
             try:
-                return ContentsImage.objects.filter(post_id=obj.id)[0].thumbnail.url
+                return ContentsImage.objects.filter(post_id=obj.id)[0].image.url
             except:
                 return None
         return obj.thumbnail.url
