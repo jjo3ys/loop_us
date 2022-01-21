@@ -94,13 +94,13 @@ def search(request, type):
         result.reverse()
         data_list = ProjectSerializer(result, many=True).data
         for i in range(len(result)):
-            try:
-                profile = Profile.objects.get(user_id=data_list[i]['user_id'])
-                data_list[i].update(SimpleProfileSerializer(profile).data)
-            except Profile.DoesNotExist:
-                data_list[i].update({"real_name":"DoesNotExist",
-                                     "profile_image":None,
-                                     "department":"DoesNotExist"})
+            profile = Profile.objects.get(user_id=data_list[i]['user_id'])
+            data_list[i].update(SimpleProfileSerializer(profile).data)
+            if request.user.id == data_list[i]['user_id']:
+                data_list[i].update({"is_user":1})
+            else:
+                data_list[i].update({"is_user":0})
+
         return Response(data_list, status=status.HTTP_200_OK)
     
     elif type == 'tag_question':
