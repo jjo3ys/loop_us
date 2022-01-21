@@ -15,11 +15,12 @@ from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 
 
-@api_view(['POST', ])
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
 @permission_classes((IsAuthenticated,))
-def raise_question(request):
+def question(request):
+    user_id = request.user.id
     if request.method == "POST":
-        question_obj = Question.objects.create(user_id=request.user.id,
+        question_obj = Question.objects.create(user_id=user_id,
                                                content=request.data['content'],
                                                adopt=False)
         
@@ -35,20 +36,83 @@ def raise_question(request):
             Question_Tag.objects.create(question=question_obj, tag=tag_obj)
         
         questionSZ = QuestionSerializer(question_obj)
-        return Response(questionSZ.data)
-
-# @api_view(['POST', ])
-# @permission_classes((IsAuthenticated,))
-# def question_to(request, to_idx):
-#     q_obj = P2PQuestion.objects.create(user=request.user,
-#                                        to_id=to_idx,
-#                                        content=request.data['content'])
+        return Response(questionSZ.data, status=status.HTTP_200_OK)
     
-#     return Response(P2PQuestionSerializer(q_obj).data, status=status.HTTP_200_OK)
+    elif request.method == 'GET':     
+        q_obj = Question.objects.get(id=request.GET['id'])
+        q_sz = QuestionSerializer(q_obj).data
+        q_profile_obj = Profile.objects.get(user=q_sz['user_id'])
+        q_profile_sz = SimpleProfileSerializer(q_profile_obj)
+        q_sz.update(q_profile_sz.data)
+        if q_obj.adopt:
+            q_sz.update({"is_adopted":1})
+        else:
+            q_sz.update({"is_adopted":0})
+
+        if user_id == q_profile_sz.data['user_id']:
+            q_sz.update({"is_user":1})
+        else:
+            q_sz.update({"is_user":0})
+
+        for d in q_sz['answer']:
+            a_profile_obj = Profile.objects.get(user=d['user_id'])
+            a_profile_sz = SimpleProfileSerializer(a_profile_obj)
+            d.update(a_profile_sz.data)
+            if a_profile_obj.user_id == user_id:
+                d.update({'is_user':1})
+            else:
+                d.update({"is_user":0})
+
+        return Response(q_sz, status=status.HTTP_200_OK)          
+    
+    elif request.method == 'PUT':
+        question_obj = Question.objects.get(id=request.GET['id'])
+        question_obj.content = request.data['content']
+        question_obj.save()
+
+        old_tag = Question_Tag.objects.filter(question_id=request.GET['id'])
+        for tag in old_tag:
+            tag.delete()
+            tag.tag.count = tag.tag.count-1
+            if tag.tag.count == 0:
+                tag.tag.delete()
+
+        tag_list = eval(request.data['tag'])      
+        for tag in tag_list:
+            tag, valid = Tag.objects.get_or_create(tag=tag)
+            Question_Tag.objects.create(tag = tag, question_id = question_obj.id)
+            if not valid:
+                tag.count = tag.count+1
+                tag.save()
+        
+        question_sz = QuestionSerializer(question_obj)
+        return Response(question_sz.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'DELETE':
+        try:
+            QuestionModel = Question.objects.get(id = request.GET['id'])
+            q_tag = Question_Tag.objects.filter(question_id=request.GET['id'])
+            for tag in q_tag:
+                tag.tag.count = tag.tag.count-1
+                if tag.tag.count == 0:
+                    tag.tag.delete()
+                else:
+                    tag.tag.save()
+                
+            if QuestionModel.user.id == request.user.id :
+                QuestionModel.delete()
+            else:
+                return Response('No permission to modify')
+
+        except:
+            return Response('Question not found')
+
+
+    return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
-def question_list_load(request, type):   
+def question_list(request, type):   
     user_id = request.user.id
 
     if type == 'my':
@@ -82,37 +146,62 @@ def question_list_load(request, type):
 
     return Response(q_sz.data, status=status.HTTP_200_OK)
 
-
-@api_view(['GET', ])
+@api_view(['POST', 'PUT', 'DELETE'])
 @permission_classes((IsAuthenticated,))
-def specific_question_load(request, question_idx):
-    user_id = request.user.id
+def answer(request, question_idx):
+    if request.method == 'POST':
+        profile_obj = Profile.objects.get(user=request.user.id)
+        profile_sz = SimpleProfileSerializer(profile_obj)
 
-    q_obj = Question.objects.get(id=question_idx)
-    q_sz = QuestionSerializer(q_obj).data
-    q_profile_obj = Profile.objects.get(user=q_sz['user_id'])
-    q_profile_sz = SimpleProfileSerializer(q_profile_obj)
-    q_sz.update(q_profile_sz.data)
-    if q_obj.adopt:
-        q_sz.update({"is_adopted":1})
-    else:
-        q_sz.update({"is_adopted":0})
+        answer_obj = Answer.objects.create(user_id=request.user.id,
+                                            question_id=question_idx,
+                                            content=request.data['content'],
+                                            adopt=False)
+        try:
+            token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
+            answer_fcm(token.token, profile_obj.real_name)
+        except:
+            pass
 
-    if user_id == q_profile_sz.data['user_id']:
-        q_sz.update({"is_user":1})
-    else:
-        q_sz.update({"is_user":0})
+        answerSZ = AnswerSerializer(answer_obj)
+        data = answerSZ.data
+        data.update(profile_sz.data)
 
-    for d in q_sz['answer']:
-        a_profile_obj = Profile.objects.get(user=d['user_id'])
-        a_profile_sz = SimpleProfileSerializer(a_profile_obj)
-        d.update(a_profile_sz.data)
-        if a_profile_obj.user_id == user_id:
-            d.update({'is_user':1})
-        else:
-            d.update({"is_user":0})
+        return Response(data, status=status.HTTP_200_OK)
+    
+    elif request.method == "PUT":
+        answer = Answer.objects.get(id=request.GET['id'])
+        answer.content = request.data['content']
+        answer.save()
+        return Response(AnswerSerializer(answer).data, status=status.HTTP_200_OK)
 
-    return Response(q_sz, status=status.HTTP_200_OK)
+    elif request.method == 'DELETE':
+        Answer.objects.get(id=request.GET['id']).delete()
+        return Response(status=status.HTTP_200_OK)
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def answer_adopt(request):
+    answer_obj = Answer.objects.get(id=request.GET['id'])
+    answer_obj.adopt = True
+    answer_obj.question.adopt = True
+    answer_obj.save()
+    try:
+        token = FcmToken.objects.get(user_id=answer_obj.user_id)
+        adopt_fcm(token)
+    except:
+        pass
+    
+    return Response(status=status.HTTP_200_OK)
+
+# @api_view(['POST', ])
+# @permission_classes((IsAuthenticated,))
+# def question_to(request, to_idx):
+#     q_obj = P2PQuestion.objects.create(user=request.user,
+#                                        to_id=to_idx,
+#                                        content=request.data['content'])
+    
+#     return Response(P2PQuestionSerializer(q_obj).data, status=status.HTTP_200_OK)
 
 # @api_view(['GET', ])
 # @permission_classes((IsAuthenticated,))
@@ -139,34 +228,6 @@ def specific_question_load(request, question_idx):
 #             d.update({"is_user":0})
 
 #     return Response(data, status=status.HTTP_200_OK)
-
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def question_update(request, question_idx):
-    if request.method == "POST":
-        question_obj = Question.objects.get(id=question_idx)
-        question_obj.content = request.data['content']
-        question_obj.save()
-
-        old_tag = Question_Tag.objects.filter(question=question_idx)
-        for tag in old_tag:
-            tag.delete()
-            tag.tag.count = tag.tag.count-1
-            if tag.tag.count == 0:
-                tag.tag.delete()
-
-        tag_list = eval(request.data['tag'])      
-        for tag in tag_list:
-            tag, valid = Tag.objects.get_or_create(tag=tag)
-            Question_Tag.objects.create(tag = tag, question_id = question_obj.id)
-            if not valid:
-                tag.count = tag.count+1
-                tag.save()
-        
-        question_sz = QuestionSerializer(question_obj)
-
-    return Response(question_sz.data, status=status.HTTP_200_OK)
-
 # @api_view(['POST', ])
 # @permission_classes((IsAuthenticated,))
 # def question_to_update(request, question_idx):
@@ -176,45 +237,6 @@ def question_update(request, question_idx):
 
 #     return Response(P2PQuestionSerializer(question_obj).data, status=status.HTTP_200_OK)
 
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def question_delete(request, question_idx):
-    if request.method == "POST":
-        try:
-            QuestionModel = Question.objects.get(id = question_idx)
-            q_tag = Question_Tag.objects.filter(question_id=question_idx)
-            for tag in q_tag:
-                tag.tag.count = tag.tag.count-1
-                if tag.tag.count == 0:
-                    tag.tag.delete()
-                else:
-                    tag.tag.save()
-                
-            if QuestionModel.user.id == request.user.id :
-                QuestionModel.delete()
-            else:
-                return Response('No permission to modify')
-
-        except:
-            return Response('Question not found')
-
-
-    return Response(status=status.HTTP_200_OK)
-
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def answer_adopt(request, answer_id):
-    answer_obj = Answer.objects.get(id=answer_id)
-    answer_obj.adopt = True
-    answer_obj.question.adopt = True
-    answer_obj.save()
-    try:
-        token = FcmToken.objects.get(user_id=answer_obj.user_id)
-        adopt_fcm(token)
-    except:
-        pass
-    
-    return Response(status=status.HTTP_200_OK)
 
 # @api_view(['POST', ])
 # @permission_classes((IsAuthenticated,))
@@ -224,27 +246,7 @@ def answer_adopt(request, answer_id):
 
 #     return Response(status=status.HTTP_200_OK)
 
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def answer(request, question_idx):
-    profile_obj = Profile.objects.get(user=request.user.id)
-    profile_sz = SimpleProfileSerializer(profile_obj)
 
-    answer_obj = Answer.objects.create(user_id=request.user.id,
-                                        question_id=question_idx,
-                                        content=request.data['content'],
-                                        adopt=False)
-    try:
-        token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
-        answer_fcm(token.token, profile_obj.real_name)
-    except:
-        pass
-
-    answerSZ = AnswerSerializer(answer_obj)
-    data = answerSZ.data
-    data.update(profile_sz.data)
-
-    return Response(data, status=status.HTTP_200_OK)
 
 # @api_view(['POST', ])
 # @permission_classes((IsAuthenticated,))

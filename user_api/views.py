@@ -154,7 +154,7 @@ def check_corp_num(request):
 
         return Response("인증 대기중입니다.", status=status.HTTP_201_CREATED)
 
-@api_view(['POST', ])
+@api_view(['POST'])
 def signup(request):
     type = request.data['type']
 
@@ -170,10 +170,10 @@ def signup(request):
         try:
             department_id = R_DEPARTMENT[request.data['department']]
             profile_obj = Profile.objects.create(user_id = user_obj.id,
-                                                 type = type,
-                                                 real_name = request.data['real_name'],
-                                                 profile_image = None,
-                                                 department = department_id)
+                                                type = type,
+                                                real_name = request.data['real_name'],
+                                                profile_image = None,
+                                                department = department_id)
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -191,24 +191,23 @@ def signup(request):
         if type == 1:
             corp = Activation.objects.get(user_id=user_obj.id)
             Company_Inform.objects.create(profile_id = profile_obj.id,
-                                          corp_num = corp.corp_num,
-                                          corp_name = corp.corp_name)
+                                        corp_num = corp.corp_num,
+                                        corp_name = corp.corp_name)
             corp.delete()
 
         return Response({'message':'singup success',
-                         'token':str(token),
-                         'user_id':token.user_id,
-                         'isAuthoriztion':1})
+                        'token':str(token),
+                        'user_id':token.user_id,
+                        'isAuthoriztion':1})
     else:
         return Response({'message':'login failed',
-                         'isAuthoriztion':0})
+                        'isAuthoriztion':0})
 
-
-@api_view(['POST', ])
+@api_view(['POST'])
 def login(request):
     user = authenticate(
-        username=request.data['username'],
-        password=request.data['password'],
+    username=request.data['username'],
+    password=request.data['password'],
     )
     if user is not None and user.is_active:
         token = Token.objects.get(user=user)
@@ -225,49 +224,48 @@ def login(request):
             FcmToken.objects.create(user_id=user.id,
                                     token=request.data['fcm_token'])
 
-        return Response({'Token':token.key,
-                         'user_id':str(token.user_id)}, status=status.HTTP_202_ACCEPTED)
+        return Response({'token':token.key,
+                        'user_id':str(token.user_id)}, status=status.HTTP_202_ACCEPTED)
     
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
 
-@api_view(['POST', ])
+@api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
-def new_password(request):
+def password(request):
     user = request.user
+    if request.method == 'PUT':
+        user = request.user
+        
+        if check_password(request.data['origin_pw'], user.password):
+            new_pw = request.data['new_pw']
+            user.set_password(new_pw)
+            user.save()
+            return Response("pw is changed", status=status.HTTP_200_OK)
+        else:
+            return Response("origin_pw is not matched with data", status=status.HTTP_401_UNAUTHORIZED)
+        
 
-    alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-    char = [ '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+' , ',',  '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', ']', '^', '_', '`', '{', '|', '}', '~']
-    new_password = ''
+    elif request.method =='GET':
+        alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+        char = [ '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+' , ',',  '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', ']', '^', '_', '`', '{', '|', '}', '~']
+        new_password = ''
 
-    for i in range(5):
-        alpha = random.choice(alphabet)
-        ch = random.choice(char)
-        new_password = new_password + alpha + ch
+        for i in range(5):
+            alpha = random.choice(alphabet)
+            ch = random.choice(char)
+            new_password = new_password + alpha + ch
 
-    user.set_password(new_password)
-    user.save()
-
-    profile_obj = Profile.objects.get(user_id=user.id)
-    real_name = profile_obj.real_name
-    EmailMessage("새로운 비밀번호입니다.", pwmessage(real_name, new_password), to=[user.email]).send()
-
-    return Response(status=status.HTTP_200_OK)
-
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def change_password(request):
-    user = request.user
-    
-    if check_password(request.data['origin_pw'], user.password):
-        new_pw = request.data['new_pw']
-        user.set_password(new_pw)
+        user.set_password(new_password)
         user.save()
-        return Response("pw is changed", status=status.HTTP_200_OK)
-    else:
-        return Response("origin_pw is not matched with data", status=status.HTTP_401_UNAUTHORIZED)
 
-@api_view(['POST', ])
+        profile_obj = Profile.objects.get(user_id=user.id)
+        real_name = profile_obj.real_name
+        EmailMessage("새로운 비밀번호입니다.", pwmessage(real_name, new_password), to=[user.email]).send()
+
+        return Response(status=status.HTTP_200_OK)
+
+@api_view(['DELETE', ])
 @permission_classes((IsAuthenticated,))
 def resign(request):  
     user = request.user
@@ -284,65 +282,65 @@ def resign(request):
     user_obj.delete()
     return Response("resign from loop", status=status.HTTP_200_OK)
     
-@api_view(['POST', ])
+@api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
-def update_profile(request, type):
-    profile = Profile.objects.get(user_id=request.user.id)
+def profile(request):
+    if request.method == 'PUT':
+        profile = Profile.objects.get(user_id=request.user.id)
+        type = request.GET['type']
 
-    if type == 'image':
-        profile.profile_image = request.FILES.get('image')
+        if type == 'image':
+            profile.profile_image = request.FILES.get('image')
+        
+        elif type == 'department':
+            profile.department = R_DEPARTMENT[request.data['department']]
+        
+        elif type == 'tag':
+            tag_list = eval(request.data['tag'])
+
+            old_tag = Profile_Tag.objects.filter(profile_id=profile.id)
+            for tag in old_tag:
+                tag.delete()
+                tag.tag.count = tag.tag.count-1
+                if tag.tag.count == 0:
+                    tag.tag.delete()
+
+            tag_list = eval(request.data['tag'])      
+            for tag in tag_list:
+                tag, valid = Tag.objects.get_or_create(tag=tag)
+                Profile_Tag.objects.create(tag = tag, profile_id = profile.id)
+                if not valid:
+                    tag.count = tag.count+1
+                    tag.save()
+
+        profile.save()
+        return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
     
-    elif type == 'department':
-        profile.department = R_DEPARTMENT[request.data['department']]
-    
-    elif type == 'tag':
-        tag_list = eval(request.data['tag'])
-
-        old_tag = Profile_Tag.objects.filter(profile_id=profile.id)
-        for tag in old_tag:
-            tag.delete()
-            tag.tag.count = tag.tag.count-1
-            if tag.tag.count == 0:
-                tag.tag.delete()
-
-        tag_list = eval(request.data['tag'])      
-        for tag in tag_list:
-            tag, valid = Tag.objects.get_or_create(tag=tag)
-            Profile_Tag.objects.create(tag = tag, profile_id = profile.id)
-            if not valid:
-                tag.count = tag.count+1
-                tag.save()
-
-    profile.save()
-
-    return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
-
-@api_view(['GET', ])
-@permission_classes((IsAuthenticated,))
-def profile_load(request, idx):
-    profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
-
-    if str(request.user.id) == idx:
-        profile.update({'is_user':1})
-    else:
-        profile.update({'is_user':0})
-    
-    try:
-        Loopship.objects.get(user_id=idx, friend_id=request.user.id)
-        profile.update({'looped':1})
-    
-    except:
+    if request.method == 'GET':
+        idx = request.GET['id']
+        profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
+        if str(request.user.id) == idx:
+            profile.update({'is_user':1})
+        else:
+            profile.update({'is_user':0})
+        
         try:
-            Request.objects.get(From_id=request.user.id, To_id=idx)
-            profile.update({'looped':2})
+            Loopship.objects.get(user_id=idx, friend_id=request.user.id)
+            profile.update({'looped':1})
+        
         except:
-            profile.update({'looped':0})
+            try:
+                Request.objects.get(From_id=request.user.id, To_id=idx)
+                profile.update({'looped':2})
+            except:
+                profile.update({'looped':0})
 
-    return Response(profile, status=status.HTTP_200_OK)
+        return Response(profile, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
-def project_load(request, idx):
+def project(request):
+    idx = request.GET['id']
     data = ProjectSerializer(Project.objects.filter(user_id=idx).order_by('-id'), many=True).data
     if request.user.id == int(idx):
         for d in data:
@@ -359,12 +357,12 @@ def project_load(request, idx):
 def university_list(request):
     return Response(UNIVERSITY)
 
-@api_view(['GET', ])
-def noti(request):
-    token_list = []
-    token_obj = FcmToken.objects.all()
-    for token in token_obj:
-        token_list.append(token.token)
+# @api_view(['GET', ])
+# def noti(request):
+#     token_list = []
+#     token_obj = FcmToken.objects.all()
+#     for token in token_obj:
+#         token_list.append(token.token)
     
-    notification_fcm(token_list)
-    return Response(status=status.HTTP_200_OK)
+#     notification_fcm(token_list)
+#     return Response(status=status.HTTP_200_OK)
