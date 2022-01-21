@@ -18,7 +18,7 @@ def adopt_fcm(token):
     )
     messaging.send(message)
 
-def loop_fcm(token, req_from):
+def loop_request_fcm(token, req_from):
     message = messaging.Message(notification=messaging.Notification(
         title='루프요청',
         body='{0}님이 루프요청 하셨습니다'.format(req_from)
@@ -28,6 +28,15 @@ def loop_fcm(token, req_from):
     )
     messaging.send(message)
 
+def loop_allow_fcm(token, req_from):
+    message = messaging.Message(notification=messaging.Notification(
+        title='루프요청',
+        body='{0}님이 루프요청을 수락 하셨습니다'.format(req_from)
+    ),
+    token = token,
+    # topic='37'
+    )
+    messaging.send(message)
 def tag_fcm(token, req_from):
     message = messaging.Message(notification=messaging.Notification(
         title='태그',
