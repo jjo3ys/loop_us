@@ -308,7 +308,7 @@ def update_profile(request, type):
         tag_list = eval(request.data['tag'])      
         for tag in tag_list:
             tag, valid = Tag.objects.get_or_create(tag=tag)
-            Profile_Tag.objects.create(tag = tag, project_id = profile.id)
+            Profile_Tag.objects.create(tag = tag, profile_id = profile.id)
             if not valid:
                 tag.count = tag.count+1
                 tag.save()
@@ -343,7 +343,17 @@ def profile_load(request, idx):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def project_load(request, idx):
-    return Response(ProjectSerializer(Project.objects.filter(user_id=idx).order_by('-id'), many=True).data, status=status.HTTP_200_OK)
+    data = ProjectSerializer(Project.objects.filter(user_id=idx).order_by('-id'), many=True).data
+    if request.user.id == int(idx):
+        for d in data:
+            d.update({"is_user":1})
+
+        return Response(data, status=status.HTTP_200_OK)
+    else:
+        for d in data:
+            d.update({"is_user":0})
+
+        return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 def university_list(request):
