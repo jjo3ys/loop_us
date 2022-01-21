@@ -61,10 +61,11 @@ class PostingSerializer(serializers.ModelSerializer):
     contents = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     thumbnail = serializers.SerializerMethodField()
+    project = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'project_id', 
+        fields = ['id', 'user_id', 'project', 
          'thumbnail', 'title', 'date', 'like_count', 'contents']
     
     def get_contents(self, obj):
@@ -72,6 +73,9 @@ class PostingSerializer(serializers.ModelSerializer):
     
     def get_like_count(self, obj):        
         return Like.objects.filter(post_id=obj.id).count()
+    
+    def get_project(self, obj):
+        return SimpleProjectserializer(obj.project).data
     
     def get_thumbnail(self, obj):
         if obj.thumbnail == '':

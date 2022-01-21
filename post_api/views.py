@@ -68,15 +68,13 @@ def posting(request):
 
         profile_obj = Profile.objects.get(user_id=post_obj.user_id)
         profile = SimpleProfileSerializer(profile_obj).data
-        project = SimpleProjectserializer(post_obj.project).data
         return_dict = {
             'posting_info': postingSZ.data,
         }
         return_dict.update(profile)
-        return_dict.update(project)
 
         tag_list = []
-        for tag in project['project_tag']:
+        for tag in postingSZ.data['project']['project_tag']:
             tag_list.append(int(tag['tag_id']))
 
         recommend = Project_Tag.objects.filter(tag_id__in=tag_list)
