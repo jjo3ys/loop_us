@@ -230,6 +230,17 @@ def login(request):
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
 
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def logout(request):
+    user = request.user
+    try:
+        token_obj = FcmToken.objects.get(user_id=user.id)
+        token_obj.delete()
+    except:
+        pass
+    return Response("Successed log out", status=status.HTTP_200_OK)
+    
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
 def password(request):
