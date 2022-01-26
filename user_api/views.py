@@ -340,7 +340,11 @@ def profile(request):
                 Request.objects.get(From_id=request.user.id, To_id=idx)
                 profile.update({'looped':2})
             except:
-                profile.update({'looped':0})
+                try:
+                    Request.objects.get(From_id=idx, To_id=request.user.id)
+                    profile.update({'looped':3})
+                except:
+                    profile.update({'looped':0})
 
         return Response(profile, status=status.HTTP_200_OK)
 
