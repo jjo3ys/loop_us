@@ -42,7 +42,7 @@ def chatting(request, receiver_idx):
         try:
             send_profile = Profile.objects.get(user_id=user.id) 
             receiver_token = FcmToken.objects.get(user_id=receiver_idx)    
-            chat_fcm(receiver_token.token, send_profile.real_name, request.data['message'])     
+            chat_fcm(receiver_token.token, send_profile.real_name, request.data['message'], user.id) 
         except:
             pass
 
