@@ -40,8 +40,6 @@ def chatting(request, receiver_idx):
                                  message=request.data['message'],
                                  is_read=False)
                     
-        message = ChatSerializer(msg).data
-
         try:
             send_profile = Profile.objects.get(user_id=user.id) 
             receiver_token = FcmToken.objects.get(user_id=receiver_idx)    
@@ -49,7 +47,7 @@ def chatting(request, receiver_idx):
         except:
             pass
 
-        return Response(message, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
