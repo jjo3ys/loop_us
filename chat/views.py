@@ -22,14 +22,14 @@ def chatting(request, receiver_idx):
             room = Room.objects.get(member=member_list)
         except Room.DoesNotExist:
             return Response("Can't find Room", status=status.HTTP_404_NOT_FOUND)
-        message_obj = Msg.objects.filter(room_id=room.id)
+        message = Msg.objects.filter(room_id=room.id)
 
-        for msg in message_obj:
+        for msg in message:
             if msg.receiver_id == user.id and not msg.is_read:
                 msg.is_read = True
                 msg.save()
 
-        message = ChatSerializer(message_obj, many=True).data
+        message = ChatSerializer(message, many=True).data
 
         return Response(message, status=status.HTTP_200_OK)
 
