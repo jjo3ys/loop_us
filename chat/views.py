@@ -18,7 +18,10 @@ def chatting(request, receiver_idx):
     member_list=[user.id, int(receiver_idx)]    
     member_list.sort()
     if request.method == 'GET':     
-        room = Room.objects.get(member=member_list)
+        try:
+            room = Room.objects.get(member=member_list)
+        except Room.DoesNotExist:
+            return Response("Can't find Room", status=status.HTTP_404_NOT_FOUND)
         message_obj = Msg.objects.filter(room_id=room.id)
 
         for msg in message_obj:
