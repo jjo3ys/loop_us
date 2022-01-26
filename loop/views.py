@@ -45,7 +45,7 @@ def loop_request(request, idx):
         except:
             request
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes((IsAuthenticated,))
 def loop(request, idx):
     user = request.user
