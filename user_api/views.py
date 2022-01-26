@@ -195,13 +195,9 @@ def signup(request):
                                         corp_name = corp.corp_name)
             corp.delete()
 
-        return Response({'message':'singup success',
-                        'token':str(token),
-                        'user_id':token.user_id,
-                        'isAuthoriztion':1})
+        return Response(status=status.HTTP_201_CREATED)
     else:
-        return Response({'message':'login failed',
-                        'isAuthoriztion':0})
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
 def login(request):
