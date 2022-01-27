@@ -79,7 +79,7 @@ def get_list(request, type, idx):
                 profile_sz.update({"is_user":0})
             following_list.append(profile_sz)
 
-        return Response({"following":following_list}, status=status.HTTP_200_OK)
+        return Response({"follow":following_list}, status=status.HTTP_200_OK)
 
     elif type == 'follower':
         follwer_list = []
@@ -93,4 +93,4 @@ def get_list(request, type, idx):
                 profile_sz.update({"is_user":0})
             follwer_list.append(profile_sz)
 
-    return Response({"follower":follwer_list}, status=status.HTTP_200_OK)
+    return Response({"follow":follwer_list}, status=status.HTTP_200_OK)
