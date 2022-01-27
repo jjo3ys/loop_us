@@ -114,7 +114,7 @@ def search(request, type):
         obj = QuestionSerializer(result, many=True).data
         for q in obj:
             q.update(SimpleProfileSerializer(Profile.objects.get(user_id=q['user_id'])).data)
-            if request.user.id == p['user_id']:
+            if request.user.id == q['user_id']:
                 q.update({"is_user":1})
             else:
                 q.update({"is_user":0})
