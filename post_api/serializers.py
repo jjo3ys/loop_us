@@ -5,12 +5,16 @@ from rest_framework import serializers
 
 class ProjectTagSerializer(serializers.ModelSerializer):
     tag = serializers.SerializerMethodField()
+    count = serializers.SerializerMethodField()
     class Meta:
         model = Project_Tag
-        fields = ['tag_id', 'tag']
+        fields = ['tag_id', 'tag', 'count']
     
     def get_tag(self, obj):
         return obj.tag.tag
+    
+    def get_count(self, obj):
+        return obj.tag.count
 
 class SimpleProjectserializer(serializers.ModelSerializer):
     project_tag = ProjectTagSerializer(many=True, read_only=True)
