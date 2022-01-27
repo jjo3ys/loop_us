@@ -1,4 +1,5 @@
-from question_api.models import Answer, Question#, P2PAnswer, P2PQuestion
+from question_api.models import Answer, Question
+from search.models import InterestTag#, P2PAnswer, P2PQuestion
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
 from fcm.models import FcmToken
@@ -23,18 +24,26 @@ def question(request):
         question_obj = Question.objects.create(user_id=user_id,
                                                content=request.data['content'],
                                                adopt=False)
-        
+
+        interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         for tag in request.data['tag']:
+            
             try: 
                 tag_obj = Tag.objects.get(tag=tag)
                 tag_obj.count = tag_obj.count + 1
                 tag_obj.save()
+                try:
+                    interest_list.tag_list[str(tag_obj.id)] += 1
+                except KeyError:
+                    interest_list.tag_list[str(tag_obj.id)] = 1
+                interest_list.save()
             
             except Tag.DoesNotExist:
                 tag_obj = Tag.objects.create(tag = tag)
             
             Question_Tag.objects.create(question=question_obj, tag=tag_obj)
-        
+
+        interest_list.save()
         questionSZ = QuestionSerializer(question_obj)
         return Response(questionSZ.data, status=status.HTTP_200_OK)
     
@@ -70,8 +79,17 @@ def question(request):
         question_obj.content = request.data['content']
         question_obj.save()
 
+        interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         old_tag = Question_Tag.objects.filter(question_id=request.GET['id'])
         for tag in old_tag:
+            try:
+                interest_list.tag_list[str(tag.tag.id)] -= 1
+                if interest_list.tag_list[str(tag.tag.id)] == 0:
+                    del interest_list.tag_list[str(tag.tag.id)]
+
+            except KeyError:
+                pass
+
             tag.delete()
             tag.tag.count = tag.tag.count-1
             if tag.tag.count == 0:
@@ -81,18 +99,32 @@ def question(request):
         for tag in tag_list:
             tag, valid = Tag.objects.get_or_create(tag=tag)
             Question_Tag.objects.create(tag = tag, question_id = question_obj.id)
+            try:
+                interest_list.tag_list[str(tag.id)] += 1
+            except KeyError:
+                interest_list.tag_list[str(tag.id)] = 1
+
             if not valid:
                 tag.count = tag.count+1
                 tag.save()
-        
+
+        interest_list.save()
         question_sz = QuestionSerializer(question_obj)
         return Response(question_sz.data, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
         try:
+            interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
             QuestionModel = Question.objects.get(id = request.GET['id'])
             q_tag = Question_Tag.objects.filter(question_id=request.GET['id'])
             for tag in q_tag:
+                try:
+                    interest_list.tag_list[str(tag.tag.id)] -= 1
+                    if interest_list.tag_list[str(tag.tag.id)] == 0:
+                        del interest_list.tag_list[str(tag.tag.id)]
+
+                except KeyError:
+                    pass
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
                     tag.tag.delete()

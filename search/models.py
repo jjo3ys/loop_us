@@ -3,13 +3,21 @@ from django.conf import settings
 
 # Create your models here.
 class Log(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+    user_id = models.PositiveBigIntegerField()
     query = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         app_label = 'log'
         db_table = 'Search_Log'
+
+class InterestTag(models.Model):
+    tag_list = models.JSONField(default=dict)
+    user_id = models.PositiveBigIntegerField()
+
+    class Meta:
+        app_label = 'log'
+        db_table = "Interest_tag"
 
 # class Connect_log(models.Model):
 #     date = models.DateField(auto_now_add=True)

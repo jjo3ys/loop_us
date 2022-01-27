@@ -29,17 +29,17 @@ from rest_framework import status
 
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform
-from .serializers import ProfileSerializer, ProfileTagSerializer
+from .serializers import ProfileSerializer
 from .department import R_DEPARTMENT
 from .university import UNIVERSITY
 from .text import pwmessage
 
+from search.models import InterestTag
 from tag.models import Tag, Profile_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
 from loop.models import Loopship, Request
 from fcm.models import FcmToken
-from fcm.push_fcm import notification_fcm
 
 import jwt
 import json
@@ -176,6 +176,7 @@ def signup(request):
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
+        tag_list = {}
         for tag in request.data['tag']:
             try:
                 tag_obj = Tag.objects.get(tag=tag)
@@ -184,9 +185,11 @@ def signup(request):
             
             except Tag.DoesNotExist:
                 tag_obj = Tag.objects.create(tag = tag)
-            
+
+            tag_list[str(tag_obj.id)]=1
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
 
+        InterestTag.objects.create(user_id=user.id, tag_list=tag_list)
         if type == 1:
             corp = Activation.objects.get(user_id=user.id)
             Company_Inform.objects.create(profile_id = profile_obj.id,
@@ -302,23 +305,36 @@ def profile(request):
             profile_obj.department = R_DEPARTMENT[request.data['department']]
         
         elif type == 'tag':
-            tag_list = eval(request.data['tag'])
-
+            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
             for tag in tag_obj:
+                try:
+                    interest_list.tag_list[str(tag.tag.id)] -= 1
+                    if interest_list.tag_list[str(tag.tag.id)] == 0:
+                        del interest_list.tag_list[str(tag.tag.id)]
+                except KeyError:
+                    pass
+
                 tag.delete()
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
                     tag.tag.delete()
+                tag.tag.save()
 
             tag_list = eval(request.data['tag'])      
             for tag in tag_list:
                 tag_obj, valid = Tag.objects.get_or_create(tag=tag)
                 Profile_Tag.objects.create(tag = tag_obj, profile_id = profile_obj.id)
+                try:
+                    interest_list.tag_list[str(tag_obj.id)] += 1
+                except KeyError:
+                    interest_list.tag_list[str(tag_obj.id)] = 1
+
                 if not valid:
                     tag_obj.count = tag_obj.count+1
                     tag_obj.save()
 
+        interest_list.save()
         profile_obj.save()
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
     

@@ -6,10 +6,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Log#, Connect_log
+from .models import Log, InterestTag#, Connect_log
 
 from post_api.models import Post, Like, BookMark
-from post_api.serializers import SimpleProjectserializer, MainloadSerializer
+from post_api.serializers import MainloadSerializer
 from project_api.serializers import ProjectSerializer
 from user_api.models import Profile
 from user_api.serializers import ProfileSerializer, SimpleProfileSerializer
@@ -46,10 +46,19 @@ def search(request, type):
     query = request.GET['query']
     page = request.GET['page']
     if page == 1:
-        Log.objects.create(user_id=request.user.id, query=query)
+        if 'tag' in type:
+            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+            try:
+                interest_list.tag_list[query] += 1
+            except KeyError:
+                interest_list.tag_list[query] = 1
+            interest_list.save()
+            
+        else:
+            Log.objects.create(user_id=request.user.id, query=query)
 
     if type == 'post':
-        obj =list(Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)))
+        obj = list(Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)))
         obj.reverse()
         post_obj = Paginator(obj, 5).get_page(page)
         post_obj = MainloadSerializer(post_obj, many=True).data

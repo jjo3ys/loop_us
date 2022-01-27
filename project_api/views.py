@@ -1,3 +1,4 @@
+from search.models import InterestTag
 from .serializers import ProjectTagSerializer, ProjectPostSerializer
 from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
@@ -40,14 +41,20 @@ def project(request):
             except:
                 pass
 
+        interest_list = InterestTag.objects.get_or_create(user_id=user.id)[0]
         for tag in eval(request.data['tag']):
             tag_obj, valid = Tag.objects.get_or_create(tag=tag)
+            try:
+                interest_list.tag_list[str(tag_obj.id)] += 1
+            except KeyError:
+                interest_list.tag_list[str(tag_obj.id)] = 1
             if not valid:
                 tag_obj.count = tag_obj.count + 1
                 tag_obj.save()
             
             Project_Tag.objects.create(project=project_obj, tag=tag_obj)
 
+        interest_list.save()
         return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_201_CREATED)
 
     elif request.method == 'PUT':
@@ -71,9 +78,17 @@ def project(request):
         elif type =='thumbnail':
             project_obj.pj_thumbnail = request.FILES.get('thumbnail') 
 
-        elif type == 'tag':        
+        elif type == 'tag':   
+            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0] 
             old_tag = Project_Tag.objects.filter(project_id=project_obj.id)
             for tag in old_tag:
+                try:
+                    interest_list.tag_list[str(tag.tag.id)] -= 1
+                    if interest_list.tag_list[str(tag.tag.id)] == 0:
+                        del interest_list.tag_list[str(tag.tag.id)]
+                except KeyError:
+                    pass
+
                 tag.delete()
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
@@ -82,10 +97,17 @@ def project(request):
             tag_list = eval(request.data['tag'])      
             for tag in tag_list:
                 tag, valid = Tag.objects.get_or_create(tag=tag)
+                try:
+                    interest_list.tag_list[str(tag.id)] += 1
+                except KeyError:
+                    interest_list.tag_list[str(tag.id)] = 1
+
                 Project_Tag.objects.create(tag = tag, project_id = project_obj.id)
                 if not valid:
                     tag.count = tag.count+1
                     tag.save()
+
+            interest_list.save()
 
         elif type == 'looper':
             profile_obj = Profile.objects.get(user_id=request.user.id)
@@ -135,13 +157,22 @@ def project(request):
 
     elif request.method == 'DELETE':
         project_obj = Project.objects.get(id=request.GET['id'])
+        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)
         project_tag = Project_Tag.objects.filter(project_id=request.GET['id'])
         for tag in project_tag:
+            try:
+                interest_list.tag_list[str(tag.tag.id)] -= 1
+                if interest_list.tag_list[str(tag.tag.id)] == 0:
+                    del interest_list.tag_list[str(tag.tag.id)]
+            except KeyError:
+                pass
+
             tag.tag.count = tag.tag.count-1
             if tag.tag.count == 0:
                 tag.tag.save()
             else:
                 tag.tag.save()
                 
+        interest_list.save()
         project_obj.delete()
         return Response("is deleted", status=status.HTTP_200_OK)
