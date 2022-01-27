@@ -55,6 +55,11 @@ def search(request, type):
         post_obj = MainloadSerializer(post_obj, many=True).data
         for p in post_obj:
             p.update(SimpleProfileSerializer(Profile.objects.get(user_id=p['user_id'])).data)
+            if request.user.id == p['user_id']:
+                p.update({"is_user":1})
+            else:
+                p.update({"is_user":0})
+                
             try:
                 Like.objects.get(user_id=request.user.id, post_id=p['id'])
                 p.update({"is_liked":1})
