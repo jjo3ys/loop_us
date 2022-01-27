@@ -55,12 +55,11 @@ def get_list(request):
     room = Room.objects.filter(member__icontains=request.user.id)
     return_list = []
     for r in room:
-        last = ChatSerializer(Msg.objects.filter(room_id=r.id).last()).data
-        not_read = Msg.objects.filter(room_id=r.id, receiver_id=request.user.id, is_read=False).count()
+        msg_obj = Msg.objects.filter(room_id=r.id)
         r.member.remove(request.user.id)
         profile = SimpleProfileSerializer(Profile.objects.get(user_id=r.member[0])).data
         return_list.append({"profile":profile,
-                            "message":last,
-                            "not_read":not_read})
-
+                            "message":ChatSerializer(msg_obj.last()).data,
+                            "not_read":msg_obj.filter(room_id=r.id, receiver_id=request.user.id, is_read=False).count()})
+    return_list.sort(key=lambda x: x['message']['date'], reverse=True)
     return Response(return_list, status=status.HTTP_200_OK)
