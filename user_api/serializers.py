@@ -33,7 +33,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         return DEPARTMENT[obj.department]
 
     def get_loop_count(self, obj):
-        return Loopship.objects.filter(user_id=obj.user_id).count()
+        return Loopship.objects.filter(friend_id=obj.user_id).count()
 
     def get_total_post_count(self, obj):
         return Post.objects.filter(user_id=obj.user_id).count()
