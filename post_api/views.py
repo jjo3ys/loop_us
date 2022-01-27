@@ -1,5 +1,6 @@
 import re
 from django.core.paginator import Paginator
+from project_api.serializers import ProjectLooperSerializer
 
 from tag.models import Profile_Tag, Project_Tag
 from fcm.models import FcmToken
@@ -66,8 +67,7 @@ def posting(request):
 
         postingSZ = PostingSerializer(post_obj)
 
-        profile_obj = Profile.objects.get(user_id=post_obj.user_id)
-        profile = SimpleProfileSerializer(profile_obj).data
+        profile = SimpleProfileSerializer(Profile.objects.get(user_id=post_obj.user_id)).data
         return_dict = {
             'posting_info': postingSZ.data,
         }
@@ -81,10 +81,10 @@ def posting(request):
         recommend_post = []
 
         for pj_tag in recommend:
-            post = Post.objects.filter(project=pj_tag.project)
-            for p in post:
-                if p.id != post_obj.id and p not in recommend_post:
-                    recommend_post.append(p)
+            recommend_post_obj = Post.objects.filter(project=pj_tag.project)
+            for r_p in recommend_post_obj:
+                if r_p.id != post_obj.id and r_p not in recommend_post:
+                    recommend_post.append(r_p)
 
         recommend_post = random.sample(recommend_post, min(3, len(recommend_post)))
         
@@ -117,13 +117,13 @@ def posting(request):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def like(request, idx):
-    like, valid = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+    like_obj, valid = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
     if not valid:
-        like.delete()
+        like_obj.delete()
         return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
     else:
         try:
-            token = FcmToken.objects.get(user_id=like.post.user_id)
+            token = FcmToken.objects.get(user_id=like_obj.post.user_id)
             real_name = Profile.objects.get(user_id=request.user.id).real_name
             like_fcm(token.token, real_name)
         except:
@@ -134,9 +134,9 @@ def like(request, idx):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def bookmark(request, idx):
-    book, valid = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
+    book_obj, valid = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
     if not valid:
-        book.delete()
+        book_obj.delete()
         return Response('unmarked posting', status=status.HTTP_202_ACCEPTED)
     else:
         return Response('marked posting', status=status.HTTP_202_ACCEPTED)
@@ -146,24 +146,25 @@ def bookmark(request, idx):
 def bookmark_list_load(request):
     user = request.user
     bookmark_list = BookMark.objects.filter(user_id=user.id)
-    post_list = []
+    post_obj = []
     for bookmark in bookmark_list:
-        post_list.append(bookmark.post)
+        post_obj.append(bookmark.post)
+    post_obj.reverse()
+    post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
+    post_obj = MainloadSerializer(post_obj, many=True).data
 
-    post_obj = Paginator(post_list, 5).get_page(request.GET['page'])
-    post = MainloadSerializer(post_obj, many=True).data
-
-    for i in range(len(post_obj)):
-        post[i].update(SimpleProfileSerializer(Profile.objects.get(user=post_obj[i].user)).data)
+    for p in post_obj:
+        p.update(SimpleProfileSerializer(Profile.objects.get(user_id=p['user_id'])).data)
         try:
-            Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-            post[i].update({"is_liked":1})
+            Like.objects.get(user_id=request.user.id, post_id=p['id'])
+            p.update({"is_liked":1})
         except:
-            post[i].update({"is_liked":0})
-        post[i].update({"is_marked":1,
-                        "is_user":1})
+            p.update({"is_liked":0})
+        
+        p.update({"is_marked":1,
+                  "is_user":1})
 
-    return Response(post, status=status.HTTP_200_OK)
+    return Response(post_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
@@ -179,31 +180,30 @@ def recommend_load(request):
     for project in projects:
         if project.project.user_id != request.user.id:
             project_list.append(project.project.id)
-    
+    print(project_list)
     if request.GET['last'] == '0':
         post_obj = list(Post.objects.filter(project_id__in = project_list))[-5:]
     else:
         post_obj = list(Post.objects.filter(project_id__in = project_list, id__lt=request.GET['last']))[-5:]
     
     post_obj.reverse()
-    post = MainloadSerializer(post_obj, many=True).data
-    for i in range(len(post_obj)):
-        post[i].update(SimpleProfileSerializer(Profile.objects.get(user=post_obj[i].user)).data)
-        post[i].update({"is_user":0})
+    post_obj = MainloadSerializer(post_obj, many=True).data
+    for p in post_obj:
+        p.update(SimpleProfileSerializer(Profile.objects.get(user=p['user_id'])).data)
+        p.update({"is_user":0})
+        try:
+            Like.objects.get(user_id=request.user.id, post_id=p['id'])
+            p.update({"is_liked":1})
+        except:
+            p.update({"is_liked":0})
 
         try:
-            Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-            post[i].update({"is_liked":1})
+            BookMark.objects.get(user_id=request.user.id, post_id=p['id'])
+            p.update({"is_marked":1})
         except:
-            post[i].update({"is_liked":0})
+            p.update({"is_marked":0})
 
-        try:
-            BookMark.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-            post[i].update({"is_marked":1})
-        except:
-            post[i].update({"is_marked":0})
-
-    return Response(post, status=status.HTTP_200_OK)
+    return Response(post_obj, status=status.HTTP_200_OK)
     
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
@@ -214,28 +214,27 @@ def main_load(request):
         post_obj = list(Post.objects.filter(id__lt=request.GET['last']))[-5:]
 
     post_obj.reverse()
-    post = MainloadSerializer(post_obj, many=True).data
-
-    for i in range(len(post_obj)):
-        post[i].update(SimpleProfileSerializer(Profile.objects.get(user=post_obj[i].user)).data)
-        if post_obj[i].user.id == request.user.id:
-            post[i].update({"is_user":1})
+    post_obj = MainloadSerializer(post_obj, many=True).data
+    for p in post_obj:
+        p.update(SimpleProfileSerializer(Profile.objects.get(user=p['user_id'])).data)
+        if p['user_id'] == request.user.id:
+            p.update({"is_user":1})
         else:
-            post[i].update({"is_user":0})
+            p.update({"is_user":0})
 
         try:
-            Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-            post[i].update({"is_liked":1})
+            Like.objects.get(user_id=request.user.id, post_id=p['id'])
+            p.update({"is_liked":1})
         except:
-            post[i].update({"is_liked":0})
+            p.update({"is_liked":0})
 
         try:
-            BookMark.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-            post[i].update({"is_marked":1})
+            BookMark.objects.get(user_id=request.user.id, post_id=p['id'])
+            p.update({"is_marked":1})
         except:
-            post[i].update({"is_marked":0})
+            p.update({"is_marked":0})
 
-    return Response(post, status=status.HTTP_200_OK)
+    return Response(post_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
@@ -252,27 +251,27 @@ def loop_load(request):
         post_obj = list(Post.objects.filter(id__lt=request.GET['last'], user_id__in=loop_list))[-5:]
 
     post_obj.reverse()
-    post = MainloadSerializer(post_obj, many=True).data
-    for i in range(len(post_obj)):
-        post[i].update(SimpleProfileSerializer(Profile.objects.get(user=post_obj[i].user)).data)
-        if post_obj[i].user.id == request.user.id:
-            post[i].update({"is_user":1})
+    post_obj = MainloadSerializer(post_obj, many=True).data
+    for p in post_obj:
+        p.update(SimpleProfileSerializer(Profile.objects.get(user=p['user_id'])).data)
+        if p['user_id'] == request.user.id:
+            p.update({"is_user":1})
         else:
-            post[i].update({"is_user":0})
+            p.update({"is_user":0})
 
         try:
-            Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-            post[i].update({"is_liked":1})
+            Like.objects.get(user_id=request.user.id, post_id=p['id'])
+            p.update({"is_liked":1})
         except:
-            post[i].update({"is_liked":0})
+            p.update({"is_liked":0})
 
         try:
-            BookMark.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-            post[i].update({"is_marked":1})
+            BookMark.objects.get(user_id=request.user.id, post_id=p['id'])
+            p.update({"is_marked":1})
         except:
-            post[i].update({"is_marked":0})
+            p.update({"is_marked":0})
 
-    return Response(post, status=status.HTTP_200_OK)
+    return Response(post_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
