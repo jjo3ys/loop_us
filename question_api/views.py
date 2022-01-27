@@ -37,7 +37,7 @@ def question(request):
                     interest_list.tag_list[str(tag_obj.id)]['count'] += 1
                     interest_list.tag_list[str(tag_obj.id)]['date'] = str(datetime.date.today())
                 except KeyError:
-                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today())}
+                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
                 interest_list.save()
             
             except Tag.DoesNotExist:
@@ -105,7 +105,7 @@ def question(request):
                 interest_list.tag_list[str(tag.id)]['count'] += 1
                 interest_list.tag_list[str(tag.id)]['date'] = str(datetime.date.today())
             except KeyError:
-                interest_list.tag_list[str(tag.id)] = {'coutn':1, 'date':str(datetime.date.today())}
+                interest_list.tag_list[str(tag.id)] = {'coutn':1, 'date':str(datetime.date.today()), 'id':tag.id}
 
             if not valid:
                 tag.count = tag.count+1

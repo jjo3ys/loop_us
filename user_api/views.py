@@ -187,7 +187,7 @@ def signup(request):
             except Tag.DoesNotExist:
                 tag_obj = Tag.objects.create(tag = tag)
 
-            tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today())}
+            tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
 
         InterestTag.objects.create(user_id=user.id, tag_list=tag_list)
@@ -332,7 +332,7 @@ def profile(request):
                     interest_list.tag_list[str(tag_obj.id)]['count'] += 1
                     interest_list.tag_list[str(tag_obj.id)]['date'] = str(datetime.date.today())
                 except KeyError:
-                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today())}
+                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
 
                 if not valid:
                     tag_obj.count = tag_obj.count+1

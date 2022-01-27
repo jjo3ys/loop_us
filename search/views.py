@@ -53,7 +53,7 @@ def search(request, type):
                 interest_list.tag_list[query]['count'] += 1
                 interest_list.tag_list[query]['date'] = str(datetime.date.today())
             except KeyError:
-                interest_list.tag_list[query] = {'count':1, 'date':str(datetime.date.today())}
+                interest_list.tag_list[query] = {'count':1, 'date':str(datetime.date.today()), 'id':int(query)}
             
             interest_list.save()
 

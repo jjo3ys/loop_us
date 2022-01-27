@@ -50,7 +50,7 @@ def project(request):
                 interest_list.tag_list[str(tag_obj.id)]['count'] += 1
                 interest_list.tag_list[str(tag.id)]['date'] = str(datetime.date.today())
             except KeyError:
-                interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today())}
+                interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
 
             if not valid:
                 tag_obj.count = tag_obj.count + 1
@@ -105,7 +105,7 @@ def project(request):
                     interest_list.tag_list[str(tag.id)]['count'] += 1
                     interest_list.tag_list[str(tag.id)]['date'] = str(datetime.date.today())
                 except KeyError:
-                    interest_list.tag_list[str(tag.id)] = {'count':1, 'date':str(datetime.date.today())}
+                    interest_list.tag_list[str(tag.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag.id}
 
                 Project_Tag.objects.create(tag = tag, project_id = project_obj.id)
                 if not valid:
