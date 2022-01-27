@@ -1,3 +1,4 @@
+import datetime
 from django.db.models import Q
 from django.core.paginator import Paginator
 
@@ -49,11 +50,13 @@ def search(request, type):
         if 'tag' in type:
             interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             try:
-                interest_list.tag_list[query] += 1
+                interest_list.tag_list[query]['count'] += 1
+                interest_list.tag_list[query]['date'] = datetime.date.today()
             except KeyError:
-                interest_list.tag_list[query] = 1
-            interest_list.save()
+                interest_list.tag_list[query] = {'count':1, 'date':datetime.date.today()}
             
+            interest_list.save()
+
         else:
             Log.objects.create(user_id=request.user.id, query=query)
 

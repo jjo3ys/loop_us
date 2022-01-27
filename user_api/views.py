@@ -44,6 +44,7 @@ from fcm.models import FcmToken
 import jwt
 import json
 import time
+import datetime
 import random
 import requests
 
@@ -186,7 +187,7 @@ def signup(request):
             except Tag.DoesNotExist:
                 tag_obj = Tag.objects.create(tag = tag)
 
-            tag_list[str(tag_obj.id)]=1
+            tag_list[str(tag_obj.id)] = {'count':1, 'date':datetime.date.today()}
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
 
         InterestTag.objects.create(user_id=user.id, tag_list=tag_list)
@@ -280,6 +281,8 @@ def resign(request):
     user = request.user
     profile_obj = Profile.objects.get(user_id=user.id)
     tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
+    intereset_list = InterestTag.objects.get(user_id=user.id)
+    intereset_list.delete()
     for tag in tag_obj:
         tag.tag.count = tag.tag.count-1
         if tag.tag.count == 0:
@@ -309,8 +312,8 @@ def profile(request):
             tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
             for tag in tag_obj:
                 try:
-                    interest_list.tag_list[str(tag.tag.id)] -= 1
-                    if interest_list.tag_list[str(tag.tag.id)] == 0:
+                    interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
+                    if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
                         del interest_list.tag_list[str(tag.tag.id)]
                 except KeyError:
                     pass
@@ -326,14 +329,15 @@ def profile(request):
                 tag_obj, valid = Tag.objects.get_or_create(tag=tag)
                 Profile_Tag.objects.create(tag = tag_obj, profile_id = profile_obj.id)
                 try:
-                    interest_list.tag_list[str(tag_obj.id)] += 1
+                    interest_list.tag_list[str(tag_obj.id)]['count'] += 1
+                    interest_list.tag_list[str(tag_obj.id)]['date'] = datetime.date.today()
                 except KeyError:
-                    interest_list.tag_list[str(tag_obj.id)] = 1
+                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':datetime.date.today()}
 
                 if not valid:
                     tag_obj.count = tag_obj.count+1
                     tag_obj.save()
-
+            
         interest_list.save()
         profile_obj.save()
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)

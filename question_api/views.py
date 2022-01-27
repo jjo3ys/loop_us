@@ -1,3 +1,4 @@
+import datetime
 from question_api.models import Answer, Question
 from search.models import InterestTag#, P2PAnswer, P2PQuestion
 from user_api.models import Profile
@@ -33,9 +34,10 @@ def question(request):
                 tag_obj.count = tag_obj.count + 1
                 tag_obj.save()
                 try:
-                    interest_list.tag_list[str(tag_obj.id)] += 1
+                    interest_list.tag_list[str(tag_obj.id)]['count'] += 1
+                    interest_list.tag_list[str(tag_obj.id)]['date'] = datetime.date.today()
                 except KeyError:
-                    interest_list.tag_list[str(tag_obj.id)] = 1
+                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':datetime.date.today()}
                 interest_list.save()
             
             except Tag.DoesNotExist:
@@ -83,8 +85,8 @@ def question(request):
         old_tag = Question_Tag.objects.filter(question_id=request.GET['id'])
         for tag in old_tag:
             try:
-                interest_list.tag_list[str(tag.tag.id)] -= 1
-                if interest_list.tag_list[str(tag.tag.id)] == 0:
+                interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
+                if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
                     del interest_list.tag_list[str(tag.tag.id)]
 
             except KeyError:
@@ -100,9 +102,10 @@ def question(request):
             tag, valid = Tag.objects.get_or_create(tag=tag)
             Question_Tag.objects.create(tag = tag, question_id = question_obj.id)
             try:
-                interest_list.tag_list[str(tag.id)] += 1
+                interest_list.tag_list[str(tag.id)]['count'] += 1
+                interest_list.tag_list[str(tag.id)]['date'] = datetime.date.today()
             except KeyError:
-                interest_list.tag_list[str(tag.id)] = 1
+                interest_list.tag_list[str(tag.id)] = {'coutn':1, 'date':datetime.date.today()}
 
             if not valid:
                 tag.count = tag.count+1
@@ -119,8 +122,8 @@ def question(request):
             q_tag = Question_Tag.objects.filter(question_id=request.GET['id'])
             for tag in q_tag:
                 try:
-                    interest_list.tag_list[str(tag.tag.id)] -= 1
-                    if interest_list.tag_list[str(tag.tag.id)] == 0:
+                    interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
+                    if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
                         del interest_list.tag_list[str(tag.tag.id)]
 
                 except KeyError:
