@@ -13,6 +13,7 @@ class Post(models.Model):
     contents = models.TextField(null=True)
     thumbnail = models.ImageField(null=True)
     date = models.DateTimeField(auto_now_add=True)
+    department_id = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         db_table = "Posting"

@@ -1,6 +1,5 @@
 import re
 from django.core.paginator import Paginator
-from project_api.serializers import ProjectLooperSerializer
 
 from tag.models import Profile_Tag, Project_Tag
 from fcm.models import FcmToken
@@ -13,7 +12,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import PostingSerializer, PostingContentsImageSerializer, MainloadSerializer, SimpleProjectserializer
+from .serializers import PostingSerializer, PostingContentsImageSerializer, MainloadSerializer
 from .models import Post, ContentsImage, Like, BookMark
 
 from loop.models import Loopship
@@ -23,11 +22,13 @@ import random
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
 def posting(request):
-    if request.method == 'POST':           
+    if request.method == 'POST':    
+        profile_obj = Profile.objects.get(user_id=request.user.id)       
         post_obj = Post.objects.create(user_id=request.user.id, 
                                     project_id=request.GET['id'],
                                     title=request.data['title'],
-                                    thumbnail=request.FILES.get('thumbnail'))
+                                    thumbnail=request.FILES.get('thumbnail'),
+                                    department_id=profile_obj.department)
 
 
         for image in request.FILES.getlist('image'):
@@ -126,7 +127,7 @@ def posting(request):
             return_dict.update({"is_marked":1})
         except:
             return_dict.update({"is_marked":0})
-            
+
         return Response(return_dict)
     
     elif request.method == 'DELETE':
