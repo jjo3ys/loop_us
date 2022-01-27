@@ -91,6 +91,23 @@ def posting(request):
         recommend_post = MainloadSerializer(recommend_post, many=True).data
         for post in recommend_post:
             post.update(SimpleProfileSerializer(Profile.objects.get(user_id=post['user_id'])).data)
+            if post['user_id'] == user_id:
+                post.update({"is_user":1})
+            else:
+                post.update({"is_user":0})
+
+            try:
+                Like.objects.get(user_id=user_id, post_id=post['id'])
+                post.update({"is_liked":1})
+            except:
+                post.update({"is_liked":0})
+
+            try:
+                BookMark.objects.get(user_id=user_id, post_id=post['id'])
+                post.update({"is_marked":1})
+            except:
+                post.update({"is_marked":0})
+
         return_dict.update({"recommend_post":recommend_post})
 
         if user_id == post_obj.user_id:
@@ -99,16 +116,17 @@ def posting(request):
             return_dict.update({"is_user":0})
 
         try:
-            Like.objects.get(user_id=request.user.id, post_id=posting_idx)
+            Like.objects.get(user_id=user_id, post_id=posting_idx)
             return_dict.update({"is_liked":1})
         except:
             return_dict.update({"is_liked":0})
 
         try:
-            BookMark.objects.get(user_id=request.user.id, post_id=posting_idx)
+            BookMark.objects.get(user_id=user_id, post_id=posting_idx)
             return_dict.update({"is_marked":1})
         except:
             return_dict.update({"is_marked":0})
+            
         return Response(return_dict)
     
     elif request.method == 'DELETE':
