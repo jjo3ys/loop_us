@@ -51,9 +51,9 @@ def search(request, type):
             interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             try:
                 interest_list.tag_list[query]['count'] += 1
-                interest_list.tag_list[query]['date'] = datetime.date.today()
+                interest_list.tag_list[query]['date'] = str(datetime.date.today())
             except KeyError:
-                interest_list.tag_list[query] = {'count':1, 'date':datetime.date.today()}
+                interest_list.tag_list[query] = {'count':1, 'date':str(datetime.date.today())}
             
             interest_list.save()
 
@@ -87,12 +87,14 @@ def search(request, type):
         return Response(post_obj, status=status.HTTP_200_OK)
 
     elif type == 'profile':
-        obj = Profile.objects.filter(real_name__icontains=query).order_by('-id')
+        obj = list(Profile.objects.filter(real_name__icontains=query))
+        obj.reverse()
         obj = Paginator(obj, 10).get_page(page)
         return Response(ProfileSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
 
     elif type == 'question':
-        obj = Question.objects.filter(content__icontains=query).order_by('-id')
+        obj = list(Question.objects.filter(content__icontains=query))
+        obj.reverse()
         obj = Paginator(obj, 5).get_page(page)
         obj = QuestionSerializer(obj, many=True).data
         for q in obj:
