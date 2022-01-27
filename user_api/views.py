@@ -79,11 +79,10 @@ def check_email(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     try:    
-        user = User.objects.create_user(
-            username = username_obj,
-            email = email_obj,
-            password = password_obj,
-            is_active = False)
+        user = User.objects.create_user(username = username_obj,
+                                        email = email_obj,
+                                        password = password_obj,
+                                        is_active = False)
 
     except IntegrityError:
         return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
@@ -96,7 +95,7 @@ def check_email(request):
     html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://{domain}/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
     main_title = 'LOOP US 이메일 인증'
     mail_to = user.email
-    msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하세요", to=[mail_to])
+    msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
@@ -138,14 +137,14 @@ def check_corp_num(request):
     
     else:
         try:
-            user_obj = User.objects.create_user(username=request.data['username'],
-                                                password=request.data['password'],
-                                                email=request.data['email'],
-                                                is_active=False)
+            user = User.objects.create_user(username=request.data['username'],
+                                            password=request.data['password'],
+                                            email=request.data['email'],
+                                            is_active=False)
         except IntegrityError:
             return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)
 
-        Activation.objects.create(user_id = user_obj.id,
+        Activation.objects.create(user_id = user.id,
                                   corp_num = request.data['corp_num'],
                                   corp_name = request.data['corp_name'],
                                   email = request.data['email'],
@@ -159,17 +158,17 @@ def signup(request):
     type = request.data['type']
 
     if type == 1:
-        user_obj = User.objects.get(username=request.data['username'])
+        user = User.objects.get(username=request.data['username'])
     else:
-        user_obj = User.objects.get(username=request.data['email'])
+        user = User.objects.get(username=request.data['email'])
     
 
-    if user_obj.is_active:
-        token = Token.objects.create(user_id=user_obj.id)
+    if user.is_active:
+        token = Token.objects.create(user_id=user.id)
 
         try:
             department_id = R_DEPARTMENT[request.data['department']]
-            profile_obj = Profile.objects.create(user_id = user_obj.id,
+            profile_obj = Profile.objects.create(user_id = user.id,
                                                 type = type,
                                                 real_name = request.data['real_name'],
                                                 profile_image = None,
@@ -189,7 +188,7 @@ def signup(request):
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
 
         if type == 1:
-            corp = Activation.objects.get(user_id=user_obj.id)
+            corp = Activation.objects.get(user_id=user.id)
             Company_Inform.objects.create(profile_id = profile_obj.id,
                                         corp_num = corp.corp_num,
                                         corp_name = corp.corp_name)
@@ -206,22 +205,22 @@ def login(request):
     password=request.data['password'],
     )
     if user is not None and user.is_active:
-        token = Token.objects.get(user=user)
+        token_obj = Token.objects.get(user=user)
         user.last_login = timezone.now()
         user.save()
         
         try:
-            token_obj = FcmToken.objects.get(user_id=user.id)
-            if token_obj.token != request.data['fcm_token']:
-                token_obj.token = request.data['fcm_token']
-                token_obj.save()
+            fcm_obj = FcmToken.objects.get(user_id=user.id)
+            if fcm_obj.token != request.data['fcm_token']:
+                fcm_obj.token = request.data['fcm_token']
+                fcm_obj.save()
 
         except FcmToken.DoesNotExist:
             FcmToken.objects.create(user_id=user.id,
                                     token=request.data['fcm_token'])
 
-        return Response({'token':token.key,
-                        'user_id':str(token.user_id)}, status=status.HTTP_202_ACCEPTED)
+        return Response({'token':token_obj.key,
+                        'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
     
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
@@ -231,8 +230,8 @@ def login(request):
 def logout(request):
     user = request.user
     try:
-        token_obj = FcmToken.objects.get(user_id=user.id)
-        token_obj.delete()
+        fcm_obj = FcmToken.objects.get(user_id=user.id)
+        fcm_obj.delete()
     except:
         pass
     return Response("Successed log out", status=status.HTTP_200_OK)
@@ -276,37 +275,37 @@ def password(request):
 @permission_classes((IsAuthenticated,))
 def resign(request):  
     user = request.user
-    profile = Profile.objects.get(user_id=user.id)
-    tag_list = Profile_Tag.objects.filter(profile_id=profile.id)
-    for tag in tag_list:
+    profile_obj = Profile.objects.get(user_id=user.id)
+    tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
+    for tag in tag_obj:
         tag.tag.count = tag.tag.count-1
         if tag.tag.count == 0:
             tag.tag.delete()
         else:
             tag.tag.save()
             
-    user_obj = User.objects.get(id=user.id)
-    user_obj.delete()
+    user = User.objects.get(id=user.id)
+    user.delete()
     return Response("resign from loop", status=status.HTTP_200_OK)
     
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
 def profile(request):
     if request.method == 'PUT':
-        profile = Profile.objects.get(user_id=request.user.id)
+        profile_obj = Profile.objects.get(user_id=request.user.id)
         type = request.GET['type']
 
         if type == 'image':
-            profile.profile_image = request.FILES.get('image')
+            profile_obj.profile_image = request.FILES.get('image')
         
         elif type == 'department':
-            profile.department = R_DEPARTMENT[request.data['department']]
+            profile_obj.department = R_DEPARTMENT[request.data['department']]
         
         elif type == 'tag':
             tag_list = eval(request.data['tag'])
 
-            old_tag = Profile_Tag.objects.filter(profile_id=profile.id)
-            for tag in old_tag:
+            tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
+            for tag in tag_obj:
                 tag.delete()
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
@@ -314,14 +313,14 @@ def profile(request):
 
             tag_list = eval(request.data['tag'])      
             for tag in tag_list:
-                tag, valid = Tag.objects.get_or_create(tag=tag)
-                Profile_Tag.objects.create(tag = tag, profile_id = profile.id)
+                tag_obj, valid = Tag.objects.get_or_create(tag=tag)
+                Profile_Tag.objects.create(tag = tag_obj, profile_id = profile_obj.id)
                 if not valid:
-                    tag.count = tag.count+1
-                    tag.save()
+                    tag_obj.count = tag_obj.count+1
+                    tag_obj.save()
 
-        profile.save()
-        return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
+        profile_obj.save()
+        return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
     
     if request.method == 'GET':
         idx = request.GET['id']
@@ -352,17 +351,19 @@ def profile(request):
 @permission_classes((IsAuthenticated,))
 def project(request):
     idx = request.GET['id']
-    data = ProjectSerializer(Project.objects.filter(user_id=idx).order_by('-id'), many=True).data
+    project_obj = list(Project.objects.filter(user_id=idx))
+    project_obj.reverse()
+    project_obj = ProjectSerializer(project_obj, many=True).data
     if request.user.id == int(idx):
-        for d in data:
-            d.update({"is_user":1})
+        for p in project_obj:
+            p.update({"is_user":1})
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(project_obj, status=status.HTTP_200_OK)
     else:
-        for d in data:
-            d.update({"is_user":0})
+        for p in project_obj:
+            p.update({"is_user":0})
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(project_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 def university_list(request):

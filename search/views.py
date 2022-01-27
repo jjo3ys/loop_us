@@ -49,26 +49,25 @@ def search(request, type):
         Log.objects.create(user_id=request.user.id, query=query)
 
     if type == 'post':
-        obj = Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)).order_by('-id')
+        obj =list(Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)))
+        obj.reverse()
         post_obj = Paginator(obj, 5).get_page(page)
-        data_list = MainloadSerializer(post_obj, many=True).data
-        for i in range(len(data_list)):
-            profile = Profile.objects.get(user=obj[i].user)
-            data_list[i].update(SimpleProjectserializer(obj[i].project).data)
-            data_list[i].update(SimpleProfileSerializer(profile).data)
+        post_obj = MainloadSerializer(post_obj, many=True).data
+        for p in post_obj:
+            p.update(SimpleProfileSerializer(Profile.objects.get(user_id=p['user_id'])).data)
             try:
-                Like.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-                data_list[i].update({"is_liked":1})
+                Like.objects.get(user_id=request.user.id, post_id=p['id'])
+                p.update({"is_liked":1})
             except:
-                data_list[i].update({"is_liked":0})
+                p.update({"is_liked":0})
 
             try:
-                BookMark.objects.get(user_id=request.user.id, post_id=post_obj[i].id)
-                data_list[i].update({"is_marked":1})
+                BookMark.objects.get(user_id=request.user.id, post_id=p['id'])
+                p.update({"is_marked":1})
             except:
-                data_list[i].update({"is_marked":0})
+                p.update({"is_marked":0})
 
-        return Response(data_list, status=status.HTTP_200_OK)
+        return Response(post_obj, status=status.HTTP_200_OK)
 
     elif type == 'profile':
         obj = Profile.objects.filter(real_name__icontains=query).order_by('-id')
@@ -78,49 +77,50 @@ def search(request, type):
     elif type == 'question':
         obj = Question.objects.filter(content__icontains=query).order_by('-id')
         obj = Paginator(obj, 5).get_page(page)
-        data_list = QuestionSerializer(obj, many=True).data
-        for i in range(len(data_list)):
-            profile = Profile.objects.get(user=obj[i].user)
-            data_list[i].update(SimpleProfileSerializer(profile).data)
-        return Response(data_list, status=status.HTTP_200_OK)  
+        obj = QuestionSerializer(obj, many=True).data
+        for q in obj:
+            q.update(SimpleProfileSerializer(Profile.objects.get(user_id=q['user_id'])).data)
+
+        return Response(obj, status=status.HTTP_200_OK)  
 
     elif type == 'tag_project':
-        obj = Project_Tag.objects.filter(tag_id=int(query)).order_by('-id')
+        obj = list(Project_Tag.objects.filter(tag_id=int(query)))
+        obj.reverse()
         obj = Paginator(obj, 5).get_page(page)
         result = []
         for o in obj:
             if o.project not in result:
                 result.append(o.project)
         result.reverse()
-        data_list = ProjectSerializer(result, many=True).data
-        for i in range(len(result)):
-            profile = Profile.objects.get(user_id=data_list[i]['user_id'])
-            data_list[i].update(SimpleProfileSerializer(profile).data)
-            if request.user.id == data_list[i]['user_id']:
-                data_list[i].update({"is_user":1})
+        obj = ProjectSerializer(result, many=True).data
+        for p in obj:
+            p.update(SimpleProfileSerializer(Profile.objects.get(user_id=p['user_id'])).data)
+            if request.user.id == p['user_id']:
+                p.update({"is_user":1})
             else:
-                data_list[i].update({"is_user":0})
+                p.update({"is_user":0})
 
-        return Response(data_list, status=status.HTTP_200_OK)
+        return Response(obj, status=status.HTTP_200_OK)
     
     elif type == 'tag_question':
-        obj = Question_Tag.objects.filter(tag_id=int(query)).order_by('-id')
+        obj = list(Question_Tag.objects.filter(tag_id=int(query)))
+        obj.reverse()
         obj = Paginator(obj, 5).get_page(page)
         result = []
         for o in obj:
             if o.question not in result:
                 result.append(o.question)
         result.reverse()
-        data_list = QuestionSerializer(result, many=True).data
-        for i in range(len(result)):
-            try:
-                profile = Profile.objects.get(user_id=data_list[i]['user_id'])
-                data_list[i].update(SimpleProfileSerializer(profile).data)
-            except Profile.DoesNotExist:
-                data_list[i].update({"real_name":"DoesNotExist",
-                                     "profile_image":None,
-                                     "department":"DoesNotExist"})
-        return Response(data_list, status=status.HTTP_200_OK)
+        obj = QuestionSerializer(result, many=True).data
+        for q in obj:
+            q.update(SimpleProfileSerializer(Profile.objects.get(user_id=q['user_id'])).data)
+            if request.user.id == p['user_id']:
+                q.update({"is_user":1})
+            else:
+                q.update({"is_user":0})
+
+        return Response(obj, status=status.HTTP_200_OK)
+
 
     elif type == 'notice':
         return Response("unrealized", status=status.HTTP_204_NO_CONTENT)
