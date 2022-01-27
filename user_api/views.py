@@ -38,7 +38,7 @@ from search.models import InterestTag
 from tag.models import Tag, Profile_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
-from loop.models import Loopship, Request
+from loop.models import Loopship
 from fcm.models import FcmToken
 
 import jwt
@@ -352,18 +352,14 @@ def profile(request):
         
         try:
             Loopship.objects.get(user_id=idx, friend_id=request.user.id)
-            profile.update({'looped':1})
+            profile.update({'looped':1})#프로필 주인이 나를follower
         
         except:
             try:
-                Request.objects.get(From_id=request.user.id, To_id=idx)
-                profile.update({'looped':2})
+                Loopship.objects.get(user_id=request.user.id, friend_id=idx)
+                profile.update({'looped':2})#프로필 주인을following
             except:
-                try:
-                    Request.objects.get(From_id=idx, To_id=request.user.id)
-                    profile.update({'looped':3})
-                except:
-                    profile.update({'looped':0})
+                profile.update({'looped':0})
 
         return Response(profile, status=status.HTTP_200_OK)
 
