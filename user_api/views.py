@@ -352,14 +352,19 @@ def profile(request):
         
         try:
             Loopship.objects.get(user_id=request.user.id, friend_id=idx)
-            profile.update({'looped':2})#프로필 주인을following
-        
-        except:
+            Loopship.objects.get(user_id=idx, friend_id=request.user.id)
+            profile.update({'looped':3})
+        except:      
             try:
-                Loopship.objects.get(user_id=idx, friend_id=request.user.id)
-                profile.update({'looped':1})#프로필 주인이 나를follower
+                Loopship.objects.get(user_id=request.user.id, friend_id=idx)
+                profile.update({'looped':2})#프로필 주인을following
+            
             except:
-                profile.update({'looped':0})
+                try:
+                    Loopship.objects.get(user_id=idx, friend_id=request.user.id)
+                    profile.update({'looped':1})#프로필 주인이 나를follower
+                except:
+                    profile.update({'looped':0})
 
         return Response(profile, status=status.HTTP_200_OK)
 
