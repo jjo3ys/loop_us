@@ -89,6 +89,8 @@ def posting(request):
         recommend_post = random.sample(recommend_post, min(3, len(recommend_post)))
         
         recommend_post = MainloadSerializer(recommend_post, many=True).data
+        for post in recommend_post:
+            post.update(SimpleProfileSerializer(Profile.objects.get(user_id=post['user_id'])).data)
         return_dict.update({"recommend_post":recommend_post})
 
         if user_id == post_obj.user_id:
