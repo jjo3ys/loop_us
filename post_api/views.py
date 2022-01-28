@@ -202,18 +202,22 @@ def recommend_load(request):
 
     if request.GET['last'] == '0':
         post_obj = Post.objects.filter(department_id=profile.department)
-        post_obj.union(Post.objects.filter(project_id__in = project_list))
+        post_obj.union(Post.objects.exclude(department_id=profile.department).filter(project_id__in = project_list))
         post_obj = list(post_obj)[-5:]
     else:
-        post_obj = Post.objects.filter(project_id__in = project_list, id__lt=request.GET['last'])
-        post_obj.union(Post.objects.filter(department_id=profile.department, id__lt=request.GET['last']))
+        post_obj = Post.objects.filter(department_id=profile.department, id__lt=request.GET['last'])
+        post_obj.union(Post.objects.exclude(department_id=profile.department).filter(id__lt=request.GET['last'], project_id__in = project_list))
         post_obj = list(post_obj)[-5:]
         
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
         p.update(SimpleProfileSerializer(Profile.objects.get(user=p['user_id'])).data)
-        p.update({"is_user":0})
+        if p['user_id'] == request.user.id:
+            p.update({"is_user":1})
+        else:
+            p.update({"is_user":0})
+
         try:
             Like.objects.get(user_id=request.user.id, post_id=p['id'])
             p.update({"is_liked":1})
