@@ -1,4 +1,3 @@
-import re
 from django.core.paginator import Paginator
 
 from tag.models import Profile_Tag, Project_Tag
@@ -199,14 +198,17 @@ def recommend_load(request):
     projects = Project_Tag.objects.filter(tag_id__in=tag_list)
     project_list = []
     for project in projects:
-        if project.project.user_id != request.user.id:
-            project_list.append(project.project.id)
-    print(project_list)
+        project_list.append(project.project.id)
+
     if request.GET['last'] == '0':
-        post_obj = list(Post.objects.filter(project_id__in = project_list))[-5:]
+        post_obj = Post.objects.filter(department_id=profile.department)
+        post_obj.union(Post.objects.filter(project_id__in = project_list))
+        post_obj = list(post_obj)[-5:]
     else:
-        post_obj = list(Post.objects.filter(project_id__in = project_list, id__lt=request.GET['last']))[-5:]
-    
+        post_obj = Post.objects.filter(project_id__in = project_list, id__lt=request.GET['last'])
+        post_obj.union(Post.objects.filter(department_id=profile.department, id__lt=request.GET['last']))
+        post_obj = list(post_obj)[-5:]
+        
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
@@ -223,7 +225,6 @@ def recommend_load(request):
             p.update({"is_marked":1})
         except:
             p.update({"is_marked":0})
-
     return Response(post_obj, status=status.HTTP_200_OK)
     
 @api_view(['GET', ])
