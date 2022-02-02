@@ -162,22 +162,23 @@ def project(request):
 
     elif request.method == 'DELETE':
         project_obj = Project.objects.get(id=request.GET['id'])
-        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)
+        interest_list, valid = InterestTag.objects.get_or_create(user_id=request.user.id)
         project_tag = Project_Tag.objects.filter(project_id=request.GET['id'])
-        for tag in project_tag:
-            try:
-                interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
-                if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
-                    del interest_list.tag_list[str(tag.tag.id)]
-            except KeyError:
-                pass
+        if not valid:
+            for tag in project_tag:
+                try:
+                    interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
+                    if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
+                        del interest_list.tag_list[str(tag.tag.id)]
+                except KeyError:
+                    pass
 
-            tag.tag.count = tag.tag.count-1
-            if tag.tag.count == 0:
-                tag.tag.save()
-            else:
-                tag.tag.save()
+                tag.tag.count = tag.tag.count-1
+                if tag.tag.count == 0:
+                    tag.tag.save()
+                else:
+                    tag.tag.save()
 
-        interest_list.save()
+            interest_list.save()
         project_obj.delete()
         return Response("is deleted", status=status.HTTP_200_OK)
