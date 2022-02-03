@@ -47,6 +47,7 @@ def posting(request):
 
         post_obj.contents = str(contents)
         post_obj.save()
+        print(post_obj.id)
 
         return Response("ok", status=status.HTTP_200_OK)
     
