@@ -31,7 +31,7 @@ def loop_fcm(token, req_from):
         body='{0}님이 회원님을 팔로우 합니다.'.format(req_from)
     ),
     data={
-        'type':'allow'
+        'type':'follow'
     },
     token = token,
     )
