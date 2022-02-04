@@ -80,6 +80,7 @@ def project(request):
             project_obj.introduction = request.data['introduction']
 
         elif type =='thumbnail':
+            project_obj.pj_thumbnail.delete(save=False)
             project_obj.pj_thumbnail = request.FILES.get('thumbnail') 
 
         elif type == 'tag':   
@@ -162,6 +163,7 @@ def project(request):
 
     elif request.method == 'DELETE':
         project_obj = Project.objects.get(id=request.GET['id'])
+        project_obj.pj_thumbnail.delete(save=False)
         interest_list, valid = InterestTag.objects.get_or_create(user_id=request.user.id)
         project_tag = Project_Tag.objects.filter(project_id=request.GET['id'])
         if not valid:
