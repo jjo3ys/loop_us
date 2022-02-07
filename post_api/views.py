@@ -57,7 +57,7 @@ def posting(request):
         
         elif request.GET['type'] == 'thumbnail':
             post_obj.thumbnail.delete(save=False)
-            post_obj.thumbnail = request.FILES.get('thumnbnail')
+            post_obj.thumbnail = request.FILES.get('thumbnail')
         
         elif request.GET['type'] == 'contents':
             image_objs = ContentsImage.objects.filter(post_id=request.GET['id'])
