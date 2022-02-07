@@ -39,7 +39,7 @@ def posting(request):
         contents = []
 
         for d in eval(request.data['contents']):
-            if d['content'] == 'image':
+            if d['type'] == 'IMAGE' and d['content'] == 'image':
                 d['content'] = images[image_id]['image']
                 image_id += 1
 
@@ -47,29 +47,43 @@ def posting(request):
 
         post_obj.contents = str(contents)
         post_obj.save()
-        print(post_obj.id)
 
         return Response("ok", status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
-        type = { 0 : 'T', 
-                 1: 'H1',
-                 2: 'H2',
-                 3: 'QUOTE',
-                 4: 'BULLET',
-                 5: 'IMAGE',
-                 6: 'LINK',
-                 7: 'IMAGEINFO',
-                 8: 'URLIMAGE' }
-        post_objs = Post.objects.all()
-        for post in post_objs:
-            contents = eval(post.contents)
-            for c in contents:
-                c['type'] = type[int(c['type'])]
-            post.contents = contents
-            post.save()
+        post_obj = Post.objects.get(id=request.GET['id'])
+        if request.GET['type'] == 'title':
+            post_obj.title = request.data['title']
         
-        return Response('complete update')
+        elif request.GET['type'] == 'thumbnail':
+            post_obj.thumbnail.delete(save=False)
+            post_obj.thumbnail = request.FILES.get('thumnbnail')
+        
+        elif request.GET['type'] == 'contents':
+            image_objs = ContentsImage.objects.filter(post_id=request.GET['id'])
+
+            for image in image_objs:
+                if image.image.url not in post_obj.contents:
+                    image.image.delete(save=False)
+                    image.delete()
+
+            image_list = []
+            for image in request.FILES.getlist('image'):
+                image_obj = ContentsImage.objects.create(post_id=request.GET['id'], image=image)
+                image_list.append(image_obj.image.url)
+
+            image_id = 0
+            contents = []
+            for content in eval(request.data['contents']):
+                if content['type'] == 'IMAGE' and content['content'] == 'image':
+                    content['content'] = image_list[image_id]
+                    image_id += 1
+                contents.append(content)
+            
+            post_obj.contents = str(contents)
+        
+        post_obj.save()
+        return Response('Update OK', status=status.HTTP_200_OK)
     
     elif request.method == 'GET':
         user_id = request.user.id
