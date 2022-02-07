@@ -302,6 +302,7 @@ def profile(request):
         type = request.GET['type']
 
         if type == 'image':
+            profile_obj.profile_image.delete(save=False)
             profile_obj.profile_image = request.FILES.get('image')
         
         elif type == 'department':

@@ -47,6 +47,7 @@ def posting(request):
 
         post_obj.contents = str(contents)
         post_obj.save()
+        print(post_obj.id)
 
         return Response("ok", status=status.HTTP_200_OK)
     
@@ -146,6 +147,10 @@ def posting(request):
     
     elif request.method == 'DELETE':
         post_obj = Post.objects.get(id=request.GET['id'])
+        post_obj.thumbnail.delete(save=False)
+        contents_image_obj = ContentsImage.objects.filter(post_id=post_obj.id)
+        for image in contents_image_obj:
+            image.image.delete(save=False)
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 

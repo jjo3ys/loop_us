@@ -47,7 +47,7 @@ from rest_framework.permissions import IsAuthenticated
 def loop(request, idx):
     user = request.user
     profile = Profile.objects.get(user_id=user.id)
-    token = FcmToken.objects.get(user_id=user.id)
+    token = FcmToken.objects.get(user_id=idx)
     loop_fcm(token.token, profile.real_name)
 
     Loopship.objects.create(user_id=user.id, friend_id=idx)
