@@ -51,9 +51,24 @@ def posting(request):
         return Response("ok", status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
-        post_obj = Post.objects.get(id=request.GET['id'])
-        post_obj.title = request.data['title']
-        post_obj.thumbnail = request.FILES.get('thumbnail')
+        type = { 0 : 'T', 
+                 1: 'H1',
+                 2: 'H2',
+                 3: 'QUOTE',
+                 4: 'BULLET',
+                 5: 'IMAGE',
+                 6: 'LINK',
+                 7: 'IMAGEINFO',
+                 8: 'URLIMAGE' }
+        post_objs = Post.objects.all()
+        for post in post_objs:
+            contents = eval(post.contents)
+            for c in contents:
+                c['type'] = type[int(c['type'])]
+            post.contents = contents
+            post.save()
+        
+        return Response('complete update')
     
     elif request.method == 'GET':
         user_id = request.user.id
