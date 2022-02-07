@@ -1,4 +1,4 @@
-from .models import Profile
+from .models import Banlist, Profile
 from .department import DEPARTMENT
 from tag.models import Profile_Tag
 from loop.models import Loopship
@@ -46,3 +46,16 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
 
     def get_department(self, obj):
         return DEPARTMENT[obj.department]
+
+class BanlistSerializer(serializers.ModelSerializer):
+    banlist = serializers.SerializerMethodField()
+    class Meta:
+        model = Banlist
+        fields = ['user_id', 'banlist']
+    
+    def get_banlist(self, obj):
+        ban_list = []
+        for ban in obj.banlist:
+            ban_list.append(SimpleProfileSerializer(Profile.objects.get(user_id=ban)).data)
+        
+        return ban_list

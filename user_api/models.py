@@ -30,3 +30,19 @@ class Activation(models.Model):
     class Meta:
         db_table = "Corp_active"
 
+class Banlist(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    banlist = models.JSONField(default=None, null=True)
+
+    class Meta:
+        db_table = "Ban_list"
+
+class Report(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    type = models.BooleanField()
+    target_id = models.PositiveBigIntegerField()
+    reason = models.CharField(max_length=100)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "Report"

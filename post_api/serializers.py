@@ -54,7 +54,7 @@ class MainloadSerializer(serializers.ModelSerializer):
         return SimpleProjectserializer(obj.project).data
     
     def get_thumbnail(self, obj):
-        if obj.thumbnail == '':
+        if obj.thumbnail == None or obj.thumbnail == '':    
             try:
                 return ContentsImage.objects.filter(post_id=obj.id)[0].image.url
             except:

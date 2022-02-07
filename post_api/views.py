@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from tag.models import Profile_Tag, Project_Tag
 from fcm.models import FcmToken
 from fcm.push_fcm import like_fcm
-from user_api.models import Profile
+from user_api.models import Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
 from rest_framework.permissions import IsAuthenticated
@@ -343,3 +343,11 @@ def like_list_load(request, idx):
        like_list.append(Profile.objects.get(user_id=l.user_id))
     
     return Response(SimpleProfileSerializer(like_list, many=True).data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def report_posting(request):
+    Report.objects.create(user_id=request.user.id, type=False, target_id=request.data['id'], reason=request.data['reason'])
+    if Report.objects.filter(type=False, target_id=request.data['id']).count() >= 3:
+        pass#알람
+    return Response(status=status.HTTP_200_OK)

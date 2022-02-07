@@ -28,8 +28,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 # from .department import DEPARTMENT
-from .models import Profile, Activation, Company_Inform
-from .serializers import ProfileSerializer
+from .models import Profile, Activation, Company_Inform, Banlist, Report
+from .serializers import BanlistSerializer, ProfileSerializer
 from .department import R_DEPARTMENT
 from .university import UNIVERSITY
 from .text import pwmessage
@@ -390,6 +390,51 @@ def project(request):
 @api_view(['GET', ])
 def university_list(request):
     return Response(UNIVERSITY)
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def report_profile(request):
+    Report.objects.create(user_id=request.user.id, type=True, target_id=request.data['id'], reason=request.data['reason'])
+    if Report.objects.filter(type=True, target_id=request.data['id']).count() >= 3:
+        pass#알람
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['POST', 'DELETE', 'GET'])
+@permission_classes((IsAuthenticated,))
+def ban(request):
+    if request.method == 'POST':
+        banlist_obj, valid = Banlist.objects.get_or_create(user_id=request.user.id)
+        if not valid:
+            ban_list = banlist_obj.banlist
+            banlist_obj.banlist = ban_list.append(int(request.GET['id']))      
+        else:
+            banlist_obj.banlist=[int(request.GET['id'])]
+           
+        banlist_obj.save()
+        try:
+            Loopship.objects.get(user_id=request.user.id, friend_id=request.GET['id']).delete()
+        except:
+            pass
+
+        try:
+            Loopship.objects.get(user_id=request.GET['id'], friend_id=request.user.id).delete()
+        except:
+            pass
+
+        return Response(status=status.HTTP_200_OK)
+    
+    elif request.method == 'DELETE':
+        banlist_obj = Banlist.objects.get(user_id=request.user.id)
+        banlist_obj.banlist.remove(int(request.GET['id']))
+        banlist_obj.save()
+        return Response(status=status.HTTP_200_OK)
+
+    elif request.method == 'GET':
+        try:
+            banlist_obj = Banlist.objects.get(user_id=request.user.id)  
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(BanlistSerializer(banlist_obj).data, status=status.HTTP_200_OK)
 
 # @api_view(['GET', ])
 # def noti(request):
