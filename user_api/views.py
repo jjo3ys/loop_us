@@ -240,10 +240,9 @@ def logout(request):
         pass
     return Response("Successed log out", status=status.HTTP_200_OK)
     
-@api_view(['PUT', 'GET'])
+@api_view(['PUT', 'POST'])
 @permission_classes((IsAuthenticated,))
 def password(request):
-    user = request.user
     if request.method == 'PUT':
         user = request.user
         
@@ -256,7 +255,8 @@ def password(request):
             return Response("origin_pw is not matched with data", status=status.HTTP_401_UNAUTHORIZED)
         
 
-    elif request.method =='GET':
+    elif request.method =='POST':
+        user = User.objects.get(email=request.data['email'])
         alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
         char = [ '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+' , ',',  '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', ']', '^', '_', '`', '{', '|', '}', '~']
         new_password = ''
