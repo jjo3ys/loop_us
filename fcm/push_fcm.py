@@ -83,3 +83,23 @@ def notification_fcm(token_list):
     tokens=token_list
     )
     messaging.send_multicast(msg)
+
+def report_alarm(count, type, id, reason):
+    if type == True:
+        text = '{0}번 유저가 신고 당함 누적 횟수:{1}'.format(id, count)
+        report_type = 'user_report'
+    elif type == False:
+        text = '{0}번 포스팅이 신고 당함 누적 횟수:{1}'.format(id, count)
+        report_type = 'posting_report'
+
+    message = messaging.Message(notification=messaging.Notification(
+        title=text,
+        body='사유:{0}'.format(reason)
+    ),
+    data={
+        "type":report_type,
+        "id":str(id)
+    },
+    token='f2PsSd8nTMadfikWkOdCaQ:APA91bFZxp85MUCx00WSuavTAVeNyOPudSfdE74W5xDZaQe-0WyxP3SF9VNtCzd_sgGib_qYEJX4QkkntXoaliSHAqQmyD9tAtSw4pWbC6ScU28BkZCa4YLFb_u84lRY_-dR2uP9Z4D6'
+    )
+    messaging.send(message)
