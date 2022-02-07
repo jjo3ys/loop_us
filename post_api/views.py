@@ -47,8 +47,9 @@ def posting(request):
 
         post_obj.contents = str(contents)
         post_obj.save()
-
-        return Response("ok", status=status.HTTP_200_OK)
+        post_obj = MainloadSerializer(post_obj).data
+        post_obj.update(SimpleProfileSerializer(profile_obj).data)
+        return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
         post_obj = Post.objects.get(id=request.GET['id'])
