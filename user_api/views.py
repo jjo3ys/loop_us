@@ -243,7 +243,6 @@ def logout(request):
     return Response("Successed log out", status=status.HTTP_200_OK)
     
 @api_view(['PUT', 'POST'])
-@permission_classes((IsAuthenticated,))
 def password(request):
     if request.method == 'PUT':
         user = request.user
