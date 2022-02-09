@@ -270,8 +270,9 @@ def password(request):
 
     elif request.method =='POST':
         user = User.objects.get(email=request.data['email'])
-        # user.is_active = False
-        # user.save()
+
+        user.is_active = False
+        user.save()
         check_email(user, 'find')
         return Response(status=status.HTTP_200_OK)
 
