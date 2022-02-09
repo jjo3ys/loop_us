@@ -263,7 +263,7 @@ def password(request):
         new_password = ''
 
         for i in range(3):
-            pattern = random.shuffle(random.choice(alphabet) + random.choice(alphabet) + random.choice(integer))
+            pattern = random.choice(alphabet) + random.choice(alphabet) + random.choice(integer)
             new_password += pattern
 
         user.set_password(new_password)
@@ -339,7 +339,7 @@ def profile(request):
                     tag_obj.count = tag_obj.count+1
                     tag_obj.save()         
             interest_list.save()
-            
+
         profile_obj.save()
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
     
