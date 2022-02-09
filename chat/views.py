@@ -30,9 +30,9 @@ def chatting(request, receiver_idx):
                 msg.save()
 
         message = ChatSerializer(message, many=True).data
-        message.update(SimpleProfileSerializer(Profile.objects.get(user_id=receiver_idx)).data)
+        profile = SimpleProfileSerializer(Profile.objects.get(user_id=receiver_idx)).data
 
-        return Response(message, status=status.HTTP_200_OK)
+        return Response({"message":message, "profile":profile}, status=status.HTTP_200_OK)
 
     if request.method == 'POST':
         room = Room.objects.get_or_create(member=member_list)[0]
