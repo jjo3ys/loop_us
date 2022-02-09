@@ -59,9 +59,35 @@ headers = {
 params = (
     ('serviceKey', 'frbSEAcXD+a6UEOUq1lkWcWmFoDku20SZvLeO++pP9e5yQo5GIqTkbVbctqafewScJuzLLcTW/l4d/Lw/wjOig=='),
 )
+def check_email(user, type):           
+    uidb4 = urlsafe_base64_encode(force_bytes(user.id))
+    # token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
+    token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
+    html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://3.35.253.151:8000/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
+    main_title = 'LOOP US 이메일 인증'
+    mail_to = user.email
+    msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
+
+    for i in range(90):
+        time.sleep(2)
+        user = User.objects.get(pk=user.id)
+
+        if user.is_active:
+            return Response(status=status.HTTP_200_OK)
+
+    if type == 'create':
+        user.delete()
+
+    elif type == 'find':
+        user.is_active = True
+        user.save()
+
+    return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
 
 @api_view(['POST', ])
-def check_email(request):
+def create_user(request):
     
     email_obj = request.data['email']
     password_obj = request.data['password']
@@ -89,28 +115,8 @@ def check_email(request):
 
     except IntegrityError:
         return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
-            
-    current_site = get_current_site(request)
-    domain = current_site.domain
-    uidb4 = urlsafe_base64_encode(force_bytes(user.id))
-    token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
-    # token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
-    html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://{domain}/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
-    main_title = 'LOOP US 이메일 인증'
-    mail_to = user.email
-    msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
-
-    for i in range(36):
-        time.sleep(5)
-        user = User.objects.get(pk=user.id)
-
-        if user.is_active:
-            return Response(status=status.HTTP_200_OK)
-
-    user.delete()
-    return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
+    check_email(user, 'create')
+    return Response(status=status.HTTP_200_OK)
 
 class Activate(View):
     def get(self, request, uidb64, token):
@@ -245,34 +251,28 @@ def logout(request):
 @api_view(['PUT', 'POST'])
 def password(request):
     if request.method == 'PUT':
-        user = request.user
-        
-        if check_password(request.data['origin_pw'], user.password):
-            new_pw = request.data['new_pw']
-            user.set_password(new_pw)
+        if request.GET['type'] == 'change':
+            user = request.user
+            
+            if check_password(request.data['origin_pw'], user.password):
+                new_pw = request.data['new_pw']
+                user.set_password(new_pw)
+                user.save()
+                return Response("pw is changed", status=status.HTTP_200_OK)
+            else:
+                return Response("origin_pw is not matched with data", status=status.HTTP_401_UNAUTHORIZED)
+
+        elif request.GET['type'] == 'find':
+            user = User.objects.get(email=request.data['email'])
+            user.set_password(request.data['password'])
             user.save()
-            return Response("pw is changed", status=status.HTTP_200_OK)
-        else:
-            return Response("origin_pw is not matched with data", status=status.HTTP_401_UNAUTHORIZED)
-        
+            return Response(status=status.HTTP_200_OK)
 
     elif request.method =='POST':
         user = User.objects.get(email=request.data['email'])
-        alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-        integer = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
-        new_password = ''
-
-        for i in range(3):
-            pattern = random.choice(alphabet) + random.choice(alphabet) + random.choice(integer)
-            new_password += pattern
-
-        user.set_password(new_password)
-        user.save()
-
-        profile_obj = Profile.objects.get(user_id=user.id)
-        real_name = profile_obj.real_name
-        EmailMessage("새로운 비밀번호입니다.", pwmessage(real_name, new_password), to=[user.email]).send()
-
+        # user.is_active = False
+        # user.save()
+        check_email(user, 'find')
         return Response(status=status.HTTP_200_OK)
 
 @api_view(['DELETE', ])
