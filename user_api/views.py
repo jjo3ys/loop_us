@@ -260,13 +260,12 @@ def password(request):
     elif request.method =='POST':
         user = User.objects.get(email=request.data['email'])
         alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-        char = [ '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+' , ',',  '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', ']', '^', '_', '`', '{', '|', '}', '~']
+        integer = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
         new_password = ''
 
-        for i in range(5):
-            alpha = random.choice(alphabet)
-            ch = random.choice(char)
-            new_password = new_password + alpha + ch
+        for i in range(3):
+            pattern = random.shuffle(random.choice(alphabet) + random.choice(alphabet) + random.choice(integer))
+            new_password += pattern
 
         user.set_password(new_password)
         user.save()
@@ -339,9 +338,9 @@ def profile(request):
 
                 if not valid:
                     tag_obj.count = tag_obj.count+1
-                    tag_obj.save()
+                    tag_obj.save()         
+            interest_list.save()
             
-        interest_list.save()
         profile_obj.save()
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
     
