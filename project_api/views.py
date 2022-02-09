@@ -39,7 +39,7 @@ def project(request):
             TagLooper.objects.create(project=project_obj, looper_id=looper)
             try:
                 token = FcmToken.objects.get(user_id=looper)
-                tag_fcm(token.token, profile_obj.real_name)
+                tag_fcm(token.token, profile_obj.real_name, project_obj.project_name, project_obj.id)
             except:
                 pass
 
@@ -128,7 +128,7 @@ def project(request):
                 if valid:
                     try:
                         token = FcmToken.objects.get(user_id=looper.looper_id)
-                        tag_fcm(token.token, profile_obj.real_name)
+                        tag_fcm(token.token, profile_obj.real_name, project_obj.project_name, project_obj.id)
                     except:
                         pass
             

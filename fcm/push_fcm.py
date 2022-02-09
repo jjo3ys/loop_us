@@ -1,9 +1,9 @@
 from firebase_admin import messaging
 
-def answer_fcm(token, req_from, id):
+def answer_fcm(token, req_from, question, id):
     message = messaging.Message(notification=messaging.Notification(
-        title='답글',
-        body='회원님의 질문에 {0}님이 답변을 남겼습니다.'.format(req_from)
+        title=question,
+        body='질문에 어떤 답변이 달렸는지 확인해보세요.'.format(req_from)
     ),
     data={
         'type':'answer',
@@ -13,44 +13,35 @@ def answer_fcm(token, req_from, id):
     )
     messaging.send(message)
 
-def adopt_fcm(token):
+def loop_fcm(token, req_from, id):
     message = messaging.Message(notification=messaging.Notification(
-        title='채택',
-        body='회원님의 답글이 채택되었습니다.'
+        title='루프어스',
+        body='{0}님이 회원님을 팔로우하기 시작했어요.'.format(req_from)
     ),
     data={
-        'type':'adopt'
+        'type':'follow',
+        'id':str(id)
     },
     token = token,
     )
     messaging.send(message)
 
-def loop_fcm(token, req_from):
+def tag_fcm(token, req_from, project, id):
     message = messaging.Message(notification=messaging.Notification(
-        title='팔로우',
-        body='{0}님이 회원님을 팔로우 합니다.'.format(req_from)
+        title='루프어스',
+        body='{0}님이 {1}활동에 회원님을 태그했어요.'.format(req_from, project)
     ),
     data={
-        'type':'follow'
-    },
-    token = token,
-    )
-    messaging.send(message)
-def tag_fcm(token, req_from):
-    message = messaging.Message(notification=messaging.Notification(
-        title='태그',
-        body='{0}님이 활동에 회원님을 태그하였습니다.'.format(req_from)
-    ),
-    data={
-        'type':'tag'
+        'type':'tag',
+        'id':str(id)
     },
     token = token,
     )
     messaging.send(message)
 
-def like_fcm(token, req_from):
+def like_fcm(token, req_from, id):
     message = messaging.Message(notification=messaging.Notification(
-        title='알림',
+        title='루프어스',
         body='{0}님이 회원님의 포스팅을 좋아합니다.'.format(req_from)
     ),
     data={
@@ -63,7 +54,7 @@ def like_fcm(token, req_from):
 
 def chat_fcm(token, req_from, msg, user_id):
     message = messaging.Message(notification=messaging.Notification(
-        title='{0}님이 메세지를 남겼습니다.'.format(req_from),
+        title='{0}님'.format(req_from),
         body=msg
     ),
     data={

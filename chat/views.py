@@ -30,6 +30,7 @@ def chatting(request, receiver_idx):
                 msg.save()
 
         message = ChatSerializer(message, many=True).data
+        message.update(SimpleProfileSerializer(Profile.objects.get(user_id=receiver_idx)).data)
 
         return Response(message, status=status.HTTP_200_OK)
 

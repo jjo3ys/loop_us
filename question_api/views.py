@@ -4,9 +4,9 @@ from search.models import InterestTag#, P2PAnswer, P2PQuestion
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
 from fcm.models import FcmToken
-from fcm.push_fcm import answer_fcm, adopt_fcm
+from fcm.push_fcm import answer_fcm
 
-from .serializers import QuestionSerializer, AnswerSerializer, QuestionTagSerialier, OnlyQSerializer#, P2PAnswerSerializer, P2PQuestionSerializer
+from .serializers import QuestionSerializer, AnswerSerializer, OnlyQSerializer#, P2PAnswerSerializer, P2PQuestionSerializer
 from tag.models import Tag, Question_Tag
 
 from rest_framework import status
@@ -194,7 +194,7 @@ def answer(request, question_idx):
                                             adopt=False)
         try:
             token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
-            answer_fcm(token.token, profile_obj.real_name, question_idx)
+            answer_fcm(token.token, profile_obj.real_name, answer_obj.question.content, question_idx)
         except:
             pass
 
@@ -213,21 +213,6 @@ def answer(request, question_idx):
     elif request.method == 'DELETE':
         Answer.objects.get(id=request.GET['id']).delete()
         return Response(status=status.HTTP_200_OK)
-
-@api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
-def answer_adopt(request):
-    answer_obj = Answer.objects.get(id=request.GET['id'])
-    answer_obj.adopt = True
-    answer_obj.question.adopt = True
-    answer_obj.save()
-    try:
-        token = FcmToken.objects.get(user_id=answer_obj.user_id)
-        adopt_fcm(token)
-    except:
-        pass
-    
-    return Response(status=status.HTTP_200_OK)
 
 # @api_view(['POST', ])
 # @permission_classes((IsAuthenticated,))
