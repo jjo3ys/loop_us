@@ -37,7 +37,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'user_id', 'project_name', 'introduction', 'pj_thumbnail', 'start_date', 'end_date', 'project_tag', 'looper', 'count']
+        fields = ['id', 'user_id', 'profile', 'project_name', 'introduction', 'pj_thumbnail', 'start_date', 'end_date', 'project_tag', 'looper', 'count']
 
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
