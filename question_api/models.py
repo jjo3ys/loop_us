@@ -8,7 +8,7 @@ class Question(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField(null=True)
     adopt = models.BooleanField(null=False)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "Question"
@@ -18,7 +18,7 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, related_name='answer', on_delete=models.CASCADE)
     content = models.TextField(null=True)
     adopt = models.BooleanField(null=False)
-    date = models.DateField(auto_now_add=True)
+    date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "Q_answer"
