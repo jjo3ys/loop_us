@@ -30,6 +30,7 @@ class ProjectLooperSerializer(serializers.ModelSerializer):
         return SimpleProfileSerializer(profile).data
 
 class ProjectSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
     project_tag = ProjectTagSerializer(many=True, read_only=True)
     looper = ProjectLooperSerializer(many=True, read_only=True)
     count = serializers.SerializerMethodField()
@@ -37,6 +38,9 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'user_id', 'project_name', 'introduction', 'pj_thumbnail', 'start_date', 'end_date', 'project_tag', 'looper', 'count']
+
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
 
     def get_count(self, obj):
         post = Post.objects.filter(project_id=obj.id)

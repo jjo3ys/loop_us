@@ -66,7 +66,6 @@ def search(request, type):
         post_obj = Paginator(obj, 5).get_page(page)
         post_obj = MainloadSerializer(post_obj, many=True).data
         for p in post_obj:
-            p.update(SimpleProfileSerializer(Profile.objects.get(user_id=p['user_id'])).data)
             if request.user.id == p['user_id']:
                 p.update({"is_user":1})
             else:
@@ -97,8 +96,6 @@ def search(request, type):
         obj.reverse()
         obj = Paginator(obj, 5).get_page(page)
         obj = QuestionSerializer(obj, many=True).data
-        for q in obj:
-            q.update(SimpleProfileSerializer(Profile.objects.get(user_id=q['user_id'])).data)
 
         return Response(obj, status=status.HTTP_200_OK)  
 
@@ -113,7 +110,6 @@ def search(request, type):
         result.reverse()
         obj = ProjectSerializer(result, many=True).data
         for p in obj:
-            p.update(SimpleProfileSerializer(Profile.objects.get(user_id=p['user_id'])).data)
             if request.user.id == p['user_id']:
                 p.update({"is_user":1})
             else:
@@ -132,7 +128,6 @@ def search(request, type):
         result.reverse()
         obj = QuestionSerializer(result, many=True).data
         for q in obj:
-            q.update(SimpleProfileSerializer(Profile.objects.get(user_id=q['user_id'])).data)
             if request.user.id == q['user_id']:
                 q.update({"is_user":1})
             else:
