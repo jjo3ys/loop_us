@@ -1,4 +1,5 @@
 from firebase_admin import messaging
+from user_api.models import Alarm
 
 def answer_fcm(token, req_from, question, id):
     message = messaging.Message(notification=messaging.Notification(
@@ -9,9 +10,10 @@ def answer_fcm(token, req_from, question, id):
         'type':'answer',
         'id':str(id)
     },
-    token = token,
+    token = token.token,
     )
     messaging.send(message)
+    Alarm.objects.create(user_id=token.user_id, type=1, target_id=id)
 
 def loop_fcm(token, req_from, id):
     message = messaging.Message(notification=messaging.Notification(
@@ -22,9 +24,10 @@ def loop_fcm(token, req_from, id):
         'type':'follow',
         'id':str(id)
     },
-    token = token,
+    token = token.token,
     )
     messaging.send(message)
+    Alarm.objects.create(user_id=token.user_id, type=2, target_id=id)
 
 def tag_fcm(token, req_from, project, id):
     message = messaging.Message(notification=messaging.Notification(
@@ -35,9 +38,10 @@ def tag_fcm(token, req_from, project, id):
         'type':'tag',
         'id':str(id)
     },
-    token = token,
+    token = token.token,
     )
     messaging.send(message)
+    Alarm.objects.create(user_id=token.user_id, type=3, target_id=id)
 
 def like_fcm(token, req_from, id):
     message = messaging.Message(notification=messaging.Notification(
@@ -48,9 +52,10 @@ def like_fcm(token, req_from, id):
         'type':'tag',
         'id':str(id)
     },
-    token = token,
+    token = token.token,
     )
     messaging.send(message)
+    Alarm.objects.create(user_id=token.user_id, type=4, target_id=id)
 
 def chat_fcm(token, req_from, msg, user_id):
     message = messaging.Message(notification=messaging.Notification(

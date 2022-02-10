@@ -46,3 +46,12 @@ class Report(models.Model):
 
     class Meta:
         db_table = "Report"
+
+class Alarm(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    type = models.PositiveSmallIntegerField()
+    target_id = models.PositiveIntegerField()
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "Alarm"

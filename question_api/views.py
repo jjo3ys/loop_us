@@ -194,7 +194,7 @@ def answer(request, question_idx):
                                             adopt=False)
         try:
             token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
-            answer_fcm(token.token, profile_obj.real_name, answer_obj.question.content, question_idx)
+            answer_fcm(token, profile_obj.real_name, answer_obj.question.content, question_idx)
         except:
             pass
 
