@@ -49,7 +49,7 @@ def like_fcm(token, req_from, id):
         body='{0}님이 회원님의 포스팅을 좋아합니다.'.format(req_from)
     ),
     data={
-        'type':'tag',
+        'type':'like',
         'id':str(id)
     },
     token = token.token,
