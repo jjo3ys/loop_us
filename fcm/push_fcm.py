@@ -13,7 +13,7 @@ def answer_fcm(token, req_from, question, id):
     token = token.token,
     )
     messaging.send(message)
-    Alarm.objects.create(user_id=token.user_id, type=1, target_id=id, alarm_from=req_from)
+    Alarm.objects.create(user_id=token.user_id, type=1, target_id=id, alarm_from_id=req_from)
 
 def loop_fcm(token, req_from, id):
     message = messaging.Message(notification=messaging.Notification(
