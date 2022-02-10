@@ -14,6 +14,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
+SITE_URL = "http://3.35.253.151:8000/"
+
 cred_path = os.path.join(BASE_DIR, "serviceAccountKey.json")
 cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
