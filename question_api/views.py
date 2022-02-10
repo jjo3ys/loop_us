@@ -190,7 +190,7 @@ def answer(request, question_idx):
         try:
             token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
             answer_fcm(token, request.user.id, answer_obj.question.content, question_idx)
-        except:
+        except FcmToken.DoesNotExist:
             pass
 
         return Response(AnswerSerializer(answer_obj).data, status=status.HTTP_200_OK)
