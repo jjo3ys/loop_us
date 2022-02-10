@@ -19,29 +19,41 @@ class QuestionTagSerialier(serializers.ModelSerializer):
 
 
 class AnswerSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
 
     class Meta:
         model = Answer
-        fields = ['id', 'user_id', 'content', 'question_id', 'adopt', 'date']
+        fields = ['id', 'user_id', 'profile', 'content', 'question_id', 'adopt', 'date']
+
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
 
 class QuestionSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
     question_tag = QuestionTagSerialier(many=True, read_only=True)
     answer = AnswerSerializer(many=True, read_only=True)
 
     class Meta:
         model = Question
-        fields = ['id', 'user_id', 'content', 'answer', 'adopt', 'date', 'question_tag']
+        fields = ['id', 'user_id', 'profile', 'content', 'answer', 'adopt', 'date', 'question_tag']
+    
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
 
 class OnlyQSerializer(serializers.ModelSerializer):
     question_tag = QuestionTagSerialier(many=True, read_only=True)
     count = serializers.SerializerMethodField()
+    profile = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
-        fields = ['id', 'user_id', 'content', 'adopt', 'date', 'question_tag', 'count']
+        fields = ['id', 'user_id', 'profile', 'content', 'adopt', 'date', 'question_tag', 'count']
     
     def get_count(self, obj):
         return Answer.objects.filter(question_id=obj.id).count()
+        
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
 
 # class P2PAnswerSerializer(serializers.ModelSerializer):
 #     user_profile = serializers.SerializerMethodField()

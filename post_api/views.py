@@ -48,7 +48,6 @@ def posting(request):
         post_obj.contents = str(contents)
         post_obj.save()
         post_obj = MainloadSerializer(post_obj).data
-        post_obj.update(SimpleProfileSerializer(profile_obj).data)
         return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
@@ -98,11 +97,9 @@ def posting(request):
 
         postingSZ = PostingSerializer(post_obj)
 
-        profile = SimpleProfileSerializer(Profile.objects.get(user_id=post_obj.user_id)).data
         return_dict = {
             'posting_info': postingSZ.data,
         }
-        return_dict.update(profile)
 
         tag_list = []
         for tag in postingSZ.data['project']['project_tag']:
@@ -172,7 +169,11 @@ def posting(request):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def like(request, idx):
-    like_obj, valid = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+    try:
+        like_obj, valid = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     if not valid:
         like_obj.delete()
         return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
@@ -189,7 +190,11 @@ def like(request, idx):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def bookmark(request, idx):
-    book_obj, valid = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
+    try:
+        book_obj, valid = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
     if not valid:
         book_obj.delete()
         return Response('unmarked posting', status=status.HTTP_202_ACCEPTED)
@@ -209,7 +214,6 @@ def bookmark_list_load(request):
     post_obj = MainloadSerializer(post_obj, many=True).data
 
     for p in post_obj:
-        p.update(SimpleProfileSerializer(Profile.objects.get(user_id=p['user_id'])).data)
         try:
             Like.objects.get(user_id=request.user.id, post_id=p['id'])
             p.update({"is_liked":1})
@@ -247,7 +251,6 @@ def recommend_load(request):
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
-        p.update(SimpleProfileSerializer(Profile.objects.get(user=p['user_id'])).data)
         if p['user_id'] == request.user.id:
             p.update({"is_user":1})
         else:
@@ -277,7 +280,6 @@ def main_load(request):
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
-        p.update(SimpleProfileSerializer(Profile.objects.get(user=p['user_id'])).data)
         if p['user_id'] == request.user.id:
             p.update({"is_user":1})
         else:
@@ -314,7 +316,6 @@ def loop_load(request):
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
-        p.update(SimpleProfileSerializer(Profile.objects.get(user=p['user_id'])).data)
         if p['user_id'] == request.user.id:
             p.update({"is_user":1})
         else:

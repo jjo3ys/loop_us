@@ -5,7 +5,6 @@ from .serializers import ProjectPostSerializer
 from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
 from user_api.models import Profile
-from user_api.serializers import SimpleProfileSerializer
 from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
 from post_api.models import Like, BookMark
@@ -136,11 +135,12 @@ def project(request):
         return Response(status=status.HTTP_200_OK)
 
     elif request.method == 'GET':
-        project_obj = Project.objects.get(id=request.GET['id'])
+        try:
+            project_obj = Project.objects.get(id=request.GET['id'])
+        except Project.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         project = ProjectPostSerializer(project_obj).data
-        profile_obj = Profile.objects.get(user=project_obj.user)
-        profile_obj = SimpleProfileSerializer(profile_obj).data
-        project.update(profile_obj)
         if request.user.id == project_obj.user_id:
             project.update({"is_user":1})
         else:

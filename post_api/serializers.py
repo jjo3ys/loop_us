@@ -1,3 +1,5 @@
+from user_api.models import Profile
+from user_api.serializers import SimpleProfileSerializer
 from .models import Post, ContentsImage, Like
 from project_api.models import Project
 from tag.models import Project_Tag
@@ -39,13 +41,17 @@ class PostingContentsImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'post_id', 'image']
 
 class MainloadSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
     thumbnail = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'thumbnail', 'title', 'date', 'like_count', 'project']
+        fields = ['id', 'user_id', 'profile', 'thumbnail', 'title', 'date', 'like_count', 'project']
+
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
     
     def get_like_count(self, obj):
         return Like.objects.filter(post_id=obj.id).count()
@@ -62,6 +68,7 @@ class MainloadSerializer(serializers.ModelSerializer):
         return obj.thumbnail.url
     
 class PostingSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
     contents = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     thumbnail = serializers.SerializerMethodField()
@@ -69,8 +76,11 @@ class PostingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'project', 
+        fields = ['id', 'user_id', 'profile', 'project', 
          'thumbnail', 'title', 'date', 'like_count', 'contents']
+        
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
     
     def get_contents(self, obj):
         return eval(str(obj.contents))

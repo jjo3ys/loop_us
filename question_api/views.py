@@ -2,7 +2,6 @@ import datetime
 from question_api.models import Answer, Question
 from search.models import InterestTag#, P2PAnswer, P2PQuestion
 from user_api.models import Profile
-from user_api.serializers import SimpleProfileSerializer
 from fcm.models import FcmToken
 from fcm.push_fcm import answer_fcm
 
@@ -46,30 +45,23 @@ def question(request):
             Question_Tag.objects.create(question=question_obj, tag=tag_obj)
 
         interest_list.save()
-        questionSZ = QuestionSerializer(question_obj)
-        return Response(questionSZ.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
     
-    elif request.method == 'GET':     
-        q_obj = Question.objects.get(id=request.GET['id'])
-        q_sz = QuestionSerializer(q_obj).data
-        q_profile_obj = Profile.objects.get(user=q_sz['user_id'])
-        q_profile_sz = SimpleProfileSerializer(q_profile_obj)
-        q_sz.update(q_profile_sz.data)
-        if q_obj.adopt:
-            q_sz.update({"is_adopted":1})
-        else:
-            q_sz.update({"is_adopted":0})
+    elif request.method == 'GET':   
+        try:  
+            q_obj = Question.objects.get(id=request.GET['id'])
+        except Question.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if user_id == q_profile_sz.data['user_id']:
+        q_sz = QuestionSerializer(q_obj).data
+
+        if user_id == q_obj.user_id:
             q_sz.update({"is_user":1})
         else:
             q_sz.update({"is_user":0})
 
         for d in q_sz['answer']:
-            a_profile_obj = Profile.objects.get(user=d['user_id'])
-            a_profile_sz = SimpleProfileSerializer(a_profile_obj)
-            d.update(a_profile_sz.data)
-            if a_profile_obj.user_id == user_id:
+            if d['user_id'] == user_id:
                 d.update({'is_user':1})
             else:
                 d.update({"is_user":0})
@@ -151,29 +143,31 @@ def question_list(request, type):
     user_id = request.user.id
 
     if type == 'my':
-        if request.GET['last'] == '0':
-            q_obj = list(Question.objects.filter(user = user_id))[-5:]
-        else:
-            q_obj = list(Question.objects.filter(id__lt=request.GET['last'], user = user_id))[-5:]
-        q_obj.reverse()
+        try:
+            if request.GET['last'] == '0':
+                q_obj = list(Question.objects.filter(user = user_id))[-5:]
+            else:
+                q_obj = list(Question.objects.filter(id__lt=request.GET['last'], user = user_id))[-5:]
+            q_obj.reverse()
+        except Question.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         q_sz = OnlyQSerializer(q_obj, many = True)
-        profile_sz = SimpleProfileSerializer(Profile.objects.get(user = user_id))
         for d in q_sz.data:
-            d.update(profile_sz.data)
             d.update({"is_user":1})
 
     elif type == "any":
-        if request.GET['last'] == '0':
-            q_obj = list(Question.objects.all())[-5:]
-        else:
-            q_obj = list(Question.objects.filter(id__lt=request.GET['last']))[-5:]  
-        q_obj.reverse()
-        
+        try:
+            if request.GET['last'] == '0':
+                q_obj = list(Question.objects.all())[-5:]
+            else:
+                q_obj = list(Question.objects.filter(id__lt=request.GET['last']))[-5:]  
+            q_obj.reverse()
+        except Question.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         q_sz = OnlyQSerializer(q_obj, many=True)
         for d in q_sz.data:
-            profile_sz = SimpleProfileSerializer(Profile.objects.get(user=d['user_id']))
-            d.update(profile_sz.data)
             if d['user_id'] == user_id:
                 d.update({"is_user":1})
             else:
@@ -186,23 +180,21 @@ def question_list(request, type):
 def answer(request, question_idx):
     if request.method == 'POST':
         profile_obj = Profile.objects.get(user=request.user.id)
-        profile_sz = SimpleProfileSerializer(profile_obj)
+        try:
+            answer_obj = Answer.objects.create(user_id=request.user.id,
+                                                question_id=question_idx,
+                                                content=request.data['content'],
+                                                adopt=False)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        answer_obj = Answer.objects.create(user_id=request.user.id,
-                                            question_id=question_idx,
-                                            content=request.data['content'],
-                                            adopt=False)
         try:
             token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
             answer_fcm(token, profile_obj.real_name, answer_obj.question.content, question_idx)
         except:
             pass
 
-        answerSZ = AnswerSerializer(answer_obj)
-        data = answerSZ.data
-        data.update(profile_sz.data)
-
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(AnswerSerializer(answer_obj).data, status=status.HTTP_200_OK)
     
     elif request.method == "PUT":
         answer = Answer.objects.get(id=request.GET['id'])

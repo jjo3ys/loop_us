@@ -51,10 +51,11 @@ class ProjectPostSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
     post = PostingSerializer(many=True, read_only=True)
     count = serializers.SerializerMethodField()
+    profile = serializers.SerializerMethodField()
     
     class Meta:
         model = Project
-        fields = ['id', 'project_name', 'introduction', 'pj_thumbnail','start_date', 'end_date', 'project_tag', 'looper', 'count', 'post']
+        fields = ['id', 'profile', 'project_name', 'introduction', 'pj_thumbnail','start_date', 'end_date', 'project_tag', 'looper', 'count', 'post']
     
     def get_count(self, obj):
         post = Post.objects.filter(project_id=obj.id)
@@ -63,3 +64,6 @@ class ProjectPostSerializer(serializers.ModelSerializer):
             count+=Like.objects.filter(post_id=p.id).count()
         
         return {"post_count":post.count(), "like_count":count}
+    
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
