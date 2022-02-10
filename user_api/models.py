@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
+
 
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -48,7 +50,8 @@ class Report(models.Model):
         db_table = "Report"
 
 class Alarm(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='alarm_user')
+    alarm_from = models.ForeignKey(User, on_delete=models.CASCADE, related_name='alarm_from')
     type = models.PositiveSmallIntegerField()
     target_id = models.PositiveIntegerField()
     date = models.DateTimeField(auto_now_add=True)

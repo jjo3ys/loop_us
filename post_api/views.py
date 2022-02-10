@@ -181,7 +181,7 @@ def like(request, idx):
         try:
             token = FcmToken.objects.get(user_id=like_obj.post.user_id)
             real_name = Profile.objects.get(user_id=request.user.id).real_name
-            like_fcm(token, real_name, idx)
+            like_fcm(token, real_name, idx, request.user.id)
         except:
             pass
 

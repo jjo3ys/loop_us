@@ -1,4 +1,6 @@
-from .models import Banlist, Profile
+from project_api.models import Project
+from question_api.models import Question
+from .models import Alarm, Banlist, Profile
 from .department import DEPARTMENT
 from tag.models import Profile_Tag
 from loop.models import Loopship
@@ -59,3 +61,24 @@ class BanlistSerializer(serializers.ModelSerializer):
             ban_list.append(SimpleProfileSerializer(Profile.objects.get(user_id=ban)).data)
         
         return ban_list
+
+class AlarmSerializer(serializers.ModelSerializer):
+    content = serializers.SerializerMethodField()
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Alarm
+        fields = ['user_id', 'type', 'target_id', 'content', 'profile', 'date']
+    
+    def get_content(self, obj):
+        if int(obj.type) == 1:
+            return Question.objects.get(id=obj.target_id).content        
+        elif int(obj.type) == 2:
+            return None
+        elif int(obj.type) == 3:
+            return Project.objects.get(id=obj.target_id).project_name
+        elif int(obj.type) == 4:
+            return Post.objects.get(id=obj.target_id).title
+    
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.alarm_from_id)).data

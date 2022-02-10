@@ -30,8 +30,8 @@ from rest_framework import status
 from fcm.push_fcm import report_alarm
 
 # from .department import DEPARTMENT
-from .models import Profile, Activation, Company_Inform, Banlist, Report
-from .serializers import BanlistSerializer, ProfileSerializer
+from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
+from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 from .department import R_DEPARTMENT
 from .university import UNIVERSITY
 from .text import pwmessage
@@ -438,6 +438,18 @@ def ban(request):
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(BanlistSerializer(banlist_obj).data, status=status.HTTP_200_OK)
 
+@api_view(['GET', 'DELETE'])
+@permission_classes((IsAuthenticated,))
+def alarm(request):
+    if request.method == 'GET':
+        alarm_obj = list(Alarm.objects.filter(user_id=request.user.id))
+        alarm_obj.reverse()
+        return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
+    
+    elif request.method == 'DELETE':
+        alarm_obj = Alarm.objects.get(id=request.GET['id'])
+        alarm_obj.delete()
+        return Response(status=status.HTTP_200_OK)
 # @api_view(['GET', ])
 # def noti(request):
 #     token_list = []

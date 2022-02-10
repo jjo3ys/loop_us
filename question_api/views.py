@@ -179,7 +179,6 @@ def question_list(request, type):
 @permission_classes((IsAuthenticated,))
 def answer(request, question_idx):
     if request.method == 'POST':
-        profile_obj = Profile.objects.get(user=request.user.id)
         try:
             answer_obj = Answer.objects.create(user_id=request.user.id,
                                                 question_id=question_idx,
@@ -190,7 +189,7 @@ def answer(request, question_idx):
 
         try:
             token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
-            answer_fcm(token, profile_obj.real_name, answer_obj.question.content, question_idx)
+            answer_fcm(token, request.user.id, answer_obj.question.content, question_idx)
         except:
             pass
 

@@ -4,7 +4,7 @@ from user_api.models import Alarm
 def answer_fcm(token, req_from, question, id):
     message = messaging.Message(notification=messaging.Notification(
         title=question,
-        body='질문에 어떤 답변이 달렸는지 확인해보세요.'.format(req_from)
+        body='질문에 어떤 답변이 달렸는지 확인해보세요.'
     ),
     data={
         'type':'answer',
@@ -13,7 +13,7 @@ def answer_fcm(token, req_from, question, id):
     token = token.token,
     )
     messaging.send(message)
-    Alarm.objects.create(user_id=token.user_id, type=1, target_id=id)
+    Alarm.objects.create(user_id=token.user_id, type=1, target_id=id, alarm_from=req_from)
 
 def loop_fcm(token, req_from, id):
     message = messaging.Message(notification=messaging.Notification(
@@ -27,9 +27,9 @@ def loop_fcm(token, req_from, id):
     token = token.token,
     )
     messaging.send(message)
-    Alarm.objects.create(user_id=token.user_id, type=2, target_id=id)
+    Alarm.objects.create(user_id=token.user_id, type=2, target_id=id, alarm_from_id=id)
 
-def tag_fcm(token, req_from, project, id):
+def tag_fcm(token, req_from, from_id, project, id):
     message = messaging.Message(notification=messaging.Notification(
         title='루프어스',
         body='{0}님이 {1}활동에 회원님을 태그했어요.'.format(req_from, project)
@@ -41,9 +41,9 @@ def tag_fcm(token, req_from, project, id):
     token = token.token,
     )
     messaging.send(message)
-    Alarm.objects.create(user_id=token.user_id, type=3, target_id=id)
+    Alarm.objects.create(user_id=token.user_id, type=3, target_id=id, alarm_from_id=from_id)
 
-def like_fcm(token, req_from, id):
+def like_fcm(token, req_from, id, from_id):
     message = messaging.Message(notification=messaging.Notification(
         title='루프어스',
         body='{0}님이 회원님의 포스팅을 좋아합니다.'.format(req_from)
@@ -55,7 +55,7 @@ def like_fcm(token, req_from, id):
     token = token.token,
     )
     messaging.send(message)
-    Alarm.objects.create(user_id=token.user_id, type=4, target_id=id)
+    Alarm.objects.create(user_id=token.user_id, type=4, target_id=id, alarm_from_id=from_id)
 
 def chat_fcm(token, req_from, msg, user_id):
     message = messaging.Message(notification=messaging.Notification(
