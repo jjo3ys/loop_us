@@ -22,6 +22,7 @@ def loop_fcm(token, req_from, id):
     ),
     data={
         'type':'follow',
+        'real_name':req_from,
         'id':str(id)
     },
     token = token.token,
@@ -64,6 +65,7 @@ def chat_fcm(token, req_from, msg, user_id):
     ),
     data={
         "type":"msg",
+        "real_name":req_from,
         "id":str(user_id)
     },
     token=token
