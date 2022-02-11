@@ -188,8 +188,9 @@ def answer(request, question_idx):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         try:
-            token = FcmToken.objects.get(user_id=answer_obj.question.user_id)
-            answer_fcm(token, request.user.id, answer_obj.question.content, question_idx)
+            questioner_id = answer_obj.question.user_id
+            token = FcmToken.objects.get(user_id=questioner_id)
+            answer_fcm(token, request.user.id, answer_obj.question.content, question_idx, Profile.objects.get(user_id=questioner_id).real_name)
         except FcmToken.DoesNotExist:
             pass
 
