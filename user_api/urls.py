@@ -12,6 +12,7 @@ urlpatterns = [
     path('profile', views.profile),
     path('project', views.project),
     path('password', views.password),
+    path('department_list', views.department_list),
     path('university_list', views.university_list),
     path('report', views.report_profile),
     path('alarm', views.alarm),

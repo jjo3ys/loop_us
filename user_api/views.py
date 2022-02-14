@@ -32,7 +32,7 @@ from fcm.push_fcm import report_alarm
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
-from .department import R_DEPARTMENT
+from .department import DEPARTMENT, R_DEPARTMENT
 from .university import UNIVERSITY
 from .text import pwmessage
 
@@ -389,8 +389,12 @@ def project(request):
         return Response(project_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
+def department_list(request):
+    return Response(DEPARTMENT, status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
 def university_list(request):
-    return Response(UNIVERSITY)
+    return Response(UNIVERSITY, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
