@@ -10,9 +10,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-llzvhsk6%r+^g_22*iq2p()39s2+*hrw6jcp(pdhozwtt)&_o='
 
-DEBUG = True
+# DEBUG = True
+# ALLOWED_HOSTS = ["*"]
 
-ALLOWED_HOSTS = ["*"]
+DEBUG = False
+ALLOWED_HOSTS = ['3.35.253.151:8000']
+
 
 SITE_URL = "http://3.35.253.151:8000/"
 
