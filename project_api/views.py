@@ -47,7 +47,7 @@ def project(request):
             tag_obj, valid = Tag.objects.get_or_create(tag=tag)
             try:
                 interest_list.tag_list[str(tag_obj.id)]['count'] += 1
-                interest_list.tag_list[str(tag.id)]['date'] = str(datetime.date.today())
+                interest_list.tag_list[str(tag_obj.id)]['date'] = str(datetime.date.today())
             except KeyError:
                 interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
 
