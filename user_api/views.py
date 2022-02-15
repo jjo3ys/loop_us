@@ -442,10 +442,33 @@ def ban(request):
 @permission_classes((IsAuthenticated,))
 def alarm(request):
     if request.method == 'GET':
-        alarm_obj = list(Alarm.objects.filter(user_id=request.user.id))
-        alarm_obj.reverse()
-        return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
-    
+        if request.GET['type'] == 'follow':
+            if request.GET['last'] == '0':
+                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, type=2))[-10:]
+                
+            else:
+                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last'], type=2))[-10:]
+            
+            for alarm in alarm_obj:
+                if not alarm.is_read:
+                    alarm.is_read = True
+                    alarm.save()
+
+            return Response(AlarmSerializer(reversed(list(alarm_obj)), many=True).data, status=status.HTTP_200_OK)
+        else:            
+            if request.GET['last'] == '0':
+                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id).exclude(type=2))[-10:]
+
+            else:
+                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2))[-10:]
+
+            for alarm in alarm_obj:
+                if not alarm.is_read:
+                    alarm.is_read = True
+                    alarm.save()
+                    
+            return Response(AlarmSerializer(reversed(list(alarm_obj)), many=True).data, status=status.HTTP_200_OK)
+
     elif request.method == 'DELETE':
         alarm_obj = Alarm.objects.get(id=request.GET['id'])
         alarm_obj.delete()

@@ -68,17 +68,26 @@ class AlarmSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Alarm
-        fields = ['user_id', 'type', 'target_id', 'content', 'profile', 'date']
+        fields = ['id', 'user_id', 'type', 'target_id', 'content', 'profile', 'date', 'is_read']
     
     def get_content(self, obj):
         if int(obj.type) == 1:
-            return Question.objects.get(id=obj.target_id).content        
+            try:
+                return Question.objects.get(id=obj.target_id).content    
+            except Question.DoesNotExist:
+                return None    
         elif int(obj.type) == 2:
             return None
         elif int(obj.type) == 3:
-            return Project.objects.get(id=obj.target_id).project_name
+            try:
+                return Project.objects.get(id=obj.target_id).project_name
+            except Project.DoesNotExist:
+                return None
         elif int(obj.type) == 4:
-            return Post.objects.get(id=obj.target_id).title
+            try:
+                return Post.objects.get(id=obj.target_id).title
+            except Post.DoesNotExist:
+                return None
     
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.alarm_from_id)).data

@@ -55,6 +55,7 @@ class Alarm(models.Model):
     type = models.PositiveSmallIntegerField()
     target_id = models.PositiveIntegerField()
     date = models.DateTimeField(auto_now_add=True)
-
+    is_read = models.BooleanField(default=False)
+    
     class Meta:
         db_table = "Alarm"
