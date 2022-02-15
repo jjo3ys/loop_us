@@ -5,6 +5,7 @@ from django.conf import settings
 class Log(models.Model):
     user_id = models.PositiveBigIntegerField()
     query = models.TextField()
+    type = models.PositiveSmallIntegerField(default=0)
     date = models.DateTimeField(auto_now_add=True)
     
     class Meta:

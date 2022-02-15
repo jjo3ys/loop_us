@@ -1,13 +1,14 @@
 from firebase_admin import messaging
 from user_api.models import Alarm
 
-def answer_fcm(token, req_from, question, id):
+def answer_fcm(token, req_from, question, id, real_name):
     message = messaging.Message(notification=messaging.Notification(
         title=question,
         body='질문에 어떤 답변이 달렸는지 확인해보세요.'
     ),
     data={
         'type':'answer',
+        'real_name':real_name,
         'id':str(id)
     },
     token = token.token,
@@ -22,6 +23,7 @@ def loop_fcm(token, req_from, id):
     ),
     data={
         'type':'follow',
+        'real_name':req_from,
         'id':str(id)
     },
     token = token.token,
@@ -64,6 +66,7 @@ def chat_fcm(token, req_from, msg, user_id):
     ),
     data={
         "type":"msg",
+        "real_name":req_from,
         "id":str(user_id)
     },
     token=token

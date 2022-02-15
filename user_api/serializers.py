@@ -87,7 +87,7 @@ class AlarmSerializer(serializers.ModelSerializer):
             try:
                 return Post.objects.get(id=obj.target_id).title
             except Post.DoesNotExist:
-                return None
+                return
     
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.alarm_from_id)).data

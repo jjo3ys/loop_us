@@ -32,7 +32,7 @@ from fcm.push_fcm import report_alarm
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
-from .department import R_DEPARTMENT
+from .department import DEPARTMENT, R_DEPARTMENT
 from .university import UNIVERSITY
 from .text import pwmessage
 
@@ -128,7 +128,7 @@ class Activate(View):
             user.is_active = True
             user.save()
 
-            return redirect("https://w.namu.la/s/ff250ecf6b040d461d70a54825fa840816bd399369d4fbcc9e71fe21a028435757556a886cf579feff0c97d373cbe88619c0d2bce59f741e21f2668dffe7978bc834e9da9ef0c3609b4bc5b89476f166d8c98764bdc2047eaf910159f9387d8e510ce80dc6238b903ffaf01f2b30e052")
+            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
 
         return Response({'message': 'email check fail...'})
 
@@ -389,8 +389,12 @@ def project(request):
         return Response(project_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
+def department_list(request):
+    return Response(DEPARTMENT, status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
 def university_list(request):
-    return Response(UNIVERSITY)
+    return Response(UNIVERSITY, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))

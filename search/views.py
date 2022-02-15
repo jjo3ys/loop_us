@@ -46,26 +46,13 @@ from tag.models import Project_Tag, Question_Tag
 def search(request, type):
     query = request.GET['query']
     page = request.GET['page']
-    if page == 1:
-        if 'tag' in type:
-            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-            try:
-                interest_list.tag_list[query]['count'] += 1
-                interest_list.tag_list[query]['date'] = str(datetime.date.today())
-            except KeyError:
-                interest_list.tag_list[query] = {'count':1, 'date':str(datetime.date.today()), 'id':int(query)}
-            
-            interest_list.save()
-
-        else:
-            Log.objects.create(user_id=request.user.id, query=query)
 
     if type == 'post':
         obj = list(Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)))
         obj.reverse()
-        post_obj = Paginator(obj, 5).get_page(page)
-        post_obj = MainloadSerializer(post_obj, many=True).data
-        for p in post_obj:
+        obj = Paginator(obj, 5).get_page(page)
+        obj = MainloadSerializer(obj, many=True).data
+        for p in obj:
             if request.user.id == p['user_id']:
                 p.update({"is_user":1})
             else:
@@ -83,21 +70,17 @@ def search(request, type):
             except:
                 p.update({"is_marked":0})
 
-        return Response(post_obj, status=status.HTTP_200_OK)
-
     elif type == 'profile':
         obj = list(Profile.objects.filter(real_name__icontains=query))
         obj.reverse()
         obj = Paginator(obj, 10).get_page(page)
-        return Response(ProfileSerializer(obj, many=True).data, status=status.HTTP_200_OK)  
+        obj = ProfileSerializer(obj, many=True).data
 
     elif type == 'question':
         obj = list(Question.objects.filter(content__icontains=query))
         obj.reverse()
         obj = Paginator(obj, 5).get_page(page)
         obj = QuestionSerializer(obj, many=True).data
-
-        return Response(obj, status=status.HTTP_200_OK)  
 
     elif type == 'tag_project':
         obj = list(Project_Tag.objects.filter(tag_id=int(query)))
@@ -114,9 +97,7 @@ def search(request, type):
                 p.update({"is_user":1})
             else:
                 p.update({"is_user":0})
-
-        return Response(obj, status=status.HTTP_200_OK)
-    
+  
     elif type == 'tag_question':
         obj = list(Question_Tag.objects.filter(tag_id=int(query)))
         obj.reverse()
@@ -133,8 +114,23 @@ def search(request, type):
             else:
                 q.update({"is_user":0})
 
-        return Response(obj, status=status.HTTP_200_OK)
-
-
     elif type == 'notice':
         return Response("unrealized", status=status.HTTP_204_NO_CONTENT)
+    
+    if page == '1':
+        if 'tag' in type:
+            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+            try:
+                interest_list.tag_list[query]['count'] += 1
+                interest_list.tag_list[query]['date'] = str(datetime.date.today())
+            except KeyError:
+                interest_list.tag_list[query] = {'count':1, 'date':str(datetime.date.today()), 'id':int(query)}
+            
+            interest_list.save()
+
+        else:
+            type_int = {'post':1, 'profile':2, 'question':3}
+            Log.objects.create(user_id=request.user.id, query=query, type=type_int[type])
+
+    
+    return Response(obj, status=status.HTTP_200_OK)
