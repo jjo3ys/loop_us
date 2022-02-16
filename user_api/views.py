@@ -350,12 +350,11 @@ def profile(request):
         profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
         if str(request.user.id) == idx:
             profile.update({'is_user':1})
-            room_obj = Room.objects.filter(member__contain=request.user.id)
             if Alarm.objects.filter(user_id=request.user.id, is_read=False).exists():
                 profile.update({'new_alarm':True})
             else:
                 profile.update({'new_alarm':False})
-            if Msg.objects.filter(room__in=room_obj, is_read=False).exists():
+            if Msg.objects.filter(room__in=Room.objects.filter(member__contain=request.user.id), is_read=False).exists():
                 profile.update({'new_message':True})
             else:
                 profile.update({'new_message':False})
