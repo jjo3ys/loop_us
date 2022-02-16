@@ -363,7 +363,7 @@ def profile(request):
         
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
         following = Loopship.objects.filter(user_id=idx, friend_id=request.user.id).exists()
-        
+
         if follow and following:
             profile.update({'looped':3})
         elif follow:
@@ -460,8 +460,20 @@ def alarm(request):
                 if not alarm.is_read:
                     alarm.is_read = True
                     alarm.save()
+            alarm_obj = AlarmSerializer(reversed(list(alarm_obj)), many=True).data
+            for alarm in alarm_obj:
+                follow = Loopship.objects.filter(user_id=request.user.id, friend_id=alarm['target_id']).exists()
+                following = Loopship.objects.filter(user_id=alarm['target_id'], friend_id=request.user.id).exists()
+                if follow and following:
+                    alarm.update({"looped":3})
+                elif follow:
+                    alarm.update({"looped":2})#내가 알람 보낸 사람을 follow
+                elif following:
+                    alarm.update({"looped":1})#알람 보낸 사람이 나를 follow
+                else:
+                    alarm.update({"looped":0})
 
-            return Response(AlarmSerializer(reversed(list(alarm_obj)), many=True).data, status=status.HTTP_200_OK)
+            return Response(alarm_obj, status=status.HTTP_200_OK)
         else:            
             if request.GET['last'] == '0':
                 alarm_obj = list(Alarm.objects.filter(user_id=request.user.id).exclude(type=2))[-10:]
