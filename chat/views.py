@@ -30,7 +30,10 @@ def chatting(request, receiver_idx):
                 msg.save()
 
         message = ChatSerializer(message, many=True).data
-        profile = SimpleProfileSerializer(Profile.objects.get(user_id=receiver_idx)).data
+        try:
+            profile = SimpleProfileSerializer(Profile.objects.get(user_id=receiver_idx)).data
+        except Profile.DoesNotExist:
+            profile = None
 
         return Response({"message":message, "profile":profile}, status=status.HTTP_200_OK)
 
@@ -58,7 +61,10 @@ def get_list(request):
     for r in room:
         msg_obj = Msg.objects.filter(room_id=r.id)
         r.member.remove(request.user.id)
-        profile = SimpleProfileSerializer(Profile.objects.get(user_id=r.member[0])).data
+        try:
+            profile = SimpleProfileSerializer(Profile.objects.get(user_id=r.member[0])).data
+        except:
+            profile = None
         return_list.append({"profile":profile,
                             "message":ChatSerializer(msg_obj.last()).data,
                             "not_read":msg_obj.filter(room_id=r.id, receiver_id=request.user.id, is_read=False).count()})
