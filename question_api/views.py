@@ -186,13 +186,13 @@ def answer(request, question_idx):
                                                 adopt=False)
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            questioner_id = answer_obj.question.user_id
-            token = FcmToken.objects.get(user_id=questioner_id)
-            answer_fcm(token, request.user.id, answer_obj.question.content, question_idx, Profile.objects.get(user_id=questioner_id).real_name)
-        except FcmToken.DoesNotExist:
-            pass
+        if answer_obj.question.user_id != request.user.id:
+            try:
+                questioner_id = answer_obj.question.user_id
+                token = FcmToken.objects.get(user_id=questioner_id)
+                answer_fcm(token, request.user.id, answer_obj.question.content, question_idx, Profile.objects.get(user_id=questioner_id).real_name)
+            except FcmToken.DoesNotExist:
+                pass
 
         return Response(AnswerSerializer(answer_obj).data, status=status.HTTP_200_OK)
     

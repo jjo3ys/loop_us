@@ -178,12 +178,13 @@ def like(request, idx):
         like_obj.delete()
         return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
     else:
-        try:
-            token = FcmToken.objects.get(user_id=like_obj.post.user_id)
-            real_name = Profile.objects.get(user_id=request.user.id).real_name
-            like_fcm(token, real_name, idx, request.user.id)
-        except:
-            pass
+        if like_obj.post.user_id != request.user.id:
+            try:
+                token = FcmToken.objects.get(user_id=like_obj.post.user_id)
+                real_name = Profile.objects.get(user_id=request.user.id).real_name
+                like_fcm(token, real_name, idx, request.user.id)
+            except:
+                pass
 
         return Response('liked posting', status=status.HTTP_202_ACCEPTED)
 
