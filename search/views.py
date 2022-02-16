@@ -58,16 +58,14 @@ def search(request, type):
             else:
                 p.update({"is_user":0})
                 
-            try:
-                Like.objects.get(user_id=request.user.id, post_id=p['id'])
+            if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():          
                 p.update({"is_liked":1})
-            except:
+            else:
                 p.update({"is_liked":0})
 
-            try:
-                BookMark.objects.get(user_id=request.user.id, post_id=p['id'])
+            if BookMark.objects.filter(user_id=request.user.id, post_id=p['id']).exists():              
                 p.update({"is_marked":1})
-            except:
+            else:
                 p.update({"is_marked":0})
 
     elif type == 'profile':

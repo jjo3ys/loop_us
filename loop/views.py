@@ -76,6 +76,16 @@ def get_list(request, type, idx):
             if l.friend_id == request.user.id:
                 profile_sz.update({"is_user":1})
             else:
+                # follow = Loopship.objects.filter(user_id=request.user.id, friend_id=l.friend_id).exists()
+                # following = Loopship.objects.filter(user_id=l.friend_id, friend_id=request.user.id).exists()
+                # if follow and following:
+                #     profile_sz.update({"looped":3})
+                # elif follow:
+                #     profile_sz.update({"looped":2})
+                # elif following:
+                #     profile_sz.update({"looped":1})
+                # else:
+                #     profile_sz.update({"looped":0})
                 profile_sz.update({"is_user":0})
             following_list.append(profile_sz)
 
@@ -90,6 +100,16 @@ def get_list(request, type, idx):
             if l.user_id == request.user.id:
                 profile_sz.update({"is_user":1})
             else:
+                # follow = Loopship.objects.filter(user_id=request.user.id, friend_id=l.user_id).exists()
+                # following = Loopship.objects.filter(user_id=l.user_id, friend_id=request.user.id).exists()
+                # if follow and following:
+                #     profile_sz.update({"looped":3})
+                # elif follow:
+                #     profile_sz.update({"looped":2})
+                # elif following:
+                #     profile_sz.update({"looped":1})
+                # else:
+                #     profile_sz.update({"looped":0})
                 profile_sz.update({"is_user":0})
             follwer_list.append(profile_sz)
 

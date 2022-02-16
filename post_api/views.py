@@ -210,15 +210,13 @@ def bookmark_list_load(request):
     post_obj = []
     for bookmark in bookmark_list:
         post_obj.append(bookmark.post)
-    post_obj.reverse()
-    post_obj = Paginator(post_obj, 5).get_page(request.GET['page'])
-    post_obj = MainloadSerializer(post_obj, many=True).data
+
+    post_obj = MainloadSerializer(Paginator(reversed(post_obj), 5).get_page(request.GET['page']), many=True).data
 
     for p in post_obj:
-        try:
-            Like.objects.get(user_id=request.user.id, post_id=p['id'])
+        if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
             p.update({"is_liked":1})
-        except:
+        else:
             p.update({"is_liked":0})
         
         p.update({"is_marked":1,
@@ -243,31 +241,29 @@ def recommend_load(request):
     if request.GET['last'] == '0':
         post_obj = Post.objects.filter(department_id=profile.department)
         post_obj.union(Post.objects.exclude(department_id=profile.department).filter(project_id__in = project_list))
-        post_obj = list(post_obj)[-5:]
     else:
         post_obj = Post.objects.filter(department_id=profile.department, id__lt=request.GET['last'])
         post_obj.union(Post.objects.exclude(department_id=profile.department).filter(id__lt=request.GET['last'], project_id__in = project_list))
-        post_obj = list(post_obj)[-5:]
-        
-    post_obj.reverse()
-    post_obj = MainloadSerializer(post_obj, many=True).data
+
+    post_obj = MainloadSerializer(reversed(list(post_obj)[-5:]), many=True).data
     for p in post_obj:
         if p['user_id'] == request.user.id:
             p.update({"is_user":1})
         else:
             p.update({"is_user":0})
 
-        try:
-            Like.objects.get(user_id=request.user.id, post_id=p['id'])
+        
+        if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
             p.update({"is_liked":1})
-        except:
+        else:
             p.update({"is_liked":0})
 
-        try:
-            BookMark.objects.get(user_id=request.user.id, post_id=p['id'])
+        
+        if BookMark.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
             p.update({"is_marked":1})
-        except:
+        else:
             p.update({"is_marked":0})
+
     return Response(post_obj, status=status.HTTP_200_OK)
     
 @api_view(['GET', ])
@@ -286,16 +282,15 @@ def main_load(request):
         else:
             p.update({"is_user":0})
 
-        try:
-            Like.objects.get(user_id=request.user.id, post_id=p['id'])
+        if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
             p.update({"is_liked":1})
-        except:
+        else:
             p.update({"is_liked":0})
 
-        try:
-            BookMark.objects.get(user_id=request.user.id, post_id=p['id'])
+        
+        if BookMark.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
             p.update({"is_marked":1})
-        except:
+        else:
             p.update({"is_marked":0})
 
     return Response(post_obj, status=status.HTTP_200_OK)
@@ -322,16 +317,15 @@ def loop_load(request):
         else:
             p.update({"is_user":0})
 
-        try:
-            Like.objects.get(user_id=request.user.id, post_id=p['id'])
+        if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
             p.update({"is_liked":1})
-        except:
+        else:
             p.update({"is_liked":0})
 
-        try:
-            BookMark.objects.get(user_id=request.user.id, post_id=p['id'])
+        
+        if BookMark.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
             p.update({"is_marked":1})
-        except:
+        else:
             p.update({"is_marked":0})
 
     return Response(post_obj, status=status.HTTP_200_OK)

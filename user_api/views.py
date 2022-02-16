@@ -361,21 +361,17 @@ def profile(request):
         else:
             profile.update({'is_user':0})
         
-        try:
-            Loopship.objects.get(user_id=request.user.id, friend_id=idx)
-            Loopship.objects.get(user_id=idx, friend_id=request.user.id)
+        follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
+        following = Loopship.objects.filter(user_id=idx, friend_id=request.user.id).exists()
+        
+        if follow and following:
             profile.update({'looped':3})
-        except:      
-            try:
-                Loopship.objects.get(user_id=request.user.id, friend_id=idx)
-                profile.update({'looped':2})#프로필 주인을following
-            
-            except:
-                try:
-                    Loopship.objects.get(user_id=idx, friend_id=request.user.id)
-                    profile.update({'looped':1})#프로필 주인이 나를follower
-                except:
-                    profile.update({'looped':0})
+        elif follow:
+            profile.update({'looped':2})#프로필 주인을 follow
+        elif following:
+            profile.update({'looped':1})#프로필 주인이 나를 following
+        else:
+            profile.update({'looped':0})
 
         return Response(profile, status=status.HTTP_200_OK)
 
@@ -389,13 +385,11 @@ def project(request):
     if request.user.id == int(idx):
         for p in project_obj:
             p.update({"is_user":1})
-
-        return Response(project_obj, status=status.HTTP_200_OK)
     else:
         for p in project_obj:
             p.update({"is_user":0})
 
-        return Response(project_obj, status=status.HTTP_200_OK)
+    return Response(project_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 def department_list(request):
