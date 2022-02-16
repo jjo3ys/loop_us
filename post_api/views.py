@@ -206,12 +206,13 @@ def bookmark(request, idx):
 @permission_classes((IsAuthenticated,))
 def bookmark_list_load(request):
     user = request.user
-    bookmark_list = BookMark.objects.filter(user_id=user.id)
+    bookmark_list = BookMark.objects.filter(user_id=user.id).order_by('-id')
+    bookmark_list = Paginator(bookmark_list, 10).get_page(request.GET['page'])
     post_obj = []
     for bookmark in bookmark_list:
         post_obj.append(bookmark.post)
 
-    post_obj = MainloadSerializer(Paginator(reversed(post_obj), 5).get_page(request.GET['page']), many=True).data
+    post_obj = MainloadSerializer(post_obj, many=True).data
 
     for p in post_obj:
         if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
