@@ -50,7 +50,7 @@ def loop(request, idx):
     token = FcmToken.objects.get(user_id=idx)
     loop_fcm(token, profile.real_name, user.id)
 
-    Loopship.objects.create(user_id=user.id, friend_id=idx)
+    Loopship.objects.get_or_create(user_id=user.id, friend_id=idx)
  
     return Response("ok", status=status.HTTP_200_OK)
 
