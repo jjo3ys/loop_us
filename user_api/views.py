@@ -37,9 +37,10 @@ from .university import UNIVERSITY
 from .text import pwmessage
 
 from search.models import InterestTag
-from tag.models import Tag, Profile_Tag
+from tag.models import Project_Tag, Question_Tag, Tag, Profile_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
+from question_api.models import Question
 from loop.models import Loopship
 from fcm.models import FcmToken
 from chat.models import Room, Msg
@@ -60,6 +61,15 @@ headers = {
 params = (
     ('serviceKey', 'frbSEAcXD+a6UEOUq1lkWcWmFoDku20SZvLeO++pP9e5yQo5GIqTkbVbctqafewScJuzLLcTW/l4d/Lw/wjOig=='),
 )
+def delete_tag(tag_obj):
+    for tag in tag_obj:
+        tag.tag.count = tag.tag.count-1
+        if tag.tag.count == 0:
+            tag.tag.delete()
+        else:
+            tag.tag.save()
+
+
 def check_email(user, type):           
     uidb4 = urlsafe_base64_encode(force_bytes(user.id))
     token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
@@ -249,7 +259,7 @@ def logout(request):
         pass
     return Response("Successed log out", status=status.HTTP_200_OK)
     
-@api_view(['PUT', 'POST'])
+@api_view(['PUT', 'POST', 'GET'])
 def password(request):
     if request.method == 'PUT':
         if request.GET['type'] == 'change':
@@ -276,22 +286,31 @@ def password(request):
         user.save()
         check_email(user, 'find')
         return Response(status=status.HTTP_200_OK)
+    
+    elif request.method == 'GET':    
+        if check_password(request.data['password'], request.user.password):
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)      
 
 @api_view(['DELETE', ])
 @permission_classes((IsAuthenticated,))
 def resign(request):  
     user = request.user
     profile_obj = Profile.objects.get(user_id=user.id)
-    tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
     intereset_list = InterestTag.objects.get(user_id=user.id)
     intereset_list.delete()
-    for tag in tag_obj:
-        tag.tag.count = tag.tag.count-1
-        if tag.tag.count == 0:
-            tag.tag.delete()
-        else:
-            tag.tag.save()
-            
+
+    tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
+    if tag_obj.exists():
+        delete_tag(tag_obj)
+    tag_obj = Project_Tag.objects.filter(project__in=Project.objects.filter(user_id=user.id))
+    if tag_obj.exists():
+        delete_tag(tag_obj)
+    tag_obj = Question_Tag.objects.filter(question__in=Question.objects.filter(user_id=user.id))
+    if tag_obj.exists():
+        delete_tag(tag_obj)
+    
     user = User.objects.get(id=user.id)
     user.delete()
     return Response("resign from loop", status=status.HTTP_200_OK)
