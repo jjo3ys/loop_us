@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
     'search.apps.SearchConfig',
+    'portfolio_api.apps.PortfolioApiConfig',
     'chat',
     
     'rest_framework',
