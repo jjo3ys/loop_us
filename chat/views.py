@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-@api_view(['POST', 'GET'])
+@api_view(['POST', 'GET', 'PUT'])
 @permission_classes((IsAuthenticated,))
 def chatting(request):
     user = request.user
