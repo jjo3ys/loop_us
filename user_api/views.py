@@ -40,6 +40,7 @@ from search.models import InterestTag
 from tag.models import Project_Tag, Question_Tag, Tag, Profile_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
+from post_api.models import ContentsImage, Post
 from question_api.models import Question
 from loop.models import Loopship
 from fcm.models import FcmToken
@@ -298,11 +299,18 @@ def password(request):
 def resign(request):  
     user = request.user
     profile_obj = Profile.objects.get(user_id=user.id)
+    profile_obj.image.delete(save=False)
     try:
         intereset_list = InterestTag.objects.get(user_id=user.id)
         intereset_list.delete()
     except:
         pass
+
+    for project in Project.objects.filter(user_id=user.id):
+        project.pj_thumbnail.delete(save=False)
+        for post in Post.objects.filter(project_id=project.id):
+            for image in ContentsImage.objects.filter(post_id=post.id):
+                image.image.delete(save=False)
 
     tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
     delete_tag(tag_obj)

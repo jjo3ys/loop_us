@@ -7,7 +7,7 @@ class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     real_name = models.CharField(max_length=10)
     type = models.SmallIntegerField(default=0)
-    profile_image = models.ImageField(null = True, upload_to='profile_thumbnail/')
+    profile_image = models.ImageField(null = True, upload_to='profile_image/')
     department = models.PositiveSmallIntegerField(default=0)
 
     class Meta:

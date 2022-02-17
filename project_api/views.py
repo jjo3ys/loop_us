@@ -7,7 +7,7 @@ from tag.models import Tag, Project_Tag
 from user_api.models import Profile
 from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
-from post_api.models import Like, BookMark
+from post_api.models import ContentsImage, Like, BookMark, Post
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -166,6 +166,7 @@ def project(request):
         project_obj.pj_thumbnail.delete(save=False)
         interest_list, valid = InterestTag.objects.get_or_create(user_id=request.user.id)
         project_tag = Project_Tag.objects.filter(project_id=request.GET['id'])
+
         if not valid:
             for tag in project_tag:
                 try:
@@ -182,5 +183,10 @@ def project(request):
                     tag.tag.save()
 
             interest_list.save()
+        
+        for post in Post.objects.filter(project_id=request.GET['id']):
+            for image in ContentsImage.objects.filter(post_id=post.id):
+                image.image.delete(save=False)
+                
         project_obj.delete()
         return Response("is deleted", status=status.HTTP_200_OK)
