@@ -37,7 +37,7 @@ def chatting(request, receiver_idx):
 
         return Response({"message":message, "profile":profile}, status=status.HTTP_200_OK)
 
-    if request.method == 'POST':
+    elif request.method == 'POST':
         room = Room.objects.get_or_create(member=member_list)[0]
         msg = Msg.objects.create(room_id=room.id,
                                  receiver_id=receiver_idx,
@@ -51,6 +51,12 @@ def chatting(request, receiver_idx):
         except:
             pass
 
+        return Response(status=status.HTTP_200_OK)
+    
+    elif request.method == 'PUT':
+        message = Msg.objects.filter(room_id=Room.objects.get(member=member_list).id, receiver_id=user.id, is_read=False)
+        message.update(is_read=True)
+        
         return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
