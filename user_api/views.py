@@ -298,18 +298,18 @@ def password(request):
 def resign(request):  
     user = request.user
     profile_obj = Profile.objects.get(user_id=user.id)
-    intereset_list = InterestTag.objects.get(user_id=user.id)
-    intereset_list.delete()
+    try:
+        intereset_list = InterestTag.objects.get(user_id=user.id)
+        intereset_list.delete()
+    except:
+        pass
 
     tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
-    if tag_obj.exists():
-        delete_tag(tag_obj)
+    delete_tag(tag_obj)
     tag_obj = Project_Tag.objects.filter(project__in=Project.objects.filter(user_id=user.id))
-    if tag_obj.exists():
-        delete_tag(tag_obj)
+    delete_tag(tag_obj)
     tag_obj = Question_Tag.objects.filter(question__in=Question.objects.filter(user_id=user.id))
-    if tag_obj.exists():
-        delete_tag(tag_obj)
+    delete_tag(tag_obj)
     
     user = User.objects.get(id=user.id)
     user.delete()
