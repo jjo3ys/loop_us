@@ -22,7 +22,7 @@ def chatting(request, receiver_idx):
             room = Room.objects.get(member=member_list)
         except Room.DoesNotExist:
             return Response("Can't find Room", status=status.HTTP_404_NOT_FOUND)
-            
+
         if request.GET['last'] == '0':
             message = Msg.objects.filter(room_id=room.id)
             if message.filter(receiver_id=user.id, is_read=False).exists():
@@ -41,11 +41,11 @@ def chatting(request, receiver_idx):
 
     elif request.method == 'POST':
         room = Room.objects.get_or_create(member=member_list)[0]
-        msg = Msg.objects.create(room_id=room.id,
-                                 receiver_id=receiver_idx,
-                                 message=request.data['message'],
-                                 is_read=False)
-                    
+        Msg.objects.create(room_id=room.id,
+                           receiver_id=receiver_idx,
+                           message=request.data['message'],
+                           is_read=False)
+        
         try:
             send_profile = Profile.objects.get(user_id=user.id) 
             receiver_token = FcmToken.objects.get(user_id=receiver_idx)    
