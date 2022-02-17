@@ -13,11 +13,12 @@ from rest_framework.permissions import IsAuthenticated
 
 @api_view(['POST', 'GET'])
 @permission_classes((IsAuthenticated,))
-def chatting(request, receiver_idx):
+def chatting(request):
     user = request.user
-    member_list=[user.id, int(receiver_idx)]    
+    member_list=[user.id, int(request.GET['id'])]    
     member_list.sort()
     if request.method == 'GET':     
+        return_dict = {}
         try:
             room = Room.objects.get(member=member_list)
         except Room.DoesNotExist:
@@ -28,27 +29,27 @@ def chatting(request, receiver_idx):
             if message.filter(receiver_id=user.id, is_read=False).exists():
                 message.filter(receiver_id=user.id).update(is_read=True)
             message = list(message)[-50:]
+            try:
+                return_dict['profile'] = SimpleProfileSerializer(Profile.objects.get(user_id=request.GET['id'])).data
+            except Profile.DoesNotExist:
+                return_dict['profile'] = None
         else:
             message = list(Msg.objects.filter(room_id=room.id, id__lt=request.GET['last']))[-50:]
 
-        message = ChatSerializer(message, many=True).data
-        try:
-            profile = SimpleProfileSerializer(Profile.objects.get(user_id=receiver_idx)).data
-        except Profile.DoesNotExist:
-            profile = None
-
-        return Response({"message":message, "profile":profile}, status=status.HTTP_200_OK)
+        return_dict['message'] = ChatSerializer(message, many=True).data
+        
+        return Response(return_dict, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
         room = Room.objects.get_or_create(member=member_list)[0]
         Msg.objects.create(room_id=room.id,
-                           receiver_id=receiver_idx,
+                           receiver_id=request.GET['id'],
                            message=request.data['message'],
                            is_read=False)
         
         try:
             send_profile = Profile.objects.get(user_id=user.id) 
-            receiver_token = FcmToken.objects.get(user_id=receiver_idx)    
+            receiver_token = FcmToken.objects.get(user_id=request.GET['id'])    
             chat_fcm(receiver_token.token, send_profile.real_name, request.data['message'], user.id) 
         except:
             pass
