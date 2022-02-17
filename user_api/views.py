@@ -207,7 +207,7 @@ def signup(request):
                                         corp_name = corp.corp_name)
             corp.delete()
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response({'token':token.key, 'user_id':user.id},status=status.HTTP_201_CREATED)
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
