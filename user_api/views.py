@@ -290,7 +290,7 @@ def password(request):
     
    
 
-@api_view(['DELETE', ])
+@api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def resign(request):   
     if check_password(request.data['password'], request.user.password):
@@ -319,7 +319,7 @@ def resign(request):
         user = User.objects.get(id=user.id)
         user.delete()
         return Response("resign from loop", status=status.HTTP_200_OK)
-        
+
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)   
     
