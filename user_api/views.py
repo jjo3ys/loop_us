@@ -382,7 +382,7 @@ def profile(request):
             else:
                 profile.update({'new_alarm':False})
                 
-            if Msg.objects.filter(room__in=Room.objects.filter(member__icontains=request.user.id), is_read=False).exists():
+            if Msg.objects.filter(room__in=Room.objects.filter(member__icontains=request.user.id), receiver_id=request.user.id, is_read=False).exists():
                 profile.update({'new_message':True})
             else:
                 profile.update({'new_message':False})
