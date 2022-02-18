@@ -296,7 +296,7 @@ def resign(request):
     if check_password(request.data['password'], request.user.password):
         user = request.user
         profile_obj = Profile.objects.get(user_id=user.id)
-        profile_obj.image.delete(save=False)
+        profile_obj.profile_image.delete(save=False)
         try:
             intereset_list = InterestTag.objects.get(user_id=user.id)
             intereset_list.delete()
