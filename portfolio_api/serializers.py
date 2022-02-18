@@ -18,7 +18,7 @@ class ElementSerializers(serializers.ModelSerializer):
 
     class Meta:
         model  = Element
-        fields = ['id', 'user_id', 'title', 'date', 'contents', 'portfolio_id', 'image']
+        fields = ['id', 'title', 'date', 'contents', 'portfolio_id', 'image']
 
 class PortfolioElementSerializers(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
@@ -37,10 +37,9 @@ class SelectImageSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = ContentsImage
-        fields= ['id', 'post_id', 'project', 'image', 'post_thumbnail']
+        fields= ['id', 'project', 'post_thumbnail', 'post_id', 'image']
     
     def get_project(self, obj):
-
         project = {}
         project_obj = Project.objects.get(id= Post.objects.get(id=obj.post.id).project.id)
         project['project_id'] = project_obj.id
@@ -48,8 +47,8 @@ class SelectImageSerializers(serializers.ModelSerializer):
 
         if project_obj.pj_thumbnail == '':
             project['pj_thumbnail'] = None
-        project['pj_thumbnail'] = project_obj.pj_thumbnail.url
-        
+        else: 
+            project['pj_thumbnail'] = project_obj.pj_thumbnail.url
         return project
     
     def get_post_thumbnail(self, obj):
