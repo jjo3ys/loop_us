@@ -107,3 +107,13 @@ def report_alarm(count, type, id, reason):
     token='f2PsSd8nTMadfikWkOdCaQ:APA91bFZxp85MUCx00WSuavTAVeNyOPudSfdE74W5xDZaQe-0WyxP3SF9VNtCzd_sgGib_qYEJX4QkkntXoaliSHAqQmyD9tAtSw4pWbC6ScU28BkZCa4YLFb_u84lRY_-dR2uP9Z4D6'
     )
     messaging.send(message)
+
+def topic_alarm(topic, title):
+    message = messaging.Message(notification=messaging.Notification(
+        title=title,
+        body='토픽으로 알람보내기'
+    ),
+    topic=topic
+    )
+    messaging.send(message)
+topic_alarm('promotion', '프로모션')
