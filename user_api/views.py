@@ -381,11 +381,20 @@ def profile(request):
                 profile.update({'new_alarm':True})
             else:
                 profile.update({'new_alarm':False})
-            if Msg.objects.filter(room__in=Room.objects.filter(member__contain=request.user.id), is_read=False).exists():
+                
+            if Msg.objects.filter(room__in=Room.objects.filter(member__icontains=request.user.id), is_read=False).exists():
                 profile.update({'new_message':True})
             else:
                 profile.update({'new_message':False})
         else:
+            # interest_tag = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+            # for tag in profile['profile_tag']:
+            #     try:
+            #         interest_tag.tag_list[str(tag['tag_id'])]['count'] += 1
+            #         interest_tag.tag_list[str(tag['tag_id'])]['date'] = str(datetime.date.today())
+            #     except KeyError:
+            #          interest_list.tag_list[str(tag['tag_id'])] = {'count':1, 'date':str(datetime.date.today()), 'id':tag['tag_id']}
+
             profile.update({'is_user':0})
         
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
