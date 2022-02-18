@@ -1,4 +1,6 @@
 from django.core.paginator import Paginator
+from project_api.models import TagLooper
+from search.models import InterestTag
 
 from tag.models import Profile_Tag, Project_Tag
 from fcm.models import FcmToken
@@ -229,10 +231,18 @@ def bookmark_list_load(request):
 @permission_classes((IsAuthenticated,))
 def recommend_load(request):
     profile = Profile.objects.get(user_id=request.user.id)
-    tags = Profile_Tag.objects.filter(profile_id=profile.id)
     tag_list = []
-    for tag in tags:
-        tag_list.append(tag.tag.id)
+
+    try:
+        tags = InterestTag.objects.get(user_id=request.user.id).tag_list
+        tags = sorted(tags.items(), key = lambda x:(x[1]['date'], x[1]['count']), reverse=True)
+        for tag in tags:
+            tag_list.append(tag[1]['id'])
+
+    except InterestTag.DoesNotExist:
+        tags = Profile_Tag.objects.filter(profile_id=profile.id)
+        for tag in tags:
+            tag_list.append(tag.tag.id)
 
     projects = Project_Tag.objects.filter(tag_id__in=tag_list)
     project_list = []
@@ -240,11 +250,10 @@ def recommend_load(request):
         project_list.append(project.project.id)
 
     if request.GET['last'] == '0':
-        post_obj = Post.objects.filter(department_id=profile.department)
-        post_obj.union(Post.objects.exclude(department_id=profile.department).filter(project_id__in = project_list))
+        post_obj = Post.objects.filter(project_id__in = project_list)
+
     else:
-        post_obj = Post.objects.filter(department_id=profile.department, id__lt=request.GET['last'])
-        post_obj.union(Post.objects.exclude(department_id=profile.department).filter(id__lt=request.GET['last'], project_id__in = project_list))
+        post_obj = Post.objects.filter(project_id__in = project_list, id__lt=request.GET['last'])
 
     post_obj = MainloadSerializer(reversed(list(post_obj)[-5:]), many=True).data
     for p in post_obj:
