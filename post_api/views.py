@@ -19,6 +19,7 @@ from .models import Post, ContentsImage, Like, BookMark
 from loop.models import Loopship
 
 import random
+import datetime
 # Create your views here.
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
@@ -248,12 +249,12 @@ def recommend_load(request):
     project_list = []
     for project in projects:
         project_list.append(project.project.id)
-
+    today = datetime.date.today()
     if request.GET['last'] == '0':
-        post_obj = Post.objects.filter(project_id__in = project_list)
+        post_obj = Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today], project_id__in = project_list)
 
     else:
-        post_obj = Post.objects.filter(project_id__in = project_list, id__lt=request.GET['last'])
+        post_obj = Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today], project_id__in = project_list, id__lt=request.GET['last'])
 
     post_obj = MainloadSerializer(reversed(list(post_obj)[-5:]), many=True).data
     for p in post_obj:
