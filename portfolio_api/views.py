@@ -23,7 +23,7 @@ def portfolio(request):
     
     elif request.method == 'GET': 
         try:
-            portfoilo_obj = Portfolio.objects.get(id=request.GET['id'])
+            portfoilo_obj = Portfolio.objects.get(user_id = request.GET['id'])
         except Portfolio.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
