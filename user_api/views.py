@@ -260,7 +260,7 @@ def logout(request):
         pass
     return Response("Successed log out", status=status.HTTP_200_OK)
     
-@api_view(['PUT', 'POST', 'GET'])
+@api_view(['PUT', 'POST'])
 def password(request):
     if request.method == 'PUT':
         if request.GET['type'] == 'change':
@@ -288,40 +288,41 @@ def password(request):
         check_email(user, 'find')
         return Response(status=status.HTTP_200_OK)
     
-    elif request.method == 'GET':    
-        if check_password(request.data['password'], request.user.password):
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)      
+   
 
 @api_view(['DELETE', ])
 @permission_classes((IsAuthenticated,))
-def resign(request):  
-    user = request.user
-    profile_obj = Profile.objects.get(user_id=user.id)
-    profile_obj.image.delete(save=False)
-    try:
-        intereset_list = InterestTag.objects.get(user_id=user.id)
-        intereset_list.delete()
-    except:
-        pass
+def resign(request):   
+    if check_password(request.data['password'], request.user.password):
+        user = request.user
+        profile_obj = Profile.objects.get(user_id=user.id)
+        profile_obj.image.delete(save=False)
+        try:
+            intereset_list = InterestTag.objects.get(user_id=user.id)
+            intereset_list.delete()
+        except:
+            pass
 
-    for project in Project.objects.filter(user_id=user.id):
-        project.pj_thumbnail.delete(save=False)
-        for post in Post.objects.filter(project_id=project.id):
-            for image in ContentsImage.objects.filter(post_id=post.id):
-                image.image.delete(save=False)
+        for project in Project.objects.filter(user_id=user.id):
+            project.pj_thumbnail.delete(save=False)
+            for post in Post.objects.filter(project_id=project.id):
+                for image in ContentsImage.objects.filter(post_id=post.id):
+                    image.image.delete(save=False)
 
-    tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
-    delete_tag(tag_obj)
-    tag_obj = Project_Tag.objects.filter(project__in=Project.objects.filter(user_id=user.id))
-    delete_tag(tag_obj)
-    tag_obj = Question_Tag.objects.filter(question__in=Question.objects.filter(user_id=user.id))
-    delete_tag(tag_obj)
+        tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
+        delete_tag(tag_obj)
+        tag_obj = Project_Tag.objects.filter(project__in=Project.objects.filter(user_id=user.id))
+        delete_tag(tag_obj)
+        tag_obj = Question_Tag.objects.filter(question__in=Question.objects.filter(user_id=user.id))
+        delete_tag(tag_obj)
+        
+        user = User.objects.get(id=user.id)
+        user.delete()
+        return Response("resign from loop", status=status.HTTP_200_OK)
+        
+    else:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)   
     
-    user = User.objects.get(id=user.id)
-    user.delete()
-    return Response("resign from loop", status=status.HTTP_200_OK)
     
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
