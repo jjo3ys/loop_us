@@ -27,7 +27,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from fcm.push_fcm import report_alarm
+from fcm.push_fcm import report_alarm, topic_alarm
 
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
@@ -381,7 +381,7 @@ def profile(request):
                 profile.update({'new_alarm':True})
             else:
                 profile.update({'new_alarm':False})
-                
+
             if Msg.objects.filter(room__in=Room.objects.filter(member__icontains=request.user.id), receiver_id=request.user.id, is_read=False).exists():
                 profile.update({'new_message':True})
             else:
@@ -528,12 +528,8 @@ def alarm(request):
         alarm_obj = Alarm.objects.get(id=request.GET['id'])
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)
-# @api_view(['GET', ])
-# def noti(request):
-#     token_list = []
-#     token_obj = FcmToken.objects.all()
-#     for token in token_obj:
-#         token_list.append(token.token)
-    
-#     notification_fcm(token_list)
-#     return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
+def noti(request):
+    topic_alarm('promotion', '프로모션토픽')
+    return Response(status=status.HTTP_200_OK)

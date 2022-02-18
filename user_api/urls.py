@@ -17,5 +17,5 @@ urlpatterns = [
     path('report', views.report_profile),
     path('alarm', views.alarm),
     # path('ban', views.ban),
-    # path('noti', views.noti)
+    path('noti', views.noti)
 ]
