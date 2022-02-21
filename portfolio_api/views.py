@@ -16,7 +16,7 @@ def portfolio(request):
         return Response(PortfolioSerializers(portfoilo_obj).data, status=status.HTTP_201_CREATED)
 
     elif request.method == 'PUT':
-        portfoilo_obj = Portfolio.objects.get(id=request.GET['id'])
+        portfoilo_obj = Portfolio.objects.get(user_id=request.GET['id'])
         portfoilo_obj.introduction = request.data['introduction']
         portfoilo_obj.save()
         return Response(PortfolioSerializers(portfoilo_obj).data, status=status.HTTP_200_OK)
@@ -35,7 +35,7 @@ def portfolio(request):
         return Response(portfoilo, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
-        portfoilo_obj = Portfolio.objects.get(id=request.GET['id'])
+        portfoilo_obj = Portfolio.objects.get(user_id=request.GET['id'])
         portfoilo_obj.delete()
         return Response(status=status.HTTP_200_OK)
 
@@ -43,13 +43,15 @@ def portfolio(request):
 @permission_classes((IsAuthenticated,))
 def element(request):
     if request.method == 'POST':   
-        portfolio_obj = Portfolio.objects.get(user_id=request.user.id)
-
-        element_obj = Element.objects.create(
-                                        portfolio_id = portfolio_obj.id,
+        element_obj = Element.objects.create(portfolio_id = Portfolio.objects.get(user_id=request.user.id).id,
                                         image = request.FILES.get('image'),
-                                        title=request.data['title'],
-                                        contents=request.data['contents'])                                    
+                                        title=request.data['title']) 
+        contents = []
+        for d in eval(request.data['contents']):
+            contents.append(d)
+
+        element_obj.contents = str(contents)
+        element_obj.save()
         return Response(ElementSerializers(element_obj).data, status=status.HTTP_201_CREATED)
     
     elif request.method == 'PUT':
@@ -58,7 +60,10 @@ def element(request):
             element_obj.title = request.data['title']
 
         elif request.GET['type'] == 'contents':
-            element_obj.contents = request.data['contents']
+            contents = []
+            for content in eval(request.data['contents']):
+                contents.append(content)
+            element_obj.contents = str(contents)
 
         elif request.GET['type'] == 'image':
             element_obj.image.delete(save=False)
