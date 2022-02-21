@@ -45,12 +45,11 @@ def element(request):
     if request.method == 'POST':   
         portfolio_obj = Portfolio.objects.get(user_id=request.user.id)
 
-        element_obj = Element.objects.create(user_id=request.user.id, 
+        element_obj = Element.objects.create(
                                         portfolio_id = portfolio_obj.id,
                                         image = request.FILES.get('image'),
                                         title=request.data['title'],
-                                        contents=request.data['contents'])
-                                        
+                                        contents=request.data['contents'])                                    
         return Response(ElementSerializers(element_obj).data, status=status.HTTP_201_CREATED)
     
     elif request.method == 'PUT':
