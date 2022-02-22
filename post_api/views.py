@@ -254,7 +254,7 @@ def recommend_load(request):
         post_obj = Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today], project_id__in = project_list)
 
     else:
-        post_obj = Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today], project_id__in = project_list, id__lt=request.GET['last'])
+        post_obj = Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today], id__lt=request.GET['last'], project_id__in = project_list)
 
     post_obj = MainloadSerializer(reversed(list(post_obj)[-5:]), many=True).data
     for p in post_obj:
