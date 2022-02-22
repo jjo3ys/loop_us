@@ -1,3 +1,4 @@
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -139,8 +140,8 @@ class Activate(View):
         if user.id == user_dic['id']:
             user.is_active = True
             user.save()
-
-            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
+            
+            return HttpResponseRedirect(redirect_to="https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
 
         return Response({'message': 'email check fail...'})
 
