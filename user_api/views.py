@@ -1,4 +1,3 @@
-from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -6,6 +5,7 @@ from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
 from django.views import View
+from django.conf import settings
 
 
 
@@ -74,8 +74,8 @@ def delete_tag(tag_obj):
 
 def check_email(user, type):           
     uidb4 = urlsafe_base64_encode(force_bytes(user.id))
-    token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
-    # token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
+    # token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
+    token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
     html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://3.35.253.151:8000/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
     main_title = 'LOOP US 이메일 인증'
     mail_to = user.email
@@ -130,7 +130,19 @@ def create_user(request):
         return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
     check_email(user, 'create')
     return Response(status=status.HTTP_200_OK)
+@api_view(['GET', ])
+def activate(request, uidb64, token):
+    uid = force_text(urlsafe_base64_decode(uidb64))
+    user = User.objects.get(pk=uid)
+    user_dic = jwt.decode(token, algorithms='HS256')
+    if user.id == user_dic['id']:
+        user.is_active = True
+        user.save()
+        
+        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
 
+    return Response({'message': 'email check fail...'})
+    
 class Activate(View):
     def get(self, request, uidb64, token):
 
@@ -141,7 +153,7 @@ class Activate(View):
             user.is_active = True
             user.save()
             
-            return HttpResponseRedirect(redirect_to="https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
+            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
 
         return Response({'message': 'email check fail...'})
 
@@ -531,7 +543,7 @@ def alarm(request):
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)
 
-@api_view(['GET', ])
-def noti(request):
-    topic_alarm('promotion', '프로모션토픽')
-    return Response(status=status.HTTP_200_OK)
+# @api_view(['GET', ])
+# def noti(request):
+#     topic_alarm('promotion', '프로모션토픽')
+#     return Response(status=status.HTTP_200_OK)
