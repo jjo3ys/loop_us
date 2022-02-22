@@ -74,8 +74,8 @@ def delete_tag(tag_obj):
 
 def check_email(user, type):           
     uidb4 = urlsafe_base64_encode(force_bytes(user.id))
-    # token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
-    token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
+    token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
+    # token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
     html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://3.35.253.151:8000/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
     main_title = 'LOOP US 이메일 인증'
     mail_to = user.email
@@ -142,7 +142,7 @@ def activate(request, uidb64, token):
         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
 
     return Response({'message': 'email check fail...'})
-    
+
 class Activate(View):
     def get(self, request, uidb64, token):
 
