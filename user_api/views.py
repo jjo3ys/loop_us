@@ -88,8 +88,6 @@ def check_email(user, type):
 
     for i in range(90):
         time.sleep(2)
-        user = User.objects.get(pk=user.id)
-
         if user.is_active:
             return Response(status=status.HTTP_200_OK)
 
