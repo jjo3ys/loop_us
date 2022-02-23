@@ -15,10 +15,14 @@ class PortfolioSerializers(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'introduction', 'date']
 
 class ElementSerializers(serializers.ModelSerializer):
+    contents = serializers.SerializerMethodField()
 
     class Meta:
         model  = Element
         fields = ['id', 'title', 'date', 'contents', 'portfolio_id', 'image']
+    
+    def get_contents(self, obj):
+        return eval(str(obj.contents))
 
 class PortfolioElementSerializers(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()

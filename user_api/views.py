@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
 from django.views import View
+from django.conf import settings
 
 
 
@@ -130,6 +131,18 @@ def create_user(request):
         return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
     check_email(user, 'create')
     return Response(status=status.HTTP_200_OK)
+@api_view(['GET', ])
+def activate(request, uidb64, token):
+    uid = force_text(urlsafe_base64_decode(uidb64))
+    user = User.objects.get(pk=uid)
+    user_dic = jwt.decode(token, algorithms='HS256')
+    if user.id == user_dic['id']:
+        user.is_active = True
+        user.save()
+        
+        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
+
+    return Response({'message': 'email check fail...'})
 
 class Activate(View):
     def get(self, request, uidb64, token):
@@ -140,7 +153,7 @@ class Activate(View):
         if user.id == user_dic['id']:
             user.is_active = True
             user.save()
-
+            
             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
 
         return Response({'message': 'email check fail...'})
@@ -522,7 +535,7 @@ def alarm(request):
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)
 
-@api_view(['GET', ])
-def noti(request):
-    topic_alarm('promotion', '프로모션토픽')
-    return Response(status=status.HTTP_200_OK)
+# @api_view(['GET', ])
+# def noti(request):
+#     topic_alarm('promotion', '프로모션토픽')
+#     return Response(status=status.HTTP_200_OK)
