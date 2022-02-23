@@ -5,7 +5,6 @@ from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
 from django.views import View
-from django.conf import settings
 
 
 
@@ -68,7 +67,10 @@ def delete_tag(tag_obj):
     for tag in tag_obj:
         tag.tag.count = tag.tag.count-1
         if tag.tag.count == 0:
-            tag.tag.delete()
+            try:
+                tag.tag.delete()
+            except IntegrityError:
+                pass
         else:
             tag.tag.save()
 
@@ -131,6 +133,7 @@ def create_user(request):
         return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
     check_email(user, 'create')
     return Response(status=status.HTTP_200_OK)
+
 @api_view(['GET', ])
 def activate(request, uidb64, token):
     uid = force_text(urlsafe_base64_decode(uidb64))
@@ -143,20 +146,6 @@ def activate(request, uidb64, token):
         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
 
     return Response({'message': 'email check fail...'})
-
-class Activate(View):
-    def get(self, request, uidb64, token):
-
-        uid = force_text(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-        user_dic = jwt.decode(token, algorithms='HS256')
-        if user.id == user_dic['id']:
-            user.is_active = True
-            user.save()
-            
-            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
-
-        return Response({'message': 'email check fail...'})
 
 @api_view(['POST', ])
 def check_corp_num(request):
@@ -302,8 +291,6 @@ def password(request):
         check_email(user, 'find')
         return Response(status=status.HTTP_200_OK)
     
-   
-
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def resign(request):   
@@ -311,6 +298,12 @@ def resign(request):
         user = request.user
         profile_obj = Profile.objects.get(user_id=user.id)
         profile_obj.profile_image.delete(save=False)
+        message = EmailMessage('{}님 탈퇴 사유'.format(profile_obj.real_name), '학과:{} \n 사유:{}'.format(request.data['department'], request.data['reason']), to=['loopus@loopus.co.kr'])
+        try:
+            message.send()
+        except:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+
         try:
             intereset_list = InterestTag.objects.get(user_id=user.id)
             intereset_list.delete()
@@ -336,7 +329,21 @@ def resign(request):
 
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)   
-    
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def ask(request):
+    message = EmailMessage('{}님 문의'.format(request.data['real_name']), '이메일:{} \n 문의내용:{} \n 기기:{} \n OS버젼:{} \n 학과:{} \n 유저id:{}'.format(request.data['email'],
+                                                                                                                                                         request.data['content'],
+                                                                                                                                                         request.data['device'],
+                                                                                                                                                         request.data['os'],
+                                                                                                                                                         request.data['department'],
+                                                                                                                                                         request.data['id']), to=['loopus@loopus.co.kr'])
+    try:
+        message.send()
+        return Response(status=status.HTTP_200_OK)
+    except:
+        return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
     
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
@@ -372,7 +379,7 @@ def profile(request):
                 if not valid:
                     tag_obj.count = tag_obj.count+1
                     tag_obj.save()    
-                         
+
             interest_list.save()
 
         profile_obj.save()

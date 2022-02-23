@@ -16,6 +16,7 @@ urlpatterns = [
     path('university_list', views.university_list),
     path('report', views.report_profile),
     path('alarm', views.alarm),
+    path('ask', views.ask),
     # path('ban', views.ban),
     # path('noti', views.noti)
 ]
