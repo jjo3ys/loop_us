@@ -1,6 +1,7 @@
 import datetime
-
 from search.models import InterestTag
+
+from search.views import interest_tag
 from .serializers import ProjectPostSerializer
 from .models import Project, TagLooper
 from tag.models import Tag, Project_Tag
@@ -41,16 +42,10 @@ def project(request):
                 tag_fcm(token, profile_obj.real_name, user.id, project_obj.project_name, project_obj.id)
             except:
                 pass
-
         interest_list = InterestTag.objects.get_or_create(user_id=user.id)[0]
         for tag in eval(request.data['tag']):
             tag_obj, valid = Tag.objects.get_or_create(tag=tag)
-            try:
-                interest_list.tag_list[str(tag_obj.id)]['count'] += 1
-                interest_list.tag_list[str(tag_obj.id)]['date'] = str(datetime.date.today())
-            except KeyError:
-                interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
-
+            interest_tag(interest_list, 'plus', tag_obj.id, 10)
             if not valid:
                 tag_obj.count = tag_obj.count + 1
                 tag_obj.save()
@@ -83,30 +78,19 @@ def project(request):
             project_obj.pj_thumbnail = request.FILES.get('thumbnail') 
 
         elif type == 'tag':   
-            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0] 
+            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             old_tag = Project_Tag.objects.filter(project_id=project_obj.id)
             for tag in old_tag:
-                try:
-                    interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
-                    if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
-                        del interest_list.tag_list[str(tag.tag.id)]
-                except KeyError:
-                    pass
-
+                interest_tag(interest_list, 'minus', tag.tag_id, 19)
                 tag.delete()
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
                     tag.tag.delete()
 
-            tag_list = eval(request.data['tag'])      
+            tag_list = eval(request.data['tag'])   
             for tag in tag_list:
                 tag, valid = Tag.objects.get_or_create(tag=tag)
-                try:
-                    interest_list.tag_list[str(tag.id)]['count'] += 1
-                    interest_list.tag_list[str(tag.id)]['date'] = str(datetime.date.today())
-                except KeyError:
-                    interest_list.tag_list[str(tag.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag.id}
-
+                interest_tag(interest_list, 'plus', tag.id, 10)
                 Project_Tag.objects.create(tag = tag, project_id = project_obj.id)
                 if not valid:
                     tag.count = tag.count+1
@@ -169,13 +153,7 @@ def project(request):
 
         if not valid:
             for tag in project_tag:
-                try:
-                    interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
-                    if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
-                        del interest_list.tag_list[str(tag.tag.id)]
-                except KeyError:
-                    pass
-
+                interest_tag(interest_list, 'minus', tag.tag_id, 10)
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
                     tag.tag.save()

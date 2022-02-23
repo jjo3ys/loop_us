@@ -1,6 +1,7 @@
 import datetime
 from question_api.models import Answer, Question
-from search.models import InterestTag#, P2PAnswer, P2PQuestion
+from search.models import InterestTag
+from search.views import interest_tag#, P2PAnswer, P2PQuestion
 from user_api.models import Profile
 from fcm.models import FcmToken
 from fcm.push_fcm import answer_fcm
@@ -27,21 +28,13 @@ def question(request):
 
         interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         for tag in request.data['tag']:
-            
-            try: 
-                tag_obj = Tag.objects.get(tag=tag)
+            tag_obj, valid = Tag.objects.get_or_create(tag=tag)
+            interest_list = interest_tag(interest_list, 'plus', tag.id, 20) 
+
+            if not valid:
                 tag_obj.count = tag_obj.count + 1
-                tag_obj.save()
-                try:
-                    interest_list.tag_list[str(tag_obj.id)]['count'] += 1
-                    interest_list.tag_list[str(tag_obj.id)]['date'] = str(datetime.date.today())
-                except KeyError:
-                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
-                interest_list.save()
-            
-            except Tag.DoesNotExist:
-                tag_obj = Tag.objects.create(tag = tag)
-            
+                tag_obj.save() 
+             
             Question_Tag.objects.create(question=question_obj, tag=tag_obj)
 
         interest_list.save()
@@ -76,14 +69,7 @@ def question(request):
         interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         old_tag = Question_Tag.objects.filter(question_id=request.GET['id'])
         for tag in old_tag:
-            try:
-                interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
-                if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
-                    del interest_list.tag_list[str(tag.tag.id)]
-
-            except KeyError:
-                pass
-
+            interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 20)
             tag.delete()
             tag.tag.count = tag.tag.count-1
             if tag.tag.count == 0:
@@ -93,11 +79,7 @@ def question(request):
         for tag in tag_list:
             tag, valid = Tag.objects.get_or_create(tag=tag)
             Question_Tag.objects.create(tag = tag, question_id = question_obj.id)
-            try:
-                interest_list.tag_list[str(tag.id)]['count'] += 1
-                interest_list.tag_list[str(tag.id)]['date'] = str(datetime.date.today())
-            except KeyError:
-                interest_list.tag_list[str(tag.id)] = {'coutn':1, 'date':str(datetime.date.today()), 'id':tag.id}
+            interest_list = interest_tag(interest_list, 'plus', tag.tag_id, 20)
 
             if not valid:
                 tag.count = tag.count+1
@@ -113,26 +95,18 @@ def question(request):
             QuestionModel = Question.objects.get(id = request.GET['id'])
             q_tag = Question_Tag.objects.filter(question_id=request.GET['id'])
             for tag in q_tag:
-                try:
-                    interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
-                    if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
-                        del interest_list.tag_list[str(tag.tag.id)]
-
-                except KeyError:
-                    pass
+                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 20)
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
                     tag.tag.delete()
                 else:
                     tag.tag.save()
                 
-            if QuestionModel.user.id == request.user.id :
-                QuestionModel.delete()
-            else:
-                return Response('No permission to modify')
-
+            interest_list.save()
+            QuestionModel.delete()
+        
         except:
-            return Response('Question not found')
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
     return Response(status=status.HTTP_200_OK)

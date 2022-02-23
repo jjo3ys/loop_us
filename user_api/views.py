@@ -28,6 +28,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from fcm.push_fcm import report_alarm, topic_alarm
+from search.views import interest_tag
 
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
@@ -207,7 +208,7 @@ def signup(request):
             except Tag.DoesNotExist:
                 tag_obj = Tag.objects.create(tag = tag)
 
-            tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
+            tag_list[str(tag_obj.id)] = {'count':50, 'date':str(datetime.date.today()), 'id':tag_obj.id}
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
 
         InterestTag.objects.create(user_id=user.id, tag_list=tag_list)
@@ -342,13 +343,7 @@ def profile(request):
             interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
             for tag in tag_obj:
-                try:
-                    interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
-                    if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
-                        del interest_list.tag_list[str(tag.tag.id)]
-                except KeyError:
-                    pass
-
+                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 50)
                 tag.delete()
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
@@ -359,15 +354,12 @@ def profile(request):
             for tag in tag_list:
                 tag_obj, valid = Tag.objects.get_or_create(tag=tag)
                 Profile_Tag.objects.create(tag = tag_obj, profile_id = profile_obj.id)
-                try:
-                    interest_list.tag_list[str(tag_obj.id)]['count'] += 1
-                    interest_list.tag_list[str(tag_obj.id)]['date'] = str(datetime.date.today())
-                except KeyError:
-                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
+                interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 50)
 
                 if not valid:
                     tag_obj.count = tag_obj.count+1
-                    tag_obj.save()         
+                    tag_obj.save()    
+                         
             interest_list.save()
 
         profile_obj.save()
