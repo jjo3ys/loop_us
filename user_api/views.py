@@ -175,7 +175,7 @@ def check_corp_num(request):
                                   name = request.data['name'],
                                   tel_num = request.data['tel_num'])
 
-        return Response("인증 대기중입니다.", status=status.HTTP_201_CREATED)
+        return Response("인증 대기중입니다.", status=status.HTTP_200_CREATED)
 
 @api_view(['POST'])
 def signup(request):
@@ -221,7 +221,7 @@ def signup(request):
                                         corp_name = corp.corp_name)
             corp.delete()
 
-        return Response({'token':token.key, 'user_id':user.id},status=status.HTTP_201_CREATED)
+        return Response({'token':token.key, 'user_id':user.id},status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
