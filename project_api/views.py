@@ -1,5 +1,5 @@
 import datetime
-from search.models import InterestTag
+from search.models import Get_log, InterestTag
 
 from search.views import interest_tag
 from .serializers import ProjectPostSerializer
@@ -128,6 +128,7 @@ def project(request):
         if request.user.id == project_obj.user_id:
             project.update({"is_user":1})
         else:
+            Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=3)
             project.update({"is_user":0})
 
         for post in project['post']:

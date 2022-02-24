@@ -1,7 +1,7 @@
 from django.core.paginator import Paginator
 from django.db.models import IntegerField, Case, When, Func
 from project_api.models import TagLooper
-from search.models import InterestTag
+from search.models import Get_log, InterestTag
 
 from tag.models import Profile_Tag, Project_Tag
 from fcm.models import FcmToken
@@ -145,6 +145,7 @@ def posting(request):
         if user_id == post_obj.user_id:
             return_dict.update({"is_user":1})
         else:
+            Get_log.objects.create(user_id=user_id, target_id=posting_idx, type=4)
             return_dict.update({"is_user":0})
 
         try:

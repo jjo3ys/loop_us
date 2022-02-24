@@ -37,7 +37,7 @@ from .department import DEPARTMENT, R_DEPARTMENT
 from .university import UNIVERSITY
 from .text import pwmessage
 
-from search.models import InterestTag
+from search.models import Get_log, InterestTag
 from tag.models import Project_Tag, Question_Tag, Tag, Profile_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
@@ -406,7 +406,7 @@ def profile(request):
             #         interest_tag.tag_list[str(tag['tag_id'])]['date'] = str(datetime.date.today())
             #     except KeyError:
             #          interest_list.tag_list[str(tag['tag_id'])] = {'count':1, 'date':str(datetime.date.today()), 'id':tag['tag_id']}
-
+            Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile.update({'is_user':0})
         
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()

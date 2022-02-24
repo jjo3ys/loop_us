@@ -1,6 +1,6 @@
 import datetime
 from question_api.models import Answer, Question
-from search.models import InterestTag
+from search.models import Get_log, InterestTag
 from search.views import interest_tag#, P2PAnswer, P2PQuestion
 from user_api.models import Profile
 from fcm.models import FcmToken
@@ -51,6 +51,7 @@ def question(request):
         if user_id == q_obj.user_id:
             q_sz.update({"is_user":1})
         else:
+            Get_log.objects.create(user_id=user_id, target_id=request.GET['id'], type=2)
             q_sz.update({"is_user":0})
 
         for d in q_sz['answer']:
