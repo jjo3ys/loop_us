@@ -244,17 +244,17 @@ def recommend_load(request):
     today = datetime.date.today()
 
     post_list = []
-    for post in Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today]):
+    for post in Post.objects.filter(date__range=[today-datetime.timedelta(days=7), datetime.datetime.now()]):
         try:
             post_list.append([post, tag_score[post.project_id]])
         except KeyError:
-            post_list.append([post, 0])
+            pass
 
     post_list.sort(key=lambda x: (-x[1], -x[0].id))
     page = int(request.GET['page'])
     post_obj = MainloadSerializer([x[0] for x in post_list[5*(page-1):5*page]], many=True).data
     post_list = 0
-    
+
     for p in post_obj:
         if p['user_id'] == request.user.id:
             p.update({"is_user":1})
