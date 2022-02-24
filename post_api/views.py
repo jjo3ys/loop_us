@@ -236,7 +236,7 @@ def recommend_load(request):
 
     try:
         tags = InterestTag.objects.get(user_id=request.user.id).tag_list
-        tags = sorted(tags.items(), key = lambda x:(x[1]['date'], x[1]['count']), reverse=True)
+        tags = sorted(tags.items(), key = lambda x:(x[1]['count'], x[1]['date']), reverse=True)
         for tag in tags:
             tag_list.append(tag[1]['id'])
 
