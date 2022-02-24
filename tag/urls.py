@@ -3,5 +3,5 @@ from . import views
 
 urlpatterns = [
     path('tag', views.tag),
-    path('tag_serach', views.search_tag)
+    path('search_tag', views.search_tag)
 ]
