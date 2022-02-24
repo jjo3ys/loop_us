@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator
+from django.db.models import IntegerField, Case, When, Func
 from project_api.models import TagLooper
 from search.models import InterestTag
 
@@ -231,32 +232,29 @@ def bookmark_list_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def recommend_load(request):
-    profile = Profile.objects.get(user_id=request.user.id)
-    tag_list = []
+    tags = InterestTag.objects.get(user_id=request.user.id).tag_list
 
-    try:
-        tags = InterestTag.objects.get(user_id=request.user.id).tag_list
-        tags = sorted(tags.items(), key = lambda x:(x[1]['count'], x[1]['date']), reverse=True)
-        for tag in tags:
-            tag_list.append(tag[1]['id'])
+    tag_score = {}
+    for project in Project_Tag.objects.filter(tag_id__in=tags):
+        try:
+            tag_score[project.project.id] += tags[str(project.tag_id)]['count']
+        except KeyError:
+            tag_score[project.project.id] = tags[str(project.tag_id)]['count']
 
-    except InterestTag.DoesNotExist:
-        tags = Profile_Tag.objects.filter(profile_id=profile.id)
-        for tag in tags:
-            tag_list.append(tag.tag.id)
-
-    projects = Project_Tag.objects.filter(tag_id__in=tag_list)
-    project_list = []
-    for project in projects:
-        project_list.append(project.project.id)
     today = datetime.date.today()
-    if request.GET['last'] == '0':
-        post_obj = Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today], project_id__in = project_list)
 
-    else:
-        post_obj = Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today], id__lt=request.GET['last'], project_id__in = project_list)
+    post_list = []
+    for post in Post.objects.filter(date__range=[today-datetime.timedelta(days=7), today]):
+        try:
+            post_list.append([post, tag_score[post.project_id]])
+        except KeyError:
+            post_list.append([post, 0])
 
-    post_obj = MainloadSerializer(reversed(list(post_obj)[-5:]), many=True).data
+    post_list.sort(key=lambda x: (-x[1], -x[0].id))
+    page = int(request.GET['page'])
+    post_obj = MainloadSerializer([x[0] for x in post_list[5*(page-1):5*page]], many=True).data
+    post_list = 0
+    
     for p in post_obj:
         if p['user_id'] == request.user.id:
             p.update({"is_user":1})
