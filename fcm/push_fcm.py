@@ -122,4 +122,3 @@ def topic_alarm(topic, title):
     topic=topic
     )
     messaging.send(message)
-topic_alarm('promotion', '프로모션')

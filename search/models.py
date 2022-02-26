@@ -20,13 +20,15 @@ class InterestTag(models.Model):
         app_label = 'log'
         db_table = "Interest_tag"
 
-# class Connect_log(models.Model):
-#     date = models.DateField(auto_now_add=True)
-#     user_id = models.PositiveIntegerField()
+class Get_log(models.Model):
+    date = models.DateField(auto_now_add=True)
+    user_id = models.PositiveIntegerField()
+    target_id = models.PositiveIntegerField()
+    type = models.PositiveSmallIntegerField()
 
-#     class Meta:
-#         app_label = 'log'
-#         db_table = 'Connection_log'
+    class Meta:
+        app_label = 'log'
+        db_table = 'Get_log'
 
 #chat model migrate 할 때 Meta의 app_label부분 주석처리 상태에서 makemigrations,
 #python manage.py migrate search --database=log 실행,

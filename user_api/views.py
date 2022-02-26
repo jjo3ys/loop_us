@@ -28,6 +28,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from fcm.push_fcm import report_alarm, topic_alarm
+from search.views import interest_tag
 
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
@@ -36,7 +37,7 @@ from .department import DEPARTMENT, R_DEPARTMENT
 from .university import UNIVERSITY
 from .text import pwmessage
 
-from search.models import InterestTag
+from search.models import Get_log, InterestTag
 from tag.models import Project_Tag, Question_Tag, Tag, Profile_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
@@ -66,7 +67,10 @@ def delete_tag(tag_obj):
     for tag in tag_obj:
         tag.tag.count = tag.tag.count-1
         if tag.tag.count == 0:
-            tag.tag.delete()
+            try:
+                tag.tag.delete()
+            except IntegrityError:
+                pass
         else:
             tag.tag.save()
 
@@ -84,9 +88,7 @@ def check_email(user, type):
 
     for i in range(90):
         time.sleep(2)
-        user = User.objects.get(pk=user.id)
-
-        if user.is_active:
+        if User.objects.get(id=user.id).is_active:
             return Response(status=status.HTTP_200_OK)
 
     if type == 'create':
@@ -130,19 +132,18 @@ def create_user(request):
     check_email(user, 'create')
     return Response(status=status.HTTP_200_OK)
 
-class Activate(View):
-    def get(self, request, uidb64, token):
+@api_view(['GET', ])
+def activate(request, uidb64, token):
+    uid = force_text(urlsafe_base64_decode(uidb64))
+    user = User.objects.get(pk=uid)
+    user_dic = jwt.decode(token, algorithms='HS256')
+    if user.id == user_dic['id']:
+        user.is_active = True
+        user.save()
+        
+        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
 
-        uid = force_text(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
-        user_dic = jwt.decode(token, algorithms='HS256')
-        if user.id == user_dic['id']:
-            user.is_active = True
-            user.save()
-
-            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
-
-        return Response({'message': 'email check fail...'})
+    return Response({'message': 'email check fail...'})
 
 @api_view(['POST', ])
 def check_corp_num(request):
@@ -172,7 +173,7 @@ def check_corp_num(request):
                                   name = request.data['name'],
                                   tel_num = request.data['tel_num'])
 
-        return Response("인증 대기중입니다.", status=status.HTTP_201_CREATED)
+        return Response("인증 대기중입니다.", status=status.HTTP_200_CREATED)
 
 @api_view(['POST'])
 def signup(request):
@@ -207,7 +208,7 @@ def signup(request):
             except Tag.DoesNotExist:
                 tag_obj = Tag.objects.create(tag = tag)
 
-            tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
+            tag_list[str(tag_obj.id)] = {'count':50, 'date':str(datetime.date.today()), 'id':tag_obj.id}
             Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
 
         InterestTag.objects.create(user_id=user.id, tag_list=tag_list)
@@ -218,7 +219,7 @@ def signup(request):
                                         corp_name = corp.corp_name)
             corp.delete()
 
-        return Response({'token':token.key, 'user_id':user.id},status=status.HTTP_201_CREATED)
+        return Response({'token':token.key, 'user_id':str(user.id)},status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -288,8 +289,6 @@ def password(request):
         check_email(user, 'find')
         return Response(status=status.HTTP_200_OK)
     
-   
-
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def resign(request):   
@@ -297,6 +296,12 @@ def resign(request):
         user = request.user
         profile_obj = Profile.objects.get(user_id=user.id)
         profile_obj.profile_image.delete(save=False)
+        message = EmailMessage('{}님 탈퇴 사유'.format(profile_obj.real_name), '학과:{} \n 사유:{}'.format(request.data['department'], request.data['reason']), to=['loopus@loopus.co.kr'])
+        try:
+            message.send()
+        except:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+
         try:
             intereset_list = InterestTag.objects.get(user_id=user.id)
             intereset_list.delete()
@@ -322,7 +327,22 @@ def resign(request):
 
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)   
-    
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def ask(request):
+    message = EmailMessage('{}님 문의'.format(request.data['real_name']), '이메일:{} \n 문의내용:{} \n 기기:{} \n OS버젼:{} \n 빌드번호:{} \n 학과:{} \n 유저id:{}'.format(request.data['email'],
+                                                                                                                                                         request.data['content'],
+                                                                                                                                                         request.data['device'],
+                                                                                                                                                         request.data['os'],
+                                                                                                                                                         request.data['app_ver'],
+                                                                                                                                                         request.data['department'],
+                                                                                                                                                         request.data['id']), to=['loopus@loopus.co.kr'])
+    try:
+        message.send()
+        return Response(status=status.HTTP_200_OK)
+    except:
+        return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
     
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
@@ -342,13 +362,7 @@ def profile(request):
             interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
             for tag in tag_obj:
-                try:
-                    interest_list.tag_list[str(tag.tag.id)]['count'] -= 1
-                    if interest_list.tag_list[str(tag.tag.id)]['count'] == 0:
-                        del interest_list.tag_list[str(tag.tag.id)]
-                except KeyError:
-                    pass
-
+                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 50)
                 tag.delete()
                 tag.tag.count = tag.tag.count-1
                 if tag.tag.count == 0:
@@ -359,15 +373,12 @@ def profile(request):
             for tag in tag_list:
                 tag_obj, valid = Tag.objects.get_or_create(tag=tag)
                 Profile_Tag.objects.create(tag = tag_obj, profile_id = profile_obj.id)
-                try:
-                    interest_list.tag_list[str(tag_obj.id)]['count'] += 1
-                    interest_list.tag_list[str(tag_obj.id)]['date'] = str(datetime.date.today())
-                except KeyError:
-                    interest_list.tag_list[str(tag_obj.id)] = {'count':1, 'date':str(datetime.date.today()), 'id':tag_obj.id}
+                interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 50)
 
                 if not valid:
                     tag_obj.count = tag_obj.count+1
-                    tag_obj.save()         
+                    tag_obj.save()    
+
             interest_list.save()
 
         profile_obj.save()
@@ -395,7 +406,7 @@ def profile(request):
             #         interest_tag.tag_list[str(tag['tag_id'])]['date'] = str(datetime.date.today())
             #     except KeyError:
             #          interest_list.tag_list[str(tag['tag_id'])] = {'count':1, 'date':str(datetime.date.today()), 'id':tag['tag_id']}
-
+            Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile.update({'is_user':0})
         
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
@@ -530,7 +541,7 @@ def alarm(request):
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)
 
-@api_view(['GET', ])
-def noti(request):
-    topic_alarm('promotion', '프로모션토픽')
-    return Response(status=status.HTTP_200_OK)
+# @api_view(['GET', ])
+# def noti(request):
+#     topic_alarm('promotion', '프로모션토픽')
+#     return Response(status=status.HTTP_200_OK)
