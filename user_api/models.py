@@ -41,7 +41,7 @@ class Banlist(models.Model):
 
 class Report(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    type = models.BooleanField()
+    type = models.SmallIntegerField(default=0)
     target_id = models.PositiveBigIntegerField()
     reason = models.CharField(max_length=100)
     date = models.DateTimeField(auto_now_add=True)

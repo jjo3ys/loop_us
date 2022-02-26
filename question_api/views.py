@@ -1,9 +1,9 @@
 import datetime
 from question_api.models import Answer, Question
 from search.models import InterestTag#, P2PAnswer, P2PQuestion
-from user_api.models import Profile
+from user_api.models import Profile, Report
 from fcm.models import FcmToken
-from fcm.push_fcm import answer_fcm
+from fcm.push_fcm import answer_fcm, report_alarm
 
 from .serializers import QuestionSerializer, AnswerSerializer, OnlyQSerializer#, P2PAnswerSerializer, P2PQuestionSerializer
 from tag.models import Tag, Question_Tag
@@ -206,7 +206,24 @@ def answer(request, question_idx):
         Answer.objects.get(id=request.GET['id']).delete()
         return Response(status=status.HTTP_200_OK)
 
-# @api_view(['POST', ])
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def report(request):
+    Report.objects.create(user_id=request.user.id, type=2, target_id=request.data['id'], reason=request.data['reason'])
+    count = Report.objects.filter(type=2, target_id=request.data['id']).count()
+    if count >= 3:
+        report_alarm(count, 2, request.data['id'], request.data['reason'])
+        return Response(status=status.HTTP_200_OK)
+
+@api_view(['POST', ])
+@permission_classes((IsAuthenticated,))
+def answer_report(request):
+    Report.objects.create(user_id=request.user.id, type=3, target_id=request.data['id'], reason=request.data['reason'])
+    count = Report.objects.filter(type=3, target_id=request.data['id']).count()
+    if count >= 3:
+        report_alarm(count, 3, request.data['id'], request.data['reason'])
+        return Response(status=status.HTTP_200_OK)
+    # @api_view(['POST', ])
 # @permission_classes((IsAuthenticated,))
 # def question_to(request, to_idx):
 #     q_obj = P2PQuestion.objects.create(user=request.user,

@@ -439,10 +439,10 @@ def university_list(request):
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
 def report_profile(request):
-    Report.objects.create(user_id=request.user.id, type=True, target_id=request.data['id'], reason=request.data['reason'])
-    count = Report.objects.filter(type=True, target_id=request.data['id']).count()
+    Report.objects.create(user_id=request.user.id, type=0, target_id=request.data['id'], reason=request.data['reason'])
+    count = Report.objects.filter(type=0, target_id=request.data['id']).count()
     if count >= 3:
-        report_alarm(count, True, request.data['id'], request.data['reason'])
+        report_alarm(count, 0, request.data['id'], request.data['reason'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST', 'DELETE', 'GET'])
