@@ -188,7 +188,8 @@ def report(request):
     count = Report.objects.filter(type=2, target_id=request.data['id']).count()
     if count >= 3:
         report_alarm(count, 2, request.data['id'], request.data['reason'])
-        return Response(status=status.HTTP_200_OK)
+
+    return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -197,7 +198,8 @@ def answer_report(request):
     count = Report.objects.filter(type=3, target_id=request.data['id']).count()
     if count >= 3:
         report_alarm(count, 3, request.data['id'], request.data['reason'])
-        return Response(status=status.HTTP_200_OK)
+        
+    return Response(status=status.HTTP_200_OK)
     # @api_view(['POST', ])
 # @permission_classes((IsAuthenticated,))
 # def question_to(request, to_idx):
