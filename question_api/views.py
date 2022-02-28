@@ -29,7 +29,7 @@ def question(request):
         interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         for tag in request.data['tag']:
             tag_obj, valid = Tag.objects.get_or_create(tag=tag)
-            interest_list = interest_tag(interest_list, 'plus', tag.id, 20) 
+            interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 20) 
 
             if not valid:
                 tag_obj.count = tag_obj.count + 1
@@ -188,7 +188,7 @@ def report(request):
     count = Report.objects.filter(type=2, target_id=request.data['id']).count()
     if count >= 3:
         report_alarm(count, 2, request.data['id'], request.data['reason'])
-
+        
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
@@ -198,7 +198,7 @@ def answer_report(request):
     count = Report.objects.filter(type=3, target_id=request.data['id']).count()
     if count >= 3:
         report_alarm(count, 3, request.data['id'], request.data['reason'])
-        
+
     return Response(status=status.HTTP_200_OK)
     # @api_view(['POST', ])
 # @permission_classes((IsAuthenticated,))
