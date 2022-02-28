@@ -47,8 +47,11 @@ from rest_framework.permissions import IsAuthenticated
 def loop(request, idx):
     user = request.user
     profile = Profile.objects.get(user_id=user.id)
-    token = FcmToken.objects.get(user_id=idx)
-    loop_fcm(token, profile.real_name, user.id)
+    try:
+        token = FcmToken.objects.get(user_id=idx)
+        loop_fcm(token, profile.real_name, user.id)
+    except FcmToken.DoesNotExist:
+        pass
 
     Loopship.objects.get_or_create(user_id=user.id, friend_id=idx)
  
