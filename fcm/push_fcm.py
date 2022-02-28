@@ -110,7 +110,7 @@ def report_alarm(count, type, id, reason):
         "type":report_type,
         "id":str(id)
     },
-    token='d6Ed9lF6TW-JWc1AcrkqQW:APA91bHLKJB68cim6MJBcqB-hE4Te9GM2NDykOd1RJeTn4edKfPY7vGTho8QjGGpcx5bMzXTMpsVdp0YnoEz_33GwD49vT5GHkfYMsYVWu0ERHvKT8GZqSs52ZIZlFgVwsBGMrqlPhn7'
+    token='e2x1oS_XT7iDENR1hVc6-T:APA91bE4K1Qa6vPfc7eeVlIfcdoW4c6YjgN-8jIlSWIlnEC3_OEXRtRRL6BNyUCnGI1iKoWcatb93scUPlsqgMTJ5hKMFnq2TVlyGUK57piHxmHnSZ5r7FFo9IuH591LxKEwjBizPK0j'
     )
     messaging.send(message)
 
