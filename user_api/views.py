@@ -384,7 +384,7 @@ def profile(request):
         profile_obj.save()
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
     
-    if request.method == 'GET':
+    elif request.method == 'GET':
         idx = request.GET['id']
         profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
         if str(request.user.id) == idx:
@@ -399,15 +399,14 @@ def profile(request):
             else:
                 profile.update({'new_message':False})
         else:
-            # interest_tag = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-            # for tag in profile['profile_tag']:
-            #     try:
-            #         interest_tag.tag_list[str(tag['tag_id'])]['count'] += 1
-            #         interest_tag.tag_list[str(tag['tag_id'])]['date'] = str(datetime.date.today())
-            #     except KeyError:
-            #          interest_list.tag_list[str(tag['tag_id'])] = {'count':1, 'date':str(datetime.date.today()), 'id':tag['tag_id']}
             Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile.update({'is_user':0})
+            if Banlist.objects.filter(user_id=request.user.id, banlist__contain=int(idx)).exists():
+                profile.update({'is_baned':1})
+            elif Banlist.objects.filter(user_id=idx, banlist__contain=request.user.id).exists():
+                profile.update({'is_baned':2})
+            else:
+                profile.update({'is_baned':0})
         
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
         following = Loopship.objects.filter(user_id=idx, friend_id=request.user.id).exists()
@@ -462,12 +461,12 @@ def ban(request):
     if request.method == 'POST':
         banlist_obj, valid = Banlist.objects.get_or_create(user_id=request.user.id)
         if not valid:
-            ban_list = banlist_obj.banlist
-            banlist_obj.banlist = ban_list.append(int(request.GET['id']))      
+            banlist_obj.banlist.append(int(request.GET['id']))
+
         else:
-            banlist_obj.banlist=[int(request.GET['id'])]
-           
-        banlist_obj.save()
+            banlist_obj.banlist = [int(request.GET['id'])]
+
+        banlist_obj.save() 
         try:
             Loopship.objects.get(user_id=request.user.id, friend_id=request.GET['id']).delete()
         except:
