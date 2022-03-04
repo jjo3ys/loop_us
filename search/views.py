@@ -7,16 +7,17 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
+
 from .models import Log, InterestTag#, Connect_log
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
 from project_api.serializers import ProjectSerializer
-from user_api.models import Profile
-from user_api.serializers import ProfileSerializer, SimpleProfileSerializer
+from user_api.models import Banlist, Profile
+from user_api.serializers import ProfileSerializer
 from question_api.models import Question
 from question_api.serializers import OnlyQSerializer as QuestionSerializer
-from tag.models import Project_Tag, Question_Tag, Tag
+from tag.models import Project_Tag, Question_Tag
 # Create your views here.
 
 # @api_view(['POST'])
@@ -65,9 +66,15 @@ def interest_tag(interest_list, type, tag, score):
 def search(request, type):
     query = request.GET['query']
     page = request.GET['page']
+    try:
+        ban_list = Banlist.objects.get(user_id=request.user.id).banlist
+    except:
+        ban_list = []
+
+    ban_list += Banlist.objects.filter(banlist__contain=request.user.id).values_list('user_id', flat=True)
 
     if type == 'post':
-        obj = list(Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)))
+        obj = list(Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)).exclude(user_id__in=ban_list))
         obj.reverse()
         obj = Paginator(obj, 5).get_page(page)
         obj = MainloadSerializer(obj, many=True).data
@@ -88,13 +95,13 @@ def search(request, type):
                 p.update({"is_marked":0})
 
     elif type == 'profile':
-        obj = list(Profile.objects.filter(real_name__icontains=query))
+        obj = list(Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list))
         obj.reverse()
         obj = Paginator(obj, 10).get_page(page)
         obj = ProfileSerializer(obj, many=True).data
 
     elif type == 'question':
-        obj = list(Question.objects.filter(content__icontains=query))
+        obj = list(Question.objects.filter(content__icontains=query).exclude(user_id__in=ban_list))
         obj.reverse()
         obj = Paginator(obj, 5).get_page(page)
         obj = QuestionSerializer(obj, many=True).data
@@ -102,13 +109,12 @@ def search(request, type):
     elif type == 'tag_project':
         obj = list(Project_Tag.objects.filter(tag_id=int(query)))
         obj.reverse()
-        obj = Paginator(obj, 5).get_page(page)
         result = []
         for o in obj:
-            if o.project not in result:
+            if o.user_id not in ban_list and o.project not in result:
                 result.append(o.project)
         result.reverse()
-        obj = ProjectSerializer(result, many=True).data
+        obj = ProjectSerializer(result[(int(page)-1)*5:int(page)*5], many=True).data
         for p in obj:
             if request.user.id == p['user_id']:
                 p.update({"is_user":1})
@@ -118,13 +124,12 @@ def search(request, type):
     elif type == 'tag_question':
         obj = list(Question_Tag.objects.filter(tag_id=int(query)))
         obj.reverse()
-        obj = Paginator(obj, 5).get_page(page)
         result = []
         for o in obj:
-            if o.question not in result:
+            if o.user_id not in ban_list and o.question not in result:
                 result.append(o.question)
         result.reverse()
-        obj = QuestionSerializer(result, many=True).data
+        obj = QuestionSerializer(result[(int(page)-1)*5:int(page)*5], many=True).data
         for q in obj:
             if request.user.id == q['user_id']:
                 q.update({"is_user":1})

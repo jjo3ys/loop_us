@@ -1,12 +1,10 @@
 from django.core.paginator import Paginator
-from django.db.models import IntegerField, Case, When, Func
-from project_api.models import TagLooper
 from search.models import Get_log, InterestTag
 
-from tag.models import Profile_Tag, Project_Tag
+from tag.models import Project_Tag
 from fcm.models import FcmToken
 from fcm.push_fcm import like_fcm, report_alarm
-from user_api.models import Profile, Report
+from user_api.models import Banlist, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
 from rest_framework.permissions import IsAuthenticated
@@ -234,6 +232,12 @@ def bookmark_list_load(request):
 @permission_classes((IsAuthenticated,))
 def recommend_load(request):
     tags = InterestTag.objects.get(user_id=request.user.id).tag_list
+    try:
+        ban_list = Banlist.objects.get(user_id=request.user.id).banlist
+    except:
+        ban_list = []
+
+    ban_list += Banlist.objects.filter(banlist__contain=request.user.id).values_list('user_id', flat=True)
 
     tag_score = {}
     for project in Project_Tag.objects.filter(tag_id__in=tags):
@@ -245,7 +249,7 @@ def recommend_load(request):
     today = datetime.date.today()
 
     post_list = []
-    for post in Post.objects.filter(date__range=[today-datetime.timedelta(days=7), datetime.datetime.now()]):
+    for post in Post.objects.filter(date__range=[today-datetime.timedelta(days=7), datetime.datetime.now()]).exclude(user_id__in=ban_list):
         try:
             post_list.append([post, tag_score[post.project_id]])
         except KeyError:
@@ -279,10 +283,17 @@ def recommend_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def main_load(request):
+    try:
+        ban_list = Banlist.objects.get(user_id=request.user.id).banlist
+    except:
+        ban_list = []
+
+    ban_list += Banlist.objects.filter(banlist__contain=request.user.id).values_list('user_id', flat=True)
+
     if request.GET['last'] == '0':
-        post_obj = list(Post.objects.all())[-5:]
+        post_obj = list(Post.objects.all().exclude(user_id__in=ban_list))[-5:]
     else:
-        post_obj = list(Post.objects.filter(id__lt=request.GET['last']))[-5:]
+        post_obj = list(Post.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list))[-5:]
 
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data

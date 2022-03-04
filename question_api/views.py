@@ -2,7 +2,7 @@ import datetime
 from question_api.models import Answer, Question
 from search.models import Get_log, InterestTag
 from search.views import interest_tag#, P2PAnswer, P2PQuestion
-from user_api.models import Profile, Report
+from user_api.models import Banlist, Profile, Report
 from fcm.models import FcmToken
 from fcm.push_fcm import answer_fcm, report_alarm
 
@@ -133,10 +133,17 @@ def question_list(request, type):
 
     elif type == "any":
         try:
+            ban_list = Banlist.objects.get(user_id=request.user.id).banlist
+        except:
+            ban_list = []
+
+        ban_list += Banlist.objects.filter(banlist__contain=request.user.id).values_list('user_id', flat=True)
+
+        try:
             if request.GET['last'] == '0':
-                q_obj = list(Question.objects.all())[-5:]
+                q_obj = list(Question.objects.all().exclude(user_id__in=ban_list))[-5:]
             else:
-                q_obj = list(Question.objects.filter(id__lt=request.GET['last']))[-5:]  
+                q_obj = list(Question.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list))[-5:]  
             q_obj.reverse()
         except Question.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
