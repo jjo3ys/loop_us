@@ -401,12 +401,12 @@ def profile(request):
         else:
             Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile.update({'is_user':0})
-            if Banlist.objects.filter(user_id=request.user.id, banlist__contain=int(idx)).exists():
-                profile.update({'is_baned':1})
-            elif Banlist.objects.filter(user_id=idx, banlist__contain=request.user.id).exists():
-                profile.update({'is_baned':2})
+            if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(idx)).exists():
+                profile.update({'is_banned':1})
+            elif Banlist.objects.filter(user_id=idx, banlist__contains=request.user.id).exists():
+                profile.update({'is_banned':2})
             else:
-                profile.update({'is_baned':0})
+                profile.update({'is_banned':0})
         
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
         following = Loopship.objects.filter(user_id=idx, friend_id=request.user.id).exists()

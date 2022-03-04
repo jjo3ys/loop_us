@@ -237,7 +237,7 @@ def recommend_load(request):
     except:
         ban_list = []
 
-    ban_list += Banlist.objects.filter(banlist__contain=request.user.id).values_list('user_id', flat=True)
+    ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
 
     tag_score = {}
     for project in Project_Tag.objects.filter(tag_id__in=tags):
@@ -288,7 +288,7 @@ def main_load(request):
     except:
         ban_list = []
 
-    ban_list += Banlist.objects.filter(banlist__contain=request.user.id).values_list('user_id', flat=True)
+    ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
 
     if request.GET['last'] == '0':
         post_obj = list(Post.objects.all().exclude(user_id__in=ban_list))[-5:]

@@ -71,7 +71,7 @@ def search(request, type):
     except:
         ban_list = []
 
-    ban_list += Banlist.objects.filter(banlist__contain=request.user.id).values_list('user_id', flat=True)
+    ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
 
     if type == 'post':
         obj = list(Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)).exclude(user_id__in=ban_list))
