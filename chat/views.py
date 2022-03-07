@@ -1,5 +1,5 @@
 from user_api.serializers import SimpleProfileSerializer
-from user_api.models import Profile
+from user_api.models import Banlist, Profile
 from fcm.push_fcm import chat_fcm
 from fcm.models import FcmToken
 
@@ -31,6 +31,13 @@ def chatting(request):
             message = list(message)[-50:]
             try:
                 return_dict['profile'] = SimpleProfileSerializer(Profile.objects.get(user_id=request.GET['id'])).data
+                if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(request.GET['id'])).exists():
+                    return_dict['profile']['is_banned'] = 1
+                elif Banlist.objects.filter(user_id=request.GET['id'], banlist__contains=int(request.user.id)).exists():
+                    return_dict['profile']['is_banned'] = 2
+                else:
+                    return_dict['profile']['is_banned'] = 0
+                    
             except Profile.DoesNotExist:
                 return_dict['profile'] = None
         else:
