@@ -111,7 +111,7 @@ def search(request, type):
         obj.reverse()
         result = []
         for o in obj:
-            if o.user_id not in ban_list and o.project not in result:
+            if o.project.user_id not in ban_list and o.project not in result:
                 result.append(o.project)
         result.reverse()
         obj = ProjectSerializer(result[(int(page)-1)*5:int(page)*5], many=True).data
@@ -126,7 +126,7 @@ def search(request, type):
         obj.reverse()
         result = []
         for o in obj:
-            if o.user_id not in ban_list and o.question not in result:
+            if o.question.user_id not in ban_list and o.question not in result:
                 result.append(o.question)
         result.reverse()
         obj = QuestionSerializer(result[(int(page)-1)*5:int(page)*5], many=True).data
