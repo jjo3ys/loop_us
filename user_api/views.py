@@ -141,9 +141,9 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         
-        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentication_image.png")
+        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
 
-    return Response({'message': 'email check fail...'})
+    return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
 
 @api_view(['POST', ])
 def check_corp_num(request):
