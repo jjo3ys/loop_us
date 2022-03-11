@@ -127,7 +127,7 @@ def topic_alarm(topic, title):
 def logout_push(token):
     message = messaging.Message(
         data={
-            "logout":"개같이부활"
+            "type":"logout"
         },   
         token=token
     )
