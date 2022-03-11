@@ -89,7 +89,7 @@ def check_email(user, type):
     for i in range(90):
         time.sleep(2)
         if User.objects.get(id=user.id).is_active:
-            return Response(status=status.HTTP_200_OK)
+            return True
 
     if type == 'create':
         user.delete()
@@ -98,7 +98,7 @@ def check_email(user, type):
         user.is_active = True
         user.save()
 
-    return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
+    return False
 
 @api_view(['POST', ])
 def create_user(request):
@@ -129,8 +129,11 @@ def create_user(request):
 
     except IntegrityError:
         return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
-    check_email(user, 'create')
-    return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
+    valid = check_email(user, 'create')
+    if valid:
+        return Response(status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
 
 @api_view(['GET', ])
 def activate(request, uidb64, token):
