@@ -137,7 +137,7 @@ def question_list(request, type):
         except:
             ban_list = []
 
-        ban_list += Banlist.objects.filter(banlist__contain=request.user.id).values_list('user_id', flat=True)
+        ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
 
         try:
             if request.GET['last'] == '0':
