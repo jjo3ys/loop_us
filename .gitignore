@@ -11,3 +11,4 @@ requirements.txt
 /Pipfile
 /Pipfile.lock
 config/__pycache__
+/**/migrations
