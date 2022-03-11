@@ -270,10 +270,13 @@ def check_token(request):
 @permission_classes((IsAuthenticated,))
 def logout(request):
     user = request.user
-    try:
-        fcm_obj = FcmToken.objects.get(user_id=user.id)
-        fcm_obj.delete()
-    except:
+    if request.GET['type'] == 'normal':
+        try:
+            fcm_obj = FcmToken.objects.get(user_id=user.id)
+            fcm_obj.delete()
+        except:
+            pass
+    elif request.GET['type'] == 'forced':
         pass
     return Response("Successed log out", status=status.HTTP_200_OK)
     
