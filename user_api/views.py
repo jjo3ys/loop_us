@@ -130,20 +130,24 @@ def create_user(request):
     except IntegrityError:
         return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
     check_email(user, 'create')
-    return Response(status=status.HTTP_200_OK)
+    return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
 
 @api_view(['GET', ])
 def activate(request, uidb64, token):
-    uid = force_text(urlsafe_base64_decode(uidb64))
-    user = User.objects.get(pk=uid)
-    user_dic = jwt.decode(token, algorithms='HS256')
-    if user.id == user_dic['id']:
-        user.is_active = True
-        user.save()
-        
-        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+        user_dic = jwt.decode(token, algorithms='HS256')
+        if user.id == user_dic['id']:
+            user.is_active = True
+            user.save()
+            
+            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
+        else:
+            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
 
-    return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
+    except:
+        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
 
 @api_view(['POST', ])
 def check_corp_num(request):
