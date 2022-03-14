@@ -4,11 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
-from django.views import View
 
-
-
-from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.utils import timezone
 from django.utils.http import (
@@ -27,7 +23,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from fcm.push_fcm import logout_push, report_alarm, topic_alarm
+from fcm.push_fcm import logout_push, report_alarm
 from search.views import interest_tag
 
 # from .department import DEPARTMENT
@@ -35,7 +31,6 @@ from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 from .department import DEPARTMENT, R_DEPARTMENT
 from .university import UNIVERSITY
-from .text import pwmessage
 
 from search.models import Get_log, InterestTag
 from tag.models import Project_Tag, Question_Tag, Tag, Profile_Tag
@@ -51,7 +46,6 @@ import jwt
 import json
 import time
 import datetime
-import random
 import requests
 
 headers = {
@@ -295,10 +289,14 @@ def password(request):
                 return Response("origin_pw is not matched with data", status=status.HTTP_401_UNAUTHORIZED)
 
         elif request.GET['type'] == 'find':
-            user = User.objects.get(email=request.data['email'])
-            user.set_password(request.data['password'])
-            user.save()
-            return Response(status=status.HTTP_200_OK)
+            try:
+                user = User.objects.get(email=request.data['email'])
+                user.set_password(request.data['password'])
+                user.save()
+                return Response(status=status.HTTP_200_OK)
+
+            except User.DoesNotExist:
+                return Response(stauts=status.HTTP_401_UNAUTHORIZED)
 
     elif request.method =='POST':
         user = User.objects.get(email=request.data['email'])
