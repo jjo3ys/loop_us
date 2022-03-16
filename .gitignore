@@ -2,6 +2,7 @@
 __pycache__/
 .__pycache__
 /__pycache__/
+/config/__pycache__
 /env/
 /venv/
 /docker-compose.yml
