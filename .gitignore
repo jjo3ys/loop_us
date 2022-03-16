@@ -14,5 +14,4 @@ requirements.txt
 
 confing/__pycache__
 config/my_settings.py
-/firebase.json
 /serviceAccountKey.json
