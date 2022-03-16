@@ -2,19 +2,19 @@ import os
 import firebase_admin
 
 from pathlib import Path
-from .my_settings import EMAIL, S3
+from .my_settings import DB_SETTING, DJANGO_KEY, EMAIL, S3
 from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-llzvhsk6%r+^g_22*iq2p()39s2+*hrw6jcp(pdhozwtt)&_o='
+SECRET_KEY = DJANGO_KEY
 
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+# DEBUG = True
+# ALLOWED_HOSTS = ["*"]
 
-# DEBUG = False
-# ALLOWED_HOSTS = ['3.35.253.151']
+DEBUG = False
+ALLOWED_HOSTS = ['3.35.253.151']
 
 
 SITE_URL = "http://3.35.253.151:8000/"
@@ -103,40 +103,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASE_ROUTERS = ['config.router.Router']
 
-DATABASES = {
-    'default': {
-
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'main',
-        'USER': 'LoopUS',
-        'PASSWORD': 'rlagudxo',
-        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
-        'PORT': '3306',
-
-    },
-    'chatting':{
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'chatting',
-        'USER': 'LoopUS',
-        'PASSWORD': 'rlagudxo',
-        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-        }
-    },
-    'log':{
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'log',
-        'USER': 'LoopUS',
-        'PASSWORD': 'rlagudxo',
-        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-        }
-    }
-}
+DATABASES = DB_SETTING
 
 
 # Password validation
