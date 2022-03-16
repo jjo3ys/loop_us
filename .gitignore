@@ -2,7 +2,7 @@
 __pycache__/
 .__pycache__
 /__pycache__/
-/config/__pycache__
+
 /env/
 /venv/
 /docker-compose.yml
@@ -11,3 +11,8 @@ Dockerfile
 requirements.txt
 /Pipfile
 /Pipfile.lock
+
+confing/__pycache__
+config/my_settings.py
+/firebase.json
+/serviceAccountKey.json
