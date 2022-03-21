@@ -103,7 +103,21 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASE_ROUTERS = ['config.router.Router']
 
+<<<<<<< HEAD
 DATABASES = DB_SETTING
+=======
+DATABASES = {
+    'default': {
+
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'test',
+        'USER': 'LoopUS',
+        'PASSWORD': 'rlagudxo',
+        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
+        'PORT': '3306',
+    }
+}
+>>>>>>> 0e03f0f7988e50086b15f9a981e45039a3a91da7
 
 
 # Password validation
