@@ -10,6 +10,7 @@ class Post(models.Model):
     contents = models.TextField(null=True)
     date = models.DateTimeField(auto_now_add=True)
     department_id = models.PositiveSmallIntegerField(default=0)
+    like_count = models.SmallIntegerField(default=0)
 
     class Meta:
         db_table = "Posting"
@@ -26,6 +27,7 @@ class Comment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
+    like_count = models.SmallIntegerField(default=0)
 
     class Meta:
         db_table = "Post_comment"
@@ -35,6 +37,7 @@ class Cocomment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
+    like_count = models.SmallIntegerField(default=0)
 
     class Meta:
         db_table = "Post_cocomment"
@@ -54,7 +57,7 @@ class CommentLike(models.Model):
         db_table = "Comment_like"
 
 class CocommentLike(models.Model):
-    post = models.ForeignKey(Cocomment, null=True, related_name='cocomment_like', on_delete=models.CASCADE)
+    cocomment = models.ForeignKey(Cocomment, null=True, related_name='cocomment_like', on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:

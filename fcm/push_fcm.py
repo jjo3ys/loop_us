@@ -48,6 +48,22 @@ def like_fcm(token, req_from, id, from_id):
         )
         messaging.send(message)
 
+def comment_like_fcm(token, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=5, target_id=id, alarm_from_id=from_id)
+    if valid:
+        message = messaging.Message(notification=messaging.Notification(
+            title='루프어스',
+            body='{0}님이 회원님의 댓글을 좋아합니다.'.format(req_from)
+        ),
+        data={
+            'type':'comment_like',
+            'id':str(id)
+        },
+        token = token.token,
+        )
+        messaging.send(message)
+
+
 def chat_fcm(token, req_from, msg, user_id):
     message = messaging.Message(notification=messaging.Notification(
         title='{0}님'.format(req_from),

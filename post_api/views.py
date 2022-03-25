@@ -4,7 +4,7 @@ from search.views import interest_tag
 
 from tag.models import Post_Tag, Tag
 from fcm.models import FcmToken
-from fcm.push_fcm import like_fcm, report_alarm
+from fcm.push_fcm import like_fcm, report_alarm, comment_like_fcm
 from user_api.models import Banlist, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
@@ -14,7 +14,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import PostingSerializer, MainloadSerializer
-from .models import Post, PostImage, Like, BookMark
+from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment
 
 from loop.models import Loopship
 
@@ -162,28 +162,108 @@ def posting(request):
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 
+@api_view(['POST', 'DELETE'])
+@permission_classes((IsAuthenticated,))
+def comment(request, type, idx):
+    if request.method =='POST':
+        if type == 'post':
+            Comment.objects.create(user_id=request.user.id,
+                                post_id=idx,
+                                content=request.data['content'])
+        elif type == 'comment':
+            Cocomment.objects.create(user_id=request.user.id,
+                                    comment_id=idx,
+                                    content=request.data['content'])
+        
+        return Response(status=status.HTTP_201_CREATED)
+    
+    elif request.method == 'DELETE':
+        if type == 'post':
+            try:
+                comment = Cocomment.objects.get(user_id=request.user.id, post_id=idx)
+                comment.delete()
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+        elif type == 'comment':
+            try:
+                cocomment = Cocomment.objects.get(user_id=request.user.id, comment_id=idx)
+                cocomment.delete()
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(status=status.HTTP_200_OK)
+
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def like(request, idx):
-    try:
-        like_obj, valid = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
-    except:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    type = request.GET['type']
+    if type =='post':
+        like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
 
-    if not valid:
-        like_obj.delete()
-        return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
-    else:
-        if like_obj.post.user_id != request.user.id:
-            try:
-                token = FcmToken.objects.get(user_id=like_obj.post.user_id)
-                real_name = Profile.objects.get(user_id=request.user.id).real_name
-                like_fcm(token, real_name, idx, request.user.id)
-            except:
-                pass
+        if not created:
+            like_obj.post.like_count -= 1
+            like_obj.post.save()
+            like_obj.delete()
+            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
 
-        return Response('liked posting', status=status.HTTP_202_ACCEPTED)
+        else:
+            like_obj.post.like_count += 1
+            like_obj.post.save()
+            if like_obj.post.user_id != request.user.id:
+                try:
+                    token = FcmToken.objects.get(user_id=like_obj.post.user_id)
+                    real_name = Profile.objects.get(user_id=request.user.id).real_name
+                    like_fcm(token, real_name, idx, request.user.id)
+                except:
+                    pass
 
+            return Response('liked posting', status=status.HTTP_202_ACCEPTED)
+
+    elif type =='comment':
+        like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+
+        if not created:
+            like_obj.delete()
+            like_obj.post.like_count -= 1
+            like_obj.post.save()
+            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+
+        else:
+            like_obj.post.like_count += 1
+            like_obj.post.save()
+            if like_obj.comment.user_id != request.user.id:
+                try:
+                    token = FcmToken.objects.get(user_id=like_obj.post.user_id)
+                    real_name = Profile.objects.get(user_id=request.user.id).real_name
+                    comment_like_fcm(token, real_name, idx, request.user.id)
+                except:
+                    pass
+
+            return Response('liked posting', status=status.HTTP_202_ACCEPTED)  
+                 
+    elif type =='cocomment':
+        like_obj, created = CocommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+
+        if not created:
+            like_obj.delete()
+            like_obj.post.like_count -= 1
+            like_obj.post.save()
+            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+
+        else:
+            like_obj.post.like_count += 1
+            like_obj.post.save()
+            if like_obj.cocomment.user_id != request.user.id:
+                try:
+                    token = FcmToken.objects.get(user_id=like_obj.post.user_id)
+                    real_name = Profile.objects.get(user_id=request.user.id).real_name
+                    comment_like_fcm(token, real_name, idx, request.user.id)
+                except:
+                    pass
+
+            return Response('liked posting', status=status.HTTP_202_ACCEPTED)    
+                    
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def bookmark(request, idx):
@@ -350,11 +430,22 @@ def loop_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def like_list_load(request, idx):
-    like_obj = Like.objects.filter(post_id=idx)
     like_list = []
-    for l in like_obj:
-       like_list.append(Profile.objects.get(user_id=l.user_id))
+    if request.GET['type'] == 'post':
+        like_obj = Like.objects.filter(post_id=idx)
+        for l in like_obj:
+            like_list.append(Profile.objects.get(user_id=l.user_id))
     
+    elif request.GET['type'] == 'comment':
+        like_obj = CommentLike.objects.filter(comment_id=idx)
+        for l in like_obj:
+            like_list.append(Profile.objects.get(user_id=l.user_id))
+    
+    elif request.GET['type'] == 'cocomment':
+        like_obj = CocommentLike.objects.filter(cocomment_id=idx)
+        for l in like_obj:
+            like_list.append(Profile.objects.get(user_id=l.user_id))
+
     return Response(SimpleProfileSerializer(like_list, many=True).data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
