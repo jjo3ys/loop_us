@@ -1,33 +1,27 @@
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
-from .models import Post, ContentsImage, Like
+from tag.models import Post_Tag
+from .models import Post, PostImage, Like, Cocomment, Comment
 from project_api.models import Project
-from tag.models import Project_Tag
 from rest_framework import serializers
 
-class ProjectTagSerializer(serializers.ModelSerializer):
+class PostTagSerializer(serializers.ModelSerializer):
     tag = serializers.SerializerMethodField()
-    count = serializers.SerializerMethodField()
+    tag_count = serializers.SerializerMethodField()
     class Meta:
-        model = Project_Tag
-        fields = ['tag_id', 'tag', 'count']
+        model = Post_Tag
+        fields = ['tag_id', 'tag', 'tag_count']
     
     def get_tag(self, obj):
         return obj.tag.tag
     
-    def get_count(self, obj):
+    def get_tag_count(self, obj):
         return obj.tag.count
 
 class SimpleProjectserializer(serializers.ModelSerializer):
-    project_tag = ProjectTagSerializer(many=True, read_only=True)
-    project_id = serializers.SerializerMethodField()
-
     class Meta:
         model = Project
-        fields =['project_id', 'project_name', 'project_tag']
-    
-    def get_project_id(self, obj):
-        return obj.id
+        fields =['project_id', 'project_name']
 
 class LikeSerializer(serializers.ModelSerializer):
     
@@ -35,20 +29,49 @@ class LikeSerializer(serializers.ModelSerializer):
         model = Like
         fields = ['id', 'post_id', 'user_id']
     
-class PostingContentsImageSerializer(serializers.ModelSerializer):
+class PostingImageSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
     class Meta:
-        model = ContentsImage
+        model = PostImage
         fields = ['id', 'post_id', 'image']
+
+class CocommentSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cocomment
+        fields = ['profile', 'cocomment_id', 'content', 'date']
+    
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
+
+class CommentSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+    cocomment = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = ['profile', 'comment_id', 'content', 'cocomment', 'date']
+    
+    def get_profile(self, obj):
+        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
+    
+    def get_cocomment(self, obj):
+        cocomment = Cocomment.objects.filter(comment_id=obj.id)
+
+        return {"cocoments":CocommentSerializer(reversed(list(cocomment)[-3:]), many=True),
+                "count":cocomment.count()}
 
 class MainloadSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
-    thumbnail = serializers.SerializerMethodField()
+    post_tag = PostTagSerializer(many=True, read_only=True)
+    image = PostingImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'profile', 'thumbnail', 'title', 'date', 'like_count', 'project']
+        fields = ['id', 'user_id', 'profile', 'title', 'date', 'like_count', 'project', 'image', 'post_tag']
 
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
@@ -59,42 +82,23 @@ class MainloadSerializer(serializers.ModelSerializer):
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data
     
-    def get_thumbnail(self, obj):
-        if obj.thumbnail == None or obj.thumbnail == '':    
-            try:
-                return ContentsImage.objects.filter(post_id=obj.id)[0].image.url
-            except:
-                return None
-        return obj.thumbnail.url
-    
 class PostingSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
-    contents = serializers.SerializerMethodField()
     like_count = serializers.SerializerMethodField()
-    thumbnail = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
+    post_tag = PostTagSerializer(many=True, read_only=True)
+    image = PostingImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
         fields = ['id', 'user_id', 'profile', 'project', 
-         'thumbnail', 'title', 'date', 'like_count', 'contents']
+         'title', 'date', 'like_count', 'contents', 'image', 'post_tag']
         
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
-    
-    def get_contents(self, obj):
-        return eval(str(obj.contents))
     
     def get_like_count(self, obj):        
         return Like.objects.filter(post_id=obj.id).count()
     
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data
-    
-    def get_thumbnail(self, obj):
-        if obj.thumbnail == '':
-            try:
-                return ContentsImage.objects.filter(post_id=obj.id)[0].image.url
-            except:
-                return None
-        return obj.thumbnail.url

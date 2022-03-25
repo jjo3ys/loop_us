@@ -15,9 +15,7 @@ from post_api.serializers import MainloadSerializer
 from project_api.serializers import ProjectSerializer
 from user_api.models import Banlist, Profile
 from user_api.serializers import ProfileSerializer
-from question_api.models import Question
-from question_api.serializers import OnlyQSerializer as QuestionSerializer
-from tag.models import Project_Tag, Question_Tag
+from tag.models import Post_Tag
 # Create your views here.
 
 # @api_view(['POST'])
@@ -41,7 +39,7 @@ from tag.models import Project_Tag, Question_Tag
 #     }
 
 #     return Response(return_dict, status=status.HTTP_200_OK)
-type_int = {'post':1, 'profile':2, 'question':3}    
+type_int = {'post':1, 'profile':2}    
 
 def interest_tag(interest_list, type, tag, score):
     if type == 'plus':
@@ -100,14 +98,8 @@ def search(request, type):
         obj = Paginator(obj, 10).get_page(page)
         obj = ProfileSerializer(obj, many=True).data
 
-    elif type == 'question':
-        obj = list(Question.objects.filter(content__icontains=query).exclude(user_id__in=ban_list))
-        obj.reverse()
-        obj = Paginator(obj, 5).get_page(page)
-        obj = QuestionSerializer(obj, many=True).data
-
-    elif type == 'tag_project':
-        obj = list(Project_Tag.objects.filter(tag_id=int(query)))
+    elif type == 'tag_post':
+        obj = list(Post_Tag.objects.filter(tag_id=int(query)))
         obj.reverse()
         result = []
         for o in obj:
@@ -120,21 +112,6 @@ def search(request, type):
                 p.update({"is_user":1})
             else:
                 p.update({"is_user":0})
-  
-    elif type == 'tag_question':
-        obj = list(Question_Tag.objects.filter(tag_id=int(query)))
-        obj.reverse()
-        result = []
-        for o in obj:
-            if o.question.user_id not in ban_list and o.question not in result:
-                result.append(o.question)
-        result.reverse()
-        obj = QuestionSerializer(result[(int(page)-1)*5:int(page)*5], many=True).data
-        for q in obj:
-            if request.user.id == q['user_id']:
-                q.update({"is_user":1})
-            else:
-                q.update({"is_user":0})
 
     elif type == 'notice':
         return Response("unrealized", status=status.HTTP_204_NO_CONTENT)

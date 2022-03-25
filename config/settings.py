@@ -35,12 +35,10 @@ INSTALLED_APPS = [
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
     'project_api.apps.ProjectApiConfig',
-    'question_api.apps.QuestionApiConfig',
     'tag.apps.TagConfig',
     'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
     'search.apps.SearchConfig',
-    'portfolio_api.apps.PortfolioApiConfig',
     'chat',
     
     'rest_framework',

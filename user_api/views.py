@@ -4,9 +4,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
-from django.views import View
-
-
 
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage, EmailMultiAlternatives
@@ -27,7 +24,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from fcm.push_fcm import report_alarm, topic_alarm
+from fcm.push_fcm import report_alarm
 from search.views import interest_tag
 
 # from .department import DEPARTMENT
@@ -38,11 +35,10 @@ from .university import UNIVERSITY
 from .text import pwmessage
 
 from search.models import Get_log, InterestTag
-from tag.models import Project_Tag, Question_Tag, Tag, Profile_Tag
+from tag.models import Post_Tag, Tag, Profile_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
-from post_api.models import ContentsImage, Post
-from question_api.models import Question
+from post_api.models import PostImage, Post
 from loop.models import Loopship
 from fcm.models import FcmToken
 from chat.models import Room, Msg
@@ -51,7 +47,6 @@ import jwt
 import json
 import time
 import datetime
-import random
 import requests
 
 headers = {
@@ -309,16 +304,13 @@ def resign(request):
             pass
 
         for project in Project.objects.filter(user_id=user.id):
-            project.pj_thumbnail.delete(save=False)
             for post in Post.objects.filter(project_id=project.id):
-                for image in ContentsImage.objects.filter(post_id=post.id):
+                for image in PostImage.objects.filter(post_id=post.id):
                     image.image.delete(save=False)
 
         tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
         delete_tag(tag_obj)
-        tag_obj = Project_Tag.objects.filter(project__in=Project.objects.filter(user_id=user.id))
-        delete_tag(tag_obj)
-        tag_obj = Question_Tag.objects.filter(question__in=Question.objects.filter(user_id=user.id))
+        tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
         delete_tag(tag_obj)
         
         user = User.objects.get(id=user.id)

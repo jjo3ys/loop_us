@@ -1,5 +1,4 @@
 from project_api.models import Project
-from question_api.models import Question
 from .models import Alarm, Banlist, Profile
 from .department import DEPARTMENT
 from tag.models import Profile_Tag
@@ -71,12 +70,7 @@ class AlarmSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'type', 'target_id', 'content', 'profile', 'date', 'is_read']
     
     def get_content(self, obj):
-        if int(obj.type) == 1:
-            try:
-                return Question.objects.get(id=obj.target_id).content    
-            except Question.DoesNotExist:
-                return None    
-        elif int(obj.type) == 2:
+        if int(obj.type) == 2:
             return None
         elif int(obj.type) == 3:
             try:
