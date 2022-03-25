@@ -13,3 +13,5 @@ requirements.txt
 config/__pycache__
 /**/migrations
 config/my_settings.py
+firebase.json
+serviceAccountKey.json
