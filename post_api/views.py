@@ -231,6 +231,7 @@ def recommend_load(request):
         ban_list = []
 
     ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
+    loop_list = Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', flat=True)
 
     tag_score = {}
     for post in Post_Tag.objects.filter(tag_id__in=tags):
@@ -239,10 +240,10 @@ def recommend_load(request):
         except KeyError:
             tag_score[post.post_id] = tags[str(post.tag_id)]['count']
 
-    today = datetime.date.today()
+    now = datetime.datetime.now()
 
     post_list = []
-    for post in Post.objects.filter(date__range=[today-datetime.timedelta(days=7), datetime.datetime.now()]).exclude(user_id__in=ban_list):
+    for post in Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).exclude(user_id__in=ban_list).exclude(user_id__in=loop_list):
         try:
             post_list.append([post, tag_score[post.project_id]])
         except KeyError:
@@ -318,10 +319,12 @@ def loop_load(request):
     for l in loop:
         loop_list.append(l.friend_id)
 
+    now = datetime.datetime.now()
+
     if request.GET['last'] == '0':
-        post_obj = list(Post.objects.filter(user_id__in=loop_list))[-5:]
+        post_obj = list(Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list))[-5:]
     else:
-        post_obj = list(Post.objects.filter(id__lt=request.GET['last'], user_id__in=loop_list))[-5:]
+        post_obj = list(Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list))[-5:]
 
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
