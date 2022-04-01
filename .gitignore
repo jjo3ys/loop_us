@@ -14,4 +14,4 @@ requirements.txt
 
 confing/__pycache__
 config/my_settings.py
-/serviceAccountKey.json
+serviceAccountKey.json
