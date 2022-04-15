@@ -2,10 +2,17 @@ from django.db import models
 from post_api.models import Post
 from user_api.models import Profile
 # Create your models here.
+class Group(models.Model):
+    group_name = models.CharField(max_length=50, unique=True, primary_key=True)
+    
+    class Meta:
+        db_table = "Group"
+
 class Tag(models.Model):
     tag = models.CharField(max_length=50, unique=True)
     count = models.IntegerField(default=1)
-
+    group = models.ForeignKey(Group, related_name='tag', on_delete=models.DO_NOTHING)
+    
     class Meta:
         db_table = "Tag"
 

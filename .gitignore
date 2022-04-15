@@ -11,7 +11,7 @@ requirements.txt
 /Pipfile
 /Pipfile.lock
 config/__pycache__
-/**/migrations
+# /**/migrations
 config/my_settings.py
 firebase.json
 serviceAccountKey.json
