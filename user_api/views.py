@@ -238,7 +238,11 @@ def login(request):
         try:
             fcm_obj = FcmToken.objects.get(user_id=user.id)
             if fcm_obj.token != request.data['fcm_token']:
-                logout_push(fcm_obj.token)
+                try:
+                    logout_push(fcm_obj.token)
+                except:
+                    pass
+                
                 fcm_obj.token = request.data['fcm_token']
                 fcm_obj.save()
 
