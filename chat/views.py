@@ -76,13 +76,16 @@ def get_list(request):
     return_list = []
     for r in room:
         msg_obj = Msg.objects.filter(room_id=r.id)
-        r.member.remove(request.user.id)
         try:
+            r.member.remove(request.user.id)
             profile = SimpleProfileSerializer(Profile.objects.get(user_id=r.member[0])).data
-        except:
+        except (ValueError, Profile.DoesNotExist):
             profile = None
+
         return_list.append({"profile":profile,
-                            "message":ChatSerializer(msg_obj.last()).data,
-                            "not_read":msg_obj.filter(room_id=r.id, receiver_id=request.user.id, is_read=False).count()})
+                                "message":ChatSerializer(msg_obj.last()).data,
+                                "not_read":msg_obj.filter(room_id=r.id, receiver_id=request.user.id, is_read=False).count()})
+
+
     return_list.sort(key=lambda x: x['message']['date'], reverse=True)
     return Response(return_list, status=status.HTTP_200_OK)
