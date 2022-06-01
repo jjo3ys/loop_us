@@ -3,7 +3,7 @@ from post_api.models import Post
 from user_api.models import Profile
 # Create your models here.
 class Group(models.Model):
-    group_name = models.CharField(max_length=50, unique=True, primary_key=True)
+    group_name = models.CharField(max_length=50, unique=True)
     
     class Meta:
         db_table = "Group"

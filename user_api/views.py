@@ -390,6 +390,7 @@ def profile(request):
                 profile.update({'new_message':True})
             else:
                 profile.update({'new_message':False})
+            
         else:
             Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile.update({'is_user':0})
@@ -399,7 +400,20 @@ def profile(request):
                 profile.update({'is_banned':2})
             else:
                 profile.update({'is_banned':0})
+        project_list = Project.objects.filter(user_id=idx)
+        len_post = []
+        post_ratio = []
+        for project in project_list:
+            len_post.append(Post.objects.filter(project_id=project.id).count())
+        sum_post = sum(len_post)
         
+        if sum_post == 0:
+            profile.update({"post_ratio":None})
+        else:
+            for i in range(len(post_ratio)):
+                post_ratio.append({project_list[i].project_name:round(len_post[i]/sum_post, 4)})
+            profile.update({"post_ratio":post_ratio})
+
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
         following = Loopship.objects.filter(user_id=idx, friend_id=request.user.id).exists()
 
