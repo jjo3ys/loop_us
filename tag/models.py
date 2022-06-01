@@ -22,10 +22,3 @@ class Post_Tag(models.Model):
 
     class Meta:
         db_table = "Post_tag"
-
-class Profile_Tag(models.Model):
-    tag = models.ForeignKey('Tag', related_name='profile_tag', on_delete=models.DO_NOTHING)
-    profile = models.ForeignKey(Profile, related_name='profile_tag', on_delete=models.CASCADE)
-
-    class Meta:
-        db_table = 'Prof_tag'
