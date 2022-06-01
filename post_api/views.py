@@ -52,8 +52,12 @@ def posting(request):
         post_obj = Post.objects.get(id=request.GET['id'])
         
         if request.GET['type'] == 'image':
-            pass
-        
+            images = PostImage.objects.filter(post_id=post_obj.id)
+            for image in images:
+                image.delete(save=False)
+            for image in request.FILES.getlist('image'):
+                PostImage.objects.create(post_id=post_obj.id, image=image)
+                        
         elif request.GET['type'] == 'contents':
             post_obj.contents = request.data['contents']
         
