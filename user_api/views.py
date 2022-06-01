@@ -5,7 +5,6 @@ from django.contrib.auth.hashers import check_password
 # for email check
 from django.conf.global_settings import SECRET_KEY
 
-from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.utils import timezone
 from django.utils.http import (
@@ -25,17 +24,15 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from fcm.push_fcm import report_alarm
-from search.views import interest_tag
 
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 from .department import DEPARTMENT, R_DEPARTMENT
 from .university import UNIVERSITY
-from .text import pwmessage
 
 from search.models import Get_log, InterestTag
-from tag.models import Post_Tag, Tag, Profile_Tag
+from tag.models import Post_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
 from post_api.models import PostImage, Post
@@ -46,7 +43,6 @@ from chat.models import Room, Msg
 import jwt
 import json
 import time
-import datetime
 import requests
 
 headers = {
@@ -193,20 +189,7 @@ def signup(request):
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
-        tag_list = {}
-        for tag in request.data['tag']:
-            try:
-                tag_obj = Tag.objects.get(tag=tag)
-                tag_obj.count = tag_obj.count + 1
-                tag_obj.save()
-            
-            except Tag.DoesNotExist:
-                tag_obj = Tag.objects.create(tag = tag)
 
-            tag_list[str(tag_obj.id)] = {'count':50, 'date':str(datetime.date.today()), 'id':tag_obj.id}
-            Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
-
-        InterestTag.objects.create(user_id=user.id, tag_list=tag_list)
         if type == 1:
             corp = Activation.objects.get(user_id=user.id)
             Company_Inform.objects.create(profile_id = profile_obj.id,
@@ -308,8 +291,6 @@ def resign(request):
                 for image in PostImage.objects.filter(post_id=post.id):
                     image.image.delete(save=False)
 
-        tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
-        delete_tag(tag_obj)
         tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
         delete_tag(tag_obj)
         
@@ -349,29 +330,6 @@ def profile(request):
         
         elif type == 'department':
             profile_obj.department = R_DEPARTMENT[request.data['department']]
-        
-        elif type == 'tag':
-            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-            tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
-            for tag in tag_obj:
-                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 50)
-                tag.delete()
-                tag.tag.count = tag.tag.count-1
-                if tag.tag.count == 0:
-                    tag.tag.delete()
-                tag.tag.save()
-
-            tag_list = eval(request.data['tag'])      
-            for tag in tag_list:
-                tag_obj, valid = Tag.objects.get_or_create(tag=tag)
-                Profile_Tag.objects.create(tag = tag_obj, profile_id = profile_obj.id)
-                interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 50)
-
-                if not valid:
-                    tag_obj.count = tag_obj.count+1
-                    tag_obj.save()    
-
-            interest_list.save()
 
         profile_obj.save()
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
@@ -545,8 +503,3 @@ def alarm(request):
         alarm_obj = Alarm.objects.get(id=request.GET['id'])
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)
-
-# @api_view(['GET', ])
-# def noti(request):
-#     topic_alarm('promotion', '프로모션토픽')
-#     return Response(status=status.HTTP_200_OK)
