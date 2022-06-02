@@ -1,4 +1,6 @@
+from genericpath import exists
 from django.core.paginator import Paginator
+from project_api.models import Project
 from search.models import Get_log, InterestTag
 from search.views import interest_tag
 
@@ -44,7 +46,10 @@ def posting(request):
                 tag_obj.count += 1
                 tag_obj.save()
             Post_Tag.objects.create(post=post_obj, tag=tag_obj)
-        
+            
+        project_obj = Project.objects.get(id=request.GET['id'])
+        project_obj.post_count += 1
+        project_obj.save()
         interest_list.save()
         post_obj = PostingSerializer(post_obj).data
         return Response(post_obj, status=status.HTTP_200_OK)
@@ -89,72 +94,35 @@ def posting(request):
         return Response(status=status.HTTP_200_OK)
     
     elif request.method == 'GET':
-        user_id = request.user.id
-        posting_idx = request.GET['id']
-
         try:
-            post_obj = Post.objects.get(id=posting_idx)
+            post_obj = Post.objects.get(id=request.GET['id'])
 
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        postingSZ = PostingSerializer(post_obj)
+        postingSZ = PostingSerializer(post_obj).data
 
         return_dict = {
-            'posting_info': postingSZ.data,
+            'posting_info': postingSZ
         }
-
-        tag_list = []
-        for tag in postingSZ.data['project']['project_tag']:
-            tag_list.append(int(tag['tag_id']))
-
-        post_tag = Post_Tag.objects.filter(tag_id__in=tag_list)
-        recommend_post = []
-
-        for recommend in post_tag:
-            if recommend.post_id != post_obj.id and recommend.post not in recommend_post:
-                recommend_post.append(recommend.post)
-
-        recommend_post = random.sample(recommend_post, min(3, len(recommend_post)))
         
-        recommend_post = MainloadSerializer(recommend_post, many=True).data
-        for post in recommend_post:
-            post.update(SimpleProfileSerializer(Profile.objects.get(user_id=post['user_id'])).data)
-            if post['user_id'] == user_id:
-                post.update({"is_user":1})
-            else:
-                post.update({"is_user":0})
-
-            try:
-                Like.objects.get(user_id=user_id, post_id=post['id'])
-                post.update({"is_liked":1})
-            except:
-                post.update({"is_liked":0})
-
-            try:
-                BookMark.objects.get(user_id=user_id, post_id=post['id'])
-                post.update({"is_marked":1})
-            except:
-                post.update({"is_marked":0})
-
-        return_dict.update({"recommend_post":recommend_post})
-
-        if user_id == post_obj.user_id:
+        if request.user.id == post_obj.user_id:
             return_dict.update({"is_user":1})
         else:
-            Get_log.objects.create(user_id=user_id, target_id=posting_idx, type=4)
+            Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=4)
             return_dict.update({"is_user":0})
 
-        try:
-            Like.objects.get(user_id=user_id, post_id=posting_idx)
+        exists = Like.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
+        if exists:
             return_dict.update({"is_liked":1})
-        except:
+        else:
             return_dict.update({"is_liked":0})
 
-        try:
-            BookMark.objects.get(user_id=user_id, post_id=posting_idx)
+
+        exists = BookMark.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
+        if exists:
             return_dict.update({"is_marked":1})
-        except:
+        else:
             return_dict.update({"is_marked":0})
 
         return Response(return_dict)
@@ -164,6 +132,9 @@ def posting(request):
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
         for image in contents_image_obj:
             image.image.delete(save=False)
+            
+        post_obj.project.post_count -=1
+        post_obj.project.save()
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 

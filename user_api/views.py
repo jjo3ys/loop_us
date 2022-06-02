@@ -2,6 +2,7 @@ from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
+from django.core.paginator import Paginator
 # for email check
 from django.conf.global_settings import SECRET_KEY
 
@@ -24,6 +25,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from fcm.push_fcm import report_alarm
+from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
@@ -372,19 +374,6 @@ def profile(request):
                 profile.update({'is_banned':2})
             else:
                 profile.update({'is_banned':0})
-        project_list = Project.objects.filter(user_id=idx)
-        len_post = []
-        post_ratio = []
-        for project in project_list:
-            len_post.append(Post.objects.filter(project_id=project.id).count())
-        sum_post = sum(len_post)
-        
-        if sum_post == 0:
-            profile.update({"post_ratio":None})
-        else:
-            for i in range(len(post_ratio)):
-                post_ratio.append({project_list[i].project_name:round(len_post[i]/sum_post, 4)})
-            profile.update({"post_ratio":post_ratio})
 
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
         following = Loopship.objects.filter(user_id=idx, friend_id=request.user.id).exists()
@@ -405,8 +394,19 @@ def profile(request):
 def project(request):
     idx = request.GET['id']
     project_obj = list(Project.objects.filter(user_id=idx))
-    project_obj.reverse()
     project_obj = ProjectSerializer(project_obj, many=True).data
+
+    post_ratio = []
+    sum_post = Post.objects.filter(user_id=idx).count()
+    
+    if sum_post == 0:
+        project_obj.update({"post_ratio":None})
+    else:
+        for project in project_obj:
+            post_ratio.append({project['project_name']:round(project['post_count']/sum_post, 2)})
+
+        project_obj.update({"post_ratio":post_ratio})
+
     if request.user.id == int(idx):
         for p in project_obj:
             p.update({"is_user":1})
@@ -415,6 +415,16 @@ def project(request):
             p.update({"is_user":0})
 
     return Response(project_obj, status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def posting(request):
+    idx = int(request.GET['id'])
+    post_obj = list(Post.objects.filter(project_id=int(idx)).order_by('-id'))
+    post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
+    post_obj = MainloadSerializer( many=True, read_only=True).data
+
+    return Response(post_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 def department_list(request):
