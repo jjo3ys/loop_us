@@ -241,6 +241,17 @@ def logout(request):
     except:
         pass
     return Response("Successed log out", status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def check_token(request):
+    try:
+        if request.data['fcm_token'] != FcmToken.objects.get(user_id=request.user.id).token:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(status=status.HTTP_200_OK)
+    except:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['PUT', 'POST'])
 def password(request):

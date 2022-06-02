@@ -28,7 +28,7 @@ def posting(request):
         profile_obj = Profile.objects.get(user_id=request.user.id)       
         post_obj = Post.objects.create(user_id=request.user.id, 
                                         project_id=request.GET['id'],    
-                                        contents=request.GET['contents'],
+                                        contents=request.data['contents'],
                                         department_id=profile_obj.department)
 
 
@@ -46,6 +46,7 @@ def posting(request):
             Post_Tag.objects.create(post=post_obj, tag=tag_obj)
         
         interest_list.save()
+        post_obj = PostingSerializer(post_obj).data
         return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':

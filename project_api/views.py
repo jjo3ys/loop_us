@@ -26,10 +26,10 @@ def project(request):
             end_date = None
 
         profile_obj = Profile.objects.get(user_id=user.id)    
-        project_obj = Project.objects.create(user=user, project_name = request.data['project_name'], 
-                                            introduction = request.data['introduction'],
-                                            start_date = start_date,
-                                            end_date = end_date)
+        project_obj = Project.objects.create(user=user, 
+                                             project_name = request.data['project_name'],                             
+                                             start_date = start_date,
+                                             end_date = end_date)
 
         return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_201_CREATED)
 
@@ -47,9 +47,6 @@ def project(request):
 
             project_obj.start_date = start_date
             project_obj.end_date = end_date
-        
-        elif type == 'introduction':
-            project_obj.introduction = request.data['introduction']
 
         elif type == 'looper':
             profile_obj = Profile.objects.get(user_id=request.user.id)

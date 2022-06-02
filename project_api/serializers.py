@@ -22,7 +22,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ['id', 'user_id', 'profile', 'project_name', 'introduction', 'start_date', 'end_date', 'looper', 'count']
+        fields = ['id', 'user_id', 'profile', 'project_name', 'start_date', 'end_date', 'looper', 'count']
 
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
@@ -43,7 +43,7 @@ class ProjectPostSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Project
-        fields = ['id', 'profile', 'project_name', 'introduction', 'start_date', 'end_date', 'looper', 'count', 'post']
+        fields = ['id', 'profile', 'project_name', 'start_date', 'end_date', 'looper', 'count', 'post']
     
     def get_count(self, obj):
         post = Post.objects.filter(project_id=obj.id)
