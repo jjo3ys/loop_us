@@ -2,7 +2,7 @@ import os
 import firebase_admin
 
 from pathlib import Path
-from .my_settings import EMAIL, S3
+from .my_settings import EMAIL, S3, DB_SETTING
 from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -102,18 +102,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASE_ROUTERS = ['config.router.Router']
 
-DATABASES = {
-    'default': {
-
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'test',
-        'USER': 'LoopUS',
-        'PASSWORD': 'rlagudxo',
-        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
-        'PORT': '3306',
-    }
-}
-
+DATABASES = DB_SETTING
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
