@@ -17,8 +17,8 @@ ALLOWED_HOSTS = ["*"]
 # ALLOWED_HOSTS = ['3.35.253.151']
 
 
-# SITE_URL = "http://3.35.253.151:8000/"
-SITE_URL = "http://192.168.35.235:8000/"
+SITE_URL = "http://3.35.253.151:8000/"
+# SITE_URL = "http://192.168.35.235:8000/"
 
 cred_path = os.path.join(BASE_DIR, "serviceAccountKey.json")
 cred = credentials.Certificate(cred_path)
