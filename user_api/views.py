@@ -393,26 +393,17 @@ def profile(request):
 @permission_classes((IsAuthenticated,))
 def project(request):
     idx = request.GET['id']
-    project_obj = list(Project.objects.filter(user_id=idx))
+    project_obj = Project.objects.filter(user_id=idx)
     project_obj = ProjectSerializer(project_obj, many=True).data
 
-    post_ratio = []
     sum_post = Post.objects.filter(user_id=idx).count()
-    
-    if sum_post == 0:
-        project_obj.update({"post_ratio":None})
+
+    if sum_post != 0:
+        for project in project_obj:
+            project.update({'ratio':round(project['post_count']/sum_post, 2)})
     else:
         for project in project_obj:
-            post_ratio.append({project['project_name']:round(project['post_count']/sum_post, 2)})
-
-        project_obj.update({"post_ratio":post_ratio})
-
-    if request.user.id == int(idx):
-        for p in project_obj:
-            p.update({"is_user":1})
-    else:
-        for p in project_obj:
-            p.update({"is_user":0})
+            project.update({'ratio':0})
 
     return Response(project_obj, status=status.HTTP_200_OK)
 
@@ -420,7 +411,7 @@ def project(request):
 @permission_classes((IsAuthenticated,))
 def posting(request):
     idx = int(request.GET['id'])
-    post_obj = list(Post.objects.filter(project_id=int(idx)).order_by('-id'))
+    post_obj = Post.objects.filter(project_id=int(idx)).order_by('-id')
     post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
     post_obj = MainloadSerializer( many=True, read_only=True).data
 
@@ -486,16 +477,16 @@ def alarm(request):
     if request.method == 'GET':
         if request.GET['type'] == 'follow':
             if request.GET['last'] == '0':
-                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, type=2))[-10:]
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id, type=2).order_by('-id')[:10]
                 
             else:
-                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last'], type=2))[-10:]
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last'], type=2).order_by('-id')[:10]
             
             for alarm in alarm_obj:
                 if not alarm.is_read:
                     alarm.is_read = True
                     alarm.save()
-            alarm_obj = AlarmSerializer(reversed(list(alarm_obj)), many=True).data
+            alarm_obj = AlarmSerializer(alarm_obj, many=True).data
             for alarm in alarm_obj:
                 follow = Loopship.objects.filter(user_id=request.user.id, friend_id=alarm['target_id']).exists()
                 following = Loopship.objects.filter(user_id=alarm['target_id'], friend_id=request.user.id).exists()
@@ -511,17 +502,17 @@ def alarm(request):
             return Response(alarm_obj, status=status.HTTP_200_OK)
         else:            
             if request.GET['last'] == '0':
-                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id).exclude(type=2))[-10:]
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id).exclude(type=2).order_by('-id')[:10]
 
             else:
-                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2))[-10:]
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2).order_by('-id')[:10]
 
             for alarm in alarm_obj:
                 if not alarm.is_read:
                     alarm.is_read = True
                     alarm.save()
                     
-            return Response(AlarmSerializer(reversed(list(alarm_obj)), many=True).data, status=status.HTTP_200_OK)
+            return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
         alarm_obj = Alarm.objects.get(id=request.GET['id'])
