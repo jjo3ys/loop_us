@@ -2,13 +2,13 @@ import os
 import firebase_admin
 
 from pathlib import Path
-from .my_settings import EMAIL, S3, DB_SETTING
+from .my_settings import EMAIL, S3, DB_SETTING, DJANGO_KEY
 from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-llzvhsk6%r+^g_22*iq2p()39s2+*hrw6jcp(pdhozwtt)&_o='
+SECRET_KEY = DJANGO_KEY
 
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
