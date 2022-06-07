@@ -1,14 +1,11 @@
-import datetime
-from search.models import Get_log, InterestTag
+from search.models import Get_log
 
-from search.views import interest_tag
 from .serializers import ProjectPostSerializer
 from .models import Project, TagLooper
-from tag.models import Tag, Project_Tag
 from user_api.models import Profile
 from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
-from post_api.models import ContentsImage, Like, BookMark, Post
+from post_api.models import PostImage, Like, BookMark, Post
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -29,30 +26,11 @@ def project(request):
             end_date = None
 
         profile_obj = Profile.objects.get(user_id=user.id)    
-        project_obj = Project.objects.create(user=user, project_name = request.data['project_name'], 
-                                            introduction = request.data['introduction'],
-                                            start_date = start_date,
-                                            end_date = end_date,
-                                            pj_thumbnail = request.FILES.get('thumbnail'))
-        
-        for looper in eval(request.data['looper']):
-            TagLooper.objects.create(project=project_obj, looper_id=looper)
-            try:
-                token = FcmToken.objects.get(user_id=looper)
-                tag_fcm(token, profile_obj.real_name, user.id, project_obj.project_name, project_obj.id)
-            except:
-                pass
-        interest_list = InterestTag.objects.get_or_create(user_id=user.id)[0]
-        for tag in eval(request.data['tag']):
-            tag_obj, valid = Tag.objects.get_or_create(tag=tag)
-            interest_tag(interest_list, 'plus', tag_obj.id, 10)
-            if not valid:
-                tag_obj.count = tag_obj.count + 1
-                tag_obj.save()
-            
-            Project_Tag.objects.create(project=project_obj, tag=tag_obj)
+        project_obj = Project.objects.create(user=user, 
+                                             project_name = request.data['project_name'],                             
+                                             start_date = start_date,
+                                             end_date = end_date)
 
-        interest_list.save()
         return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_201_CREATED)
 
     elif request.method == 'PUT':
@@ -69,46 +47,19 @@ def project(request):
 
             project_obj.start_date = start_date
             project_obj.end_date = end_date
-        
-        elif type == 'introduction':
-            project_obj.introduction = request.data['introduction']
-
-        elif type =='thumbnail':
-            project_obj.pj_thumbnail.delete(save=False)
-            project_obj.pj_thumbnail = request.FILES.get('thumbnail') 
-
-        elif type == 'tag':   
-            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-            old_tag = Project_Tag.objects.filter(project_id=project_obj.id)
-            for tag in old_tag:
-                interest_tag(interest_list, 'minus', tag.tag_id, 19)
-                tag.delete()
-                tag.tag.count = tag.tag.count-1
-                if tag.tag.count == 0:
-                    tag.tag.delete()
-
-            tag_list = eval(request.data['tag'])   
-            for tag in tag_list:
-                tag, valid = Tag.objects.get_or_create(tag=tag)
-                interest_tag(interest_list, 'plus', tag.id, 10)
-                Project_Tag.objects.create(tag = tag, project_id = project_obj.id)
-                if not valid:
-                    tag.count = tag.count+1
-                    tag.save()
-
-            interest_list.save()
 
         elif type == 'looper':
             profile_obj = Profile.objects.get(user_id=request.user.id)
             looper_list = eval(request.data['looper'])
+
             old_looper = TagLooper.objects.filter(project_id=project_obj.id)
             for looper in old_looper:
                 if looper.looper.id not in looper_list:
                     looper.delete()
 
             for looper in looper_list:
-                looper, valid = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
-                if valid:
+                looper, created = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
+                if created:
                     try:
                         token = FcmToken.objects.get(user_id=looper.looper_id)
                         tag_fcm(token, profile_obj.real_name, request.user.id, project_obj.project_name, project_obj.id)
@@ -148,23 +99,9 @@ def project(request):
 
     elif request.method == 'DELETE':
         project_obj = Project.objects.get(id=request.GET['id'])
-        project_obj.pj_thumbnail.delete(save=False)
-        interest_list, valid = InterestTag.objects.get_or_create(user_id=request.user.id)
-        project_tag = Project_Tag.objects.filter(project_id=request.GET['id'])
 
-        if not valid:
-            for tag in project_tag:
-                interest_tag(interest_list, 'minus', tag.tag_id, 10)
-                tag.tag.count = tag.tag.count-1
-                if tag.tag.count == 0:
-                    tag.tag.save()
-                else:
-                    tag.tag.save()
-
-            interest_list.save()
-        
         for post in Post.objects.filter(project_id=request.GET['id']):
-            for image in ContentsImage.objects.filter(post_id=post.id):
+            for image in PostImage.objects.filter(post_id=post.id):
                 image.image.delete(save=False)
                 
         project_obj.delete()

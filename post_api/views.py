@@ -1,9 +1,12 @@
+from genericpath import exists
 from django.core.paginator import Paginator
+from project_api.models import Project
 from search.models import Get_log, InterestTag
+from search.views import interest_tag
 
-from tag.models import Project_Tag
+from tag.models import Post_Tag, Tag
 from fcm.models import FcmToken
-from fcm.push_fcm import like_fcm, report_alarm
+from fcm.push_fcm import like_fcm, report_alarm, comment_like_fcm
 from user_api.models import Banlist, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
@@ -12,8 +15,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import PostingSerializer, PostingContentsImageSerializer, MainloadSerializer
-from .models import Post, ContentsImage, Like, BookMark
+from .serializers import PostingSerializer, MainloadSerializer
+from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment
 
 from loop.models import Loopship
 
@@ -26,171 +29,218 @@ def posting(request):
     if request.method == 'POST':    
         profile_obj = Profile.objects.get(user_id=request.user.id)       
         post_obj = Post.objects.create(user_id=request.user.id, 
-                                    project_id=request.GET['id'],
-                                    title=request.data['title'],
-                                    thumbnail=request.FILES.get('thumbnail'),
-                                    department_id=profile_obj.department)
+                                        project_id=request.GET['id'],    
+                                        contents=request.data['contents'],
+                                        department_id=profile_obj.department)
 
 
         for image in request.FILES.getlist('image'):
-            ContentsImage.objects.create(post_id=post_obj.id,
-                                        image=image)
+            PostImage.objects.create(post_id=post_obj.id,
+                                     image=image)
 
-        images = PostingContentsImageSerializer(ContentsImage.objects.filter(post_id=post_obj.id), many=True).data
-        image_id = 0
-        contents = []
-
-        for d in eval(request.data['contents']):
-            if d['type'] == 'IMAGE' and d['content'] == 'image':
-                d['content'] = images[image_id]['image']
-                image_id += 1
-
-            contents.append(d)
-
-        post_obj.contents = str(contents)
-        post_obj.save()
-        post_obj = MainloadSerializer(post_obj).data
+        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+        for tag in eval(request.data['tag']):
+            tag_obj, created = Tag.objects.get_or_create(tag=tag)
+            interest_tag(interest_list, 'plus', tag_obj.id, 10)
+            if not created:
+                tag_obj.count += 1
+                tag_obj.save()
+            Post_Tag.objects.create(post=post_obj, tag=tag_obj)
+            
+        project_obj = Project.objects.get(id=request.GET['id'])
+        project_obj.post_count += 1
+        project_obj.save()
+        interest_list.save()
+        post_obj = PostingSerializer(post_obj).data
         return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
         post_obj = Post.objects.get(id=request.GET['id'])
-        if request.GET['type'] == 'title':
-            post_obj.title = request.data['title']
         
-        elif request.GET['type'] == 'thumbnail':
-            post_obj.thumbnail.delete(save=False)
-            post_obj.thumbnail = request.FILES.get('thumbnail')
-        
-        elif request.GET['type'] == 'contents':
-            image_objs = ContentsImage.objects.filter(post_id=request.GET['id'])
-
-            for image in image_objs:
-                if image.image.url not in post_obj.contents:
-                    image.image.delete(save=False)
-                    image.delete()
-
-            image_list = []
+        if request.GET['type'] == 'image':
+            images = PostImage.objects.filter(post_id=post_obj.id)
+            for image in images:
+                image.delete(save=False)
             for image in request.FILES.getlist('image'):
-                image_obj = ContentsImage.objects.create(post_id=request.GET['id'], image=image)
-                image_list.append(image_obj.image.url)
-
-            image_id = 0
-            contents = []
-            for content in eval(request.data['contents']):
-                if content['type'] == 'IMAGE' and content['content'] == 'image':
-                    content['content'] = image_list[image_id]
-                    image_id += 1
-                contents.append(content)
-            
-            post_obj.contents = str(contents)
+                PostImage.objects.create(post_id=post_obj.id, image=image)
+                        
+        elif request.GET['type'] == 'contents':
+            post_obj.contents = request.data['contents']
         
+        elif request.GET['type'] == 'tag':
+            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+            tag_obj = Post_Tag.objects.filter(post_id=post_obj.id)
+            for tag in tag_obj:
+                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
+                tag.delete()
+                tag.tag.count = tag.tag.count-1
+                if tag.tag.count == 0:
+                    tag.tag.delete()
+                tag.tag.save()
+
+            tag_list = eval(request.data['tag'])      
+            for tag in tag_list:
+                tag_obj, created = Tag.objects.get_or_create(tag=tag)
+                Post_Tag.objects.create(tag = tag_obj, post_id = post_obj.id)
+                interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 10)
+
+                if not created:
+                    tag_obj.count = tag_obj.count+1
+                    tag_obj.save()    
+
+            interest_list.save()
+
         post_obj.save()
-        return Response('Update OK', status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
     
     elif request.method == 'GET':
-        user_id = request.user.id
-        posting_idx = request.GET['id']
-
         try:
-            post_obj = Post.objects.get(id=posting_idx)
+            post_obj = Post.objects.get(id=request.GET['id'])
 
         except Post.DoesNotExist:
-            return Response('The posting isn\'t valid', status=status.HTTP_404_NOT_FOUND)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        postingSZ = PostingSerializer(post_obj)
+        postingSZ = PostingSerializer(post_obj).data
 
         return_dict = {
-            'posting_info': postingSZ.data,
+            'posting_info': postingSZ
         }
-
-        tag_list = []
-        for tag in postingSZ.data['project']['project_tag']:
-            tag_list.append(int(tag['tag_id']))
-
-        recommend = Project_Tag.objects.filter(tag_id__in=tag_list)
-        recommend_post = []
-
-        for pj_tag in recommend:
-            recommend_post_obj = Post.objects.filter(project=pj_tag.project)
-            for r_p in recommend_post_obj:
-                if r_p.id != post_obj.id and r_p not in recommend_post:
-                    recommend_post.append(r_p)
-
-        recommend_post = random.sample(recommend_post, min(3, len(recommend_post)))
         
-        recommend_post = MainloadSerializer(recommend_post, many=True).data
-        for post in recommend_post:
-            post.update(SimpleProfileSerializer(Profile.objects.get(user_id=post['user_id'])).data)
-            if post['user_id'] == user_id:
-                post.update({"is_user":1})
-            else:
-                post.update({"is_user":0})
-
-            try:
-                Like.objects.get(user_id=user_id, post_id=post['id'])
-                post.update({"is_liked":1})
-            except:
-                post.update({"is_liked":0})
-
-            try:
-                BookMark.objects.get(user_id=user_id, post_id=post['id'])
-                post.update({"is_marked":1})
-            except:
-                post.update({"is_marked":0})
-
-        return_dict.update({"recommend_post":recommend_post})
-
-        if user_id == post_obj.user_id:
+        if request.user.id == post_obj.user_id:
             return_dict.update({"is_user":1})
         else:
-            Get_log.objects.create(user_id=user_id, target_id=posting_idx, type=4)
+            Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=4)
             return_dict.update({"is_user":0})
 
-        try:
-            Like.objects.get(user_id=user_id, post_id=posting_idx)
+        exists = Like.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
+        if exists:
             return_dict.update({"is_liked":1})
-        except:
+        else:
             return_dict.update({"is_liked":0})
 
-        try:
-            BookMark.objects.get(user_id=user_id, post_id=posting_idx)
+
+        exists = BookMark.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
+        if exists:
             return_dict.update({"is_marked":1})
-        except:
+        else:
             return_dict.update({"is_marked":0})
 
         return Response(return_dict)
     
     elif request.method == 'DELETE':
         post_obj = Post.objects.get(id=request.GET['id'])
-        post_obj.thumbnail.delete(save=False)
-        contents_image_obj = ContentsImage.objects.filter(post_id=post_obj.id)
+        contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
         for image in contents_image_obj:
             image.image.delete(save=False)
+            
+        post_obj.project.post_count -=1
+        post_obj.project.save()
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
+
+@api_view(['POST', 'DELETE'])
+@permission_classes((IsAuthenticated,))
+def comment(request, type, idx):
+    if request.method =='POST':
+        if type == 'post':
+            Comment.objects.create(user_id=request.user.id,
+                                post_id=idx,
+                                content=request.data['content'])
+        elif type == 'comment':
+            Cocomment.objects.create(user_id=request.user.id,
+                                    comment_id=idx,
+                                    content=request.data['content'])
+        
+        return Response(status=status.HTTP_201_CREATED)
+    
+    elif request.method == 'DELETE':
+        if type == 'post':
+            try:
+                comment = Cocomment.objects.get(user_id=request.user.id, post_id=idx)
+                comment.delete()
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+        elif type == 'comment':
+            try:
+                cocomment = Cocomment.objects.get(user_id=request.user.id, comment_id=idx)
+                cocomment.delete()
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(status=status.HTTP_200_OK)
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def like(request, idx):
-    try:
-        like_obj, valid = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
-    except:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    type = request.GET['type']
+    if type =='post':
+        like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
 
-    if not valid:
-        like_obj.delete()
-        return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
-    else:
-        if like_obj.post.user_id != request.user.id:
-            try:
-                token = FcmToken.objects.get(user_id=like_obj.post.user_id)
-                real_name = Profile.objects.get(user_id=request.user.id).real_name
-                like_fcm(token, real_name, idx, request.user.id)
-            except:
-                pass
+        if not created:
+            like_obj.post.like_count -= 1
+            like_obj.post.save()
+            like_obj.delete()
+            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
 
-        return Response('liked posting', status=status.HTTP_202_ACCEPTED)
+        else:
+            like_obj.post.like_count += 1
+            like_obj.post.save()
+            if like_obj.post.user_id != request.user.id:
+                try:
+                    token = FcmToken.objects.get(user_id=like_obj.post.user_id)
+                    real_name = Profile.objects.get(user_id=request.user.id).real_name
+                    like_fcm(token, real_name, idx, request.user.id)
+                except:
+                    pass
 
+            return Response('liked posting', status=status.HTTP_202_ACCEPTED)
+
+    elif type =='comment':
+        like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+
+        if not created:
+            like_obj.post.like_count -= 1
+            like_obj.post.save()
+            like_obj.delete()
+
+            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+
+        else:
+            like_obj.post.like_count += 1
+            like_obj.post.save()
+            if like_obj.comment.user_id != request.user.id:
+                try:
+                    token = FcmToken.objects.get(user_id=like_obj.post.user_id)
+                    real_name = Profile.objects.get(user_id=request.user.id).real_name
+                    comment_like_fcm(token, real_name, idx, request.user.id)
+                except:
+                    pass
+
+            return Response('liked posting', status=status.HTTP_202_ACCEPTED)  
+                 
+    elif type =='cocomment':
+        like_obj, created = CocommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+
+        if not created:
+            like_obj.delete()
+            like_obj.post.like_count -= 1
+            like_obj.post.save()
+            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+
+        else:
+            like_obj.post.like_count += 1
+            like_obj.post.save()
+            if like_obj.cocomment.user_id != request.user.id:
+                try:
+                    token = FcmToken.objects.get(user_id=like_obj.post.user_id)
+                    real_name = Profile.objects.get(user_id=request.user.id).real_name
+                    comment_like_fcm(token, real_name, idx, request.user.id)
+                except:
+                    pass
+
+            return Response('liked posting', status=status.HTTP_202_ACCEPTED)    
+                    
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def bookmark(request, idx):
@@ -238,18 +288,19 @@ def recommend_load(request):
         ban_list = []
 
     ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
+    loop_list = Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', flat=True)
 
     tag_score = {}
-    for project in Project_Tag.objects.filter(tag_id__in=tags):
+    for post in Post_Tag.objects.filter(tag_id__in=tags):
         try:
-            tag_score[project.project.id] += tags[str(project.tag_id)]['count']
+            tag_score[post.post_id] += tags[str(post.tag_id)]['count']
         except KeyError:
-            tag_score[project.project.id] = tags[str(project.tag_id)]['count']
+            tag_score[post.post_id] = tags[str(post.tag_id)]['count']
 
-    today = datetime.date.today()
+    now = datetime.datetime.now()
 
     post_list = []
-    for post in Post.objects.filter(date__range=[today-datetime.timedelta(days=7), datetime.datetime.now()]).exclude(user_id__in=ban_list):
+    for post in Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).exclude(user_id__in=ban_list).exclude(user_id__in=loop_list):
         try:
             post_list.append([post, tag_score[post.project_id]])
         except KeyError:
@@ -325,10 +376,12 @@ def loop_load(request):
     for l in loop:
         loop_list.append(l.friend_id)
 
+    now = datetime.datetime.now()
+
     if request.GET['last'] == '0':
-        post_obj = list(Post.objects.filter(user_id__in=loop_list))[-5:]
+        post_obj = list(Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list))[-5:]
     else:
-        post_obj = list(Post.objects.filter(id__lt=request.GET['last'], user_id__in=loop_list))[-5:]
+        post_obj = list(Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list))[-5:]
 
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
@@ -354,11 +407,22 @@ def loop_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def like_list_load(request, idx):
-    like_obj = Like.objects.filter(post_id=idx)
     like_list = []
-    for l in like_obj:
-       like_list.append(Profile.objects.get(user_id=l.user_id))
+    if request.GET['type'] == 'post':
+        like_obj = Like.objects.filter(post_id=idx)
+        for l in like_obj:
+            like_list.append(Profile.objects.get(user_id=l.user_id))
     
+    elif request.GET['type'] == 'comment':
+        like_obj = CommentLike.objects.filter(comment_id=idx)
+        for l in like_obj:
+            like_list.append(Profile.objects.get(user_id=l.user_id))
+    
+    elif request.GET['type'] == 'cocomment':
+        like_obj = CocommentLike.objects.filter(cocomment_id=idx)
+        for l in like_obj:
+            like_list.append(Profile.objects.get(user_id=l.user_id))
+
     return Response(SimpleProfileSerializer(like_list, many=True).data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])

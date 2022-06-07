@@ -11,12 +11,18 @@ Dockerfile
 requirements.txt
 /Pipfile
 /Pipfile.lock
-<<<<<<< HEAD
 
 confing/__pycache__
 config/my_settings.py
 /serviceAccountKey.json
-=======
+
 config/__pycache__
+
 /**/migrations
->>>>>>> 0e03f0f7988e50086b15f9a981e45039a3a91da7
+
+
+# /**/migrations
+config/my_settings.py
+firebase.json
+serviceAccountKey.json
+

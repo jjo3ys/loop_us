@@ -2,7 +2,7 @@ import os
 import firebase_admin
 
 from pathlib import Path
-from .my_settings import DB_SETTING, DJANGO_KEY, EMAIL, S3
+from .my_settings import EMAIL, S3, DB_SETTING, DJANGO_KEY
 from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -18,6 +18,7 @@ ALLOWED_HOSTS = ["*"]
 
 
 SITE_URL = "http://3.35.253.151:8000/"
+# SITE_URL = "http://192.168.35.235:8000/"
 
 cred_path = os.path.join(BASE_DIR, "serviceAccountKey.json")
 cred = credentials.Certificate(cred_path)
@@ -35,7 +36,6 @@ INSTALLED_APPS = [
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
     'project_api.apps.ProjectApiConfig',
-    'question_api.apps.QuestionApiConfig',
     'tag.apps.TagConfig',
     'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
@@ -103,7 +103,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASE_ROUTERS = ['config.router.Router']
 
 DATABASES = DB_SETTING
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
 class Room(models.Model):
-    member = models.JSONField(default={})
+    member = models.JSONField(default=dict)
     class Meta:
         db_table = 'Msg_room'
 

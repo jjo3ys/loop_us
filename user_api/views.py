@@ -2,6 +2,7 @@ from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
+from django.core.paginator import Paginator
 # for email check
 from django.conf.global_settings import SECRET_KEY
 
@@ -23,8 +24,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from fcm.push_fcm import logout_push, report_alarm
-from search.views import interest_tag
+from fcm.push_fcm import report_alarm
+from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
@@ -33,11 +34,10 @@ from .department import DEPARTMENT, R_DEPARTMENT
 from .university import UNIVERSITY
 
 from search.models import Get_log, InterestTag
-from tag.models import Project_Tag, Question_Tag, Tag, Profile_Tag
+from tag.models import Post_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
-from post_api.models import ContentsImage, Post
-from question_api.models import Question
+from post_api.models import PostImage, Post
 from loop.models import Loopship
 from fcm.models import FcmToken
 from chat.models import Room, Msg
@@ -45,7 +45,6 @@ from chat.models import Room, Msg
 import jwt
 import json
 import time
-import datetime
 import requests
 
 headers = {
@@ -73,6 +72,8 @@ def check_email(user, type):
     uidb4 = urlsafe_base64_encode(force_bytes(user.id))
     token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
     # token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
+    # html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://192.168.35.235:8000/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
+    # html_content = f'http://192.168.35.235:8000/user_api/activate/{uidb4}/{token}'
     html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://3.35.253.151:8000/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
     main_title = 'LOOP US 이메일 인증'
     mail_to = user.email
@@ -180,7 +181,7 @@ def check_corp_num(request):
 def signup(request):
     type = request.data['type']
 
-    if type == 1:
+    if int(type) == 1:
         user = User.objects.get(username=request.data['username'])
     else:
         user = User.objects.get(username=request.data['email'])
@@ -199,27 +200,15 @@ def signup(request):
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
-        tag_list = {}
-        for tag in request.data['tag']:
-            try:
-                tag_obj = Tag.objects.get(tag=tag)
-                tag_obj.count = tag_obj.count + 1
-                tag_obj.save()
-            
-            except Tag.DoesNotExist:
-                tag_obj = Tag.objects.create(tag = tag)
 
-            tag_list[str(tag_obj.id)] = {'count':50, 'date':str(datetime.date.today()), 'id':tag_obj.id}
-            Profile_Tag.objects.create(profile = profile_obj, tag=tag_obj)
-
-        InterestTag.objects.create(user_id=user.id, tag_list=tag_list)
         if type == 1:
             corp = Activation.objects.get(user_id=user.id)
             Company_Inform.objects.create(profile_id = profile_obj.id,
                                         corp_num = corp.corp_num,
                                         corp_name = corp.corp_name)
             corp.delete()
-
+            
+        InterestTag.objects.create(user_id=user.id, tag_list={})
         return Response({'token':token.key, 'user_id':str(user.id)},status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
@@ -273,6 +262,17 @@ def logout(request):
     except:
         pass
     return Response("Successed log out", status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def check_token(request):
+    try:
+        if request.data['fcm_token'] != FcmToken.objects.get(user_id=request.user.id).token:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(status=status.HTTP_200_OK)
+    except:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['PUT', 'POST'])
 def password(request):
@@ -326,16 +326,11 @@ def resign(request):
             pass
 
         for project in Project.objects.filter(user_id=user.id):
-            project.pj_thumbnail.delete(save=False)
             for post in Post.objects.filter(project_id=project.id):
-                for image in ContentsImage.objects.filter(post_id=post.id):
+                for image in PostImage.objects.filter(post_id=post.id):
                     image.image.delete(save=False)
 
-        tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
-        delete_tag(tag_obj)
-        tag_obj = Project_Tag.objects.filter(project__in=Project.objects.filter(user_id=user.id))
-        delete_tag(tag_obj)
-        tag_obj = Question_Tag.objects.filter(question__in=Question.objects.filter(user_id=user.id))
+        tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
         delete_tag(tag_obj)
         
         user = User.objects.get(id=user.id)
@@ -374,29 +369,6 @@ def profile(request):
         
         elif type == 'department':
             profile_obj.department = R_DEPARTMENT[request.data['department']]
-        
-        elif type == 'tag':
-            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-            tag_obj = Profile_Tag.objects.filter(profile_id=profile_obj.id)
-            for tag in tag_obj:
-                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 50)
-                tag.delete()
-                tag.tag.count = tag.tag.count-1
-                if tag.tag.count == 0:
-                    tag.tag.delete()
-                tag.tag.save()
-
-            tag_list = eval(request.data['tag'])      
-            for tag in tag_list:
-                tag_obj, valid = Tag.objects.get_or_create(tag=tag)
-                Profile_Tag.objects.create(tag = tag_obj, profile_id = profile_obj.id)
-                interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 50)
-
-                if not valid:
-                    tag_obj.count = tag_obj.count+1
-                    tag_obj.save()    
-
-            interest_list.save()
 
         profile_obj.save()
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
@@ -415,6 +387,7 @@ def profile(request):
                 profile.update({'new_message':True})
             else:
                 profile.update({'new_message':False})
+            
         else:
             Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile.update({'is_user':0})
@@ -424,7 +397,7 @@ def profile(request):
                 profile.update({'is_banned':2})
             else:
                 profile.update({'is_banned':0})
-        
+
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
         following = Loopship.objects.filter(user_id=idx, friend_id=request.user.id).exists()
 
@@ -443,17 +416,29 @@ def profile(request):
 @permission_classes((IsAuthenticated,))
 def project(request):
     idx = request.GET['id']
-    project_obj = list(Project.objects.filter(user_id=idx))
-    project_obj.reverse()
+    project_obj = Project.objects.filter(user_id=idx)
     project_obj = ProjectSerializer(project_obj, many=True).data
-    if request.user.id == int(idx):
-        for p in project_obj:
-            p.update({"is_user":1})
+
+    sum_post = Post.objects.filter(user_id=idx).count()
+
+    if sum_post != 0:
+        for project in project_obj:
+            project.update({'ratio':round(project['post_count']/sum_post, 2)})
     else:
-        for p in project_obj:
-            p.update({"is_user":0})
+        for project in project_obj:
+            project.update({'ratio':0})
 
     return Response(project_obj, status=status.HTTP_200_OK)
+
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def posting(request):
+    idx = int(request.GET['id'])
+    post_obj = Post.objects.filter(project_id=int(idx)).order_by('-id')
+    post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
+    post_obj = MainloadSerializer(post_obj, many=True, read_only=True).data
+
+    return Response(post_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 def department_list(request):
@@ -515,16 +500,16 @@ def alarm(request):
     if request.method == 'GET':
         if request.GET['type'] == 'follow':
             if request.GET['last'] == '0':
-                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, type=2))[-10:]
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id, type=2).order_by('-id')[:10]
                 
             else:
-                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last'], type=2))[-10:]
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last'], type=2).order_by('-id')[:10]
             
             for alarm in alarm_obj:
                 if not alarm.is_read:
                     alarm.is_read = True
                     alarm.save()
-            alarm_obj = AlarmSerializer(reversed(list(alarm_obj)), many=True).data
+            alarm_obj = AlarmSerializer(alarm_obj, many=True).data
             for alarm in alarm_obj:
                 follow = Loopship.objects.filter(user_id=request.user.id, friend_id=alarm['target_id']).exists()
                 following = Loopship.objects.filter(user_id=alarm['target_id'], friend_id=request.user.id).exists()
@@ -540,24 +525,19 @@ def alarm(request):
             return Response(alarm_obj, status=status.HTTP_200_OK)
         else:            
             if request.GET['last'] == '0':
-                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id).exclude(type=2))[-10:]
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id).exclude(type=2).order_by('-id')[:10]
 
             else:
-                alarm_obj = list(Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2))[-10:]
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2).order_by('-id')[:10]
 
             for alarm in alarm_obj:
                 if not alarm.is_read:
                     alarm.is_read = True
                     alarm.save()
                     
-            return Response(AlarmSerializer(reversed(list(alarm_obj)), many=True).data, status=status.HTTP_200_OK)
+            return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
         alarm_obj = Alarm.objects.get(id=request.GET['id'])
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)
-
-# @api_view(['GET', ])
-# def noti(request):
-#     topic_alarm('promotion', '프로모션토픽')
-#     return Response(status=status.HTTP_200_OK)
