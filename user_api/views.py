@@ -84,7 +84,7 @@ def check_email(user, type):
     for i in range(90):
         time.sleep(2)
         if User.objects.get(id=user.id).is_active:
-            return Response(status=status.HTTP_200_OK)
+            return True
 
     if type == 'create':
         user.delete()
@@ -93,7 +93,7 @@ def check_email(user, type):
         user.is_active = True
         user.save()
 
-    return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
+    return False
 
 @api_view(['POST', ])
 def create_user(request):
@@ -124,21 +124,28 @@ def create_user(request):
 
     except IntegrityError:
         return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
-    check_email(user, 'create')
-    return Response(status=status.HTTP_200_OK)
+    valid = check_email(user, 'create')
+    if valid:
+        return Response(status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
 
 @api_view(['GET', ])
 def activate(request, uidb64, token):
-    uid = force_text(urlsafe_base64_decode(uidb64))
-    user = User.objects.get(pk=uid)
-    user_dic = jwt.decode(token, algorithms='HS256')
-    if user.id == user_dic['id']:
-        user.is_active = True
-        user.save()
-        
-        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+        user_dic = jwt.decode(token, algorithms='HS256')
+        if user.id == user_dic['id']:
+            user.is_active = True
+            user.save()
+            
+            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
+        else:
+            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
 
-    return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
+    except:
+        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
 
 @api_view(['POST', ])
 def check_corp_num(request):
@@ -220,6 +227,7 @@ def login(request):
         try:
             fcm_obj = FcmToken.objects.get(user_id=user.id)
             if fcm_obj.token != request.data['fcm_token']:
+                logout_push(fcm_obj.token)
                 fcm_obj.token = request.data['fcm_token']
                 fcm_obj.save()
 
@@ -233,6 +241,17 @@ def login(request):
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
 
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def check_token(request):
+    try:
+        if request.data['fcm_token'] != FcmToken.objects.get(user_id=request.user.id).token:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return Response(status=status.HTTP_200_OK)
+    except:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+        
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
 def logout(request):
@@ -270,10 +289,14 @@ def password(request):
                 return Response("origin_pw is not matched with data", status=status.HTTP_401_UNAUTHORIZED)
 
         elif request.GET['type'] == 'find':
-            user = User.objects.get(email=request.data['email'])
-            user.set_password(request.data['password'])
-            user.save()
-            return Response(status=status.HTTP_200_OK)
+            try:
+                user = User.objects.get(email=request.data['email'])
+                user.set_password(request.data['password'])
+                user.save()
+                return Response(status=status.HTTP_200_OK)
+
+            except User.DoesNotExist:
+                return Response(stauts=status.HTTP_401_UNAUTHORIZED)
 
     elif request.method =='POST':
         user = User.objects.get(email=request.data['email'])
@@ -413,7 +436,7 @@ def posting(request):
     idx = int(request.GET['id'])
     post_obj = Post.objects.filter(project_id=int(idx)).order_by('-id')
     post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
-    post_obj = MainloadSerializer( many=True, read_only=True).data
+    post_obj = MainloadSerializer(post_obj, many=True, read_only=True).data
 
     return Response(post_obj, status=status.HTTP_200_OK)
 

@@ -11,6 +11,7 @@ urlpatterns = [
     path('resign', views.resign),
     path('activate/<uidb64>/<token>',views.activate),
     path('profile', views.profile),
+    path('posting', views.posting),
     path('project', views.project),
     path('posting', views.posting),
     path('posting', views.posting),
@@ -21,5 +22,6 @@ urlpatterns = [
     path('alarm', views.alarm),
     path('ask', views.ask),
     path('ban', views.ban),
+    path('check_token', views.check_token),
     # path('noti', views.noti)
 ]
