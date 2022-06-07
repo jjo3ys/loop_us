@@ -10,11 +10,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = DJANGO_KEY
 
-# DEBUG = True
-# ALLOWED_HOSTS = ["*"]
+DEBUG = True
+ALLOWED_HOSTS = ["*"]
 
-DEBUG = False
-ALLOWED_HOSTS = ['3.35.253.151']
+# DEBUG = False
+# ALLOWED_HOSTS = ['3.35.253.151']
 
 
 SITE_URL = "http://3.35.253.151:8000/"
@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
     'search.apps.SearchConfig',
-    'portfolio_api.apps.PortfolioApiConfig',
     'chat',
     
     'rest_framework',
@@ -103,21 +102,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASE_ROUTERS = ['config.router.Router']
 
-<<<<<<< HEAD
 DATABASES = DB_SETTING
-=======
-DATABASES = {
-    'default': {
-
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'test',
-        'USER': 'LoopUS',
-        'PASSWORD': 'rlagudxo',
-        'HOST': 'loop-us.crebljnzwq67.ap-northeast-2.rds.amazonaws.com',
-        'PORT': '3306',
-    }
-}
->>>>>>> 0e03f0f7988e50086b15f9a981e45039a3a91da7
 
 
 # Password validation

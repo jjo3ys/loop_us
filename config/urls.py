@@ -13,7 +13,6 @@ urlpatterns = [
     path('user_api/', include('user_api.urls')),
     path('post_api/', include('post_api.urls')),
     path('project_api/', include('project_api.urls')),
-    path('portfolio_api/', include('portfolio_api.urls')),
     path('question_api/', include('question_api.urls')),
     path('tag_api/', include('tag.urls')),
     path('loop_api/', include('loop.urls')),
