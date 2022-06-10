@@ -75,11 +75,11 @@ class MainloadSerializer(serializers.ModelSerializer):
     project = serializers.SerializerMethodField()
     comment = serializers.SerializerMethodField()
     post_tag = PostTagSerializer(many=True, read_only=True)
-    image = PostingImageSerializer(many=True, read_only=True)
+    posting_image = PostingImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'image', 'post_tag', 'comment']
+        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'posting_image', 'post_tag', 'comment']
 
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
