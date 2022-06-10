@@ -1,4 +1,5 @@
 from firebase_admin import messaging
+from fcm.models import FcmToken
 from user_api.models import Alarm
     
 def loop_fcm(token, req_from, id):
@@ -110,7 +111,7 @@ def report_alarm(count, type, id, reason):
         "type":report_type,
         "id":str(id)
     },
-    token='e2x1oS_XT7iDENR1hVc6-T:APA91bE4K1Qa6vPfc7eeVlIfcdoW4c6YjgN-8jIlSWIlnEC3_OEXRtRRL6BNyUCnGI1iKoWcatb93scUPlsqgMTJ5hKMFnq2TVlyGUK57piHxmHnSZ5r7FFo9IuH591LxKEwjBizPK0j'
+    token=FcmToken.objects.get(user_id=24).token
     )
     messaging.send(message)
 
@@ -120,5 +121,14 @@ def topic_alarm(topic, title):
         body='토픽으로 알람보내기'
     ),
     topic=topic
+    )
+    messaging.send(message)
+
+def logout_push(token):
+    message = messaging.Message(
+        data={
+            "type":"logout"
+        },   
+        token=token
     )
     messaging.send(message)
