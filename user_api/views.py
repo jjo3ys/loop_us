@@ -303,8 +303,11 @@ def password(request):
 
         user.is_active = False
         user.save()
-        check_email(user, 'find')
-        return Response(status=status.HTTP_200_OK)
+        valid = check_email(user, 'find')
+        if valid:
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
