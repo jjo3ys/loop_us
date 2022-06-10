@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
     'project_api.apps.ProjectApiConfig',
+    'rank_api.apps.RankApiConfig',
     'tag.apps.TagConfig',
     'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
