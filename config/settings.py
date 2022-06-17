@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
     'search.apps.SearchConfig',
+    'crawling_api.apps.CrawlingApiConfig',
     'chat',
     
     'rest_framework',
@@ -175,6 +176,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 1024000000
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # AUTH_USER_MODEL = 'user_api.UserCustom'
+#django cacheops 설정
 INSTALLED_APPS += ['cacheops']
  
 CACHEOPS_LRU = True # maxmemory-policy: volatile-lru 설정 

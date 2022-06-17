@@ -19,7 +19,7 @@ config/my_settings.py
 config/__pycache__
 
 /**/migrations
-
+*.exe
 
 # /**/migrations
 config/my_settings.py
