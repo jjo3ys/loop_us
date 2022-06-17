@@ -28,8 +28,8 @@ def feed_crawling(type):
     if type == 'insta':
         pass
 
-@api_view(['GET', ])
-def news_crawling(request):
+
+def news_crawling():
     driver = webdriver.Chrome(path, chrome_options=chrome_options)
     url = 'https://search.naver.com/search.naver?where=news&query='
 
