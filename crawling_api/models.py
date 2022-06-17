@@ -4,7 +4,6 @@ from tag.models import Group
 
 class News(models.Model):
     urls = models.TextField()
-    date = models.DateTimeField()
     group = models.ForeignKey(Group, related_name='group_news', on_delete=models.DO_NOTHING)
 
     class Meta:
@@ -20,7 +19,6 @@ class Insta(models.Model):
 
 class Youtube(models.Model):
     urls = models.TextField()
-    date = models.DateTimeField()
     group = models.ForeignKey(Group, related_name='group_youtube', on_delete=models.DO_NOTHING)
 
     class Meata:

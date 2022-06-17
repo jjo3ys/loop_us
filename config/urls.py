@@ -1,12 +1,12 @@
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import path, include
-from django.conf import settings
-from django.conf.urls.static import static
-from rest_framework import permissions
-from rest_framework.permissions import AllowAny
+# from django.conf import settings
+# from django.conf.urls.static import static
+# from rest_framework import permissions
+# from rest_framework.permissions import AllowAny
 # from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
+# from drf_yasg import openapi
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -18,5 +18,6 @@ urlpatterns = [
     path('search_api/', include('search.urls')),
     path('alarm/', include('fcm.urls')),
     path('chat/', include('chat.urls')),
-    path('rank/', include('rank_api.urls'))
+    path('rank/', include('rank_api.urls')),
+    path('get_data/', include('crawling_api.urls'))
 ]+ staticfiles_urlpatterns()
