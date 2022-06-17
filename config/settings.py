@@ -175,3 +175,19 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 1024000000
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # AUTH_USER_MODEL = 'user_api.UserCustom'
+INSTALLED_APPS += ['cacheops']
+ 
+CACHEOPS_LRU = True # maxmemory-policy: volatile-lru 설정 
+                    # (직접 redis config에서 수정하긴 했는데, 그렇게 안해도 되는지는 잘 모르겠네요)
+ 
+CACHEOPS_REDIS = "redis://127.0.0.1:6379/1" # local redis
+ 
+CACHEOPS_DEFAULTS = {
+    'timeout': 60 * 60 * 1, # 1시간
+    'ops': 'get', # get, fetch ... 모든 동작 ex) 'ops': 'get' 이러면 get 할 때만 캐시
+    'cache_on_save': False # save()할때 캐시 할건지 (굳이 필요없을 것 같아서 False 로함)
+}
+ 
+CACHEOPS = {
+    '*.*': {}, # 모든 앱에대해서 캐시적용
+}
