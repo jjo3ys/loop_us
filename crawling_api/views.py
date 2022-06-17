@@ -17,13 +17,20 @@ if platform.system() == 'Linux':
     path = '/home/ubuntu/loopus/chromedriver'
 else:
     path = 'C:\\project\\loop\\chromedriver'
+
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument("--single-process")
+chrome_options.add_argument("--disable-dev-shm-usage")
+
 def feed_crawling(type):
     if type == 'insta':
         pass
 
 @api_view(['GET', ])
 def news_crawling(request):
-    driver = webdriver.Chrome(path)
+    driver = webdriver.Chrome(path, chrome_options=chrome_options)
     url = 'https://search.naver.com/search.naver?where=news&query='
 
     group_id = Group.objects.all()
