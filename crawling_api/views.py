@@ -59,4 +59,3 @@ def news_crawling():
                     continue
     News.objects.filter(id__lte=last.id).delete()
     driver.close()
-    return Response(status=status.HTTP_200_OK)
