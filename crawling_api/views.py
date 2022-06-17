@@ -34,7 +34,7 @@ def news_crawling(request):
     url = 'https://search.naver.com/search.naver?where=news&query='
 
     group_id = Group.objects.all()
-    News.objects.all().delete()
+    last = News.objects.all().last()
 
     for group in group_id:
         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]
@@ -57,6 +57,6 @@ def news_crawling(request):
                     News.objects.create(urls=link, group=group)
                 except:
                     continue
-
+    News.objects.filter(id__lte=last.id).delete()
     driver.close()
     return Response(status=status.HTTP_200_OK)
