@@ -15,7 +15,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import PostingSerializer, MainloadSerializer
+from .serializers import CocommentSerializer, CommentSerializer, PostingSerializer, MainloadSerializer
 from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment
 
 from loop.models import Loopship
@@ -143,15 +143,18 @@ def posting(request):
 def comment(request):   
     if request.method =='POST':
         if request.GET['type'] == 'post':
-            Comment.objects.create(user_id=request.user.id,
-                                post_id=request.GET['id'],#포스트 id
-                                content=request.data['content'])
+            comment_obj = Comment.objects.create(user_id=request.user.id,
+                                                 post_id=request.GET['id'],#포스트 id
+                                                 content=request.data['content'])
+
+            return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
+
         elif request.GET['type'] == 'comment':
-            Cocomment.objects.create(user_id=request.user.id,
-                                    comment_id=request.GET['id'],#댓글 id
-                                    content=request.data['content'])
+            cocomment_obj = Cocomment.objects.create(user_id=request.user.id,
+                                                     comment_id=request.GET['id'],#댓글 id
+                                                     content=request.data['content'])
         
-        return Response(status=status.HTTP_201_CREATED)
+            return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
     elif request.method =='PUT':
         if request.GET['type'] == 'post':
