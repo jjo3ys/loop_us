@@ -138,7 +138,7 @@ def posting(request):
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 
-@api_view(['POST', 'DELETE'])
+@api_view(['POST', 'DELETE', 'PUT'])
 @permission_classes((IsAuthenticated,))
 def comment(request, type, idx):
     if request.method =='POST':
@@ -152,6 +152,19 @@ def comment(request, type, idx):
                                     content=request.data['content'])
         
         return Response(status=status.HTTP_201_CREATED)
+    
+    elif request.method =='PUT':
+        if type == 'post':
+            comment_obj = Comment.objects.get(id=request.data['id'])
+            comment_obj.content=request.data['content']
+            comment_obj.save()
+        
+        elif type == 'comment':
+            cocomment_obj = Cocomment.objects.get(id=request.data['id'])
+            cocomment_obj.content=request.data['content']
+            cocomment_obj.save()
+        
+        return Response(status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         if type == 'post':
