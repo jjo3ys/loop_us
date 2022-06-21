@@ -55,7 +55,7 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
     
-    def get_cocomment(self, obj):
+    def get_cocomment_count(self, obj):
         return Cocomment.objects.filter(comment_id=obj.id).count()
 
 class MainCommentSerializer(serializers.ModelSerializer):
