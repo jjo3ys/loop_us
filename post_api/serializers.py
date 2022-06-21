@@ -73,13 +73,13 @@ class MainCommentSerializer(serializers.ModelSerializer):
 class MainloadSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
-    main_load_comment = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
     post_tag = PostTagSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'main_load_comment']
+        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments']
 
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
@@ -87,7 +87,7 @@ class MainloadSerializer(serializers.ModelSerializer):
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data
     
-    def get_main_load_comment(self, obj):
+    def get_comments(self, obj):
         comment_obj = Comment.objects.filter(post_id=obj.id)
         comment_like_obj = CommentLike.objects.filter(comment_id__in=comment_obj.values_list('id', flat=True))
         if comment_like_obj.count() > 0:
