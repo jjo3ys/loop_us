@@ -140,41 +140,41 @@ def posting(request):
 
 @api_view(['POST', 'DELETE', 'PUT'])
 @permission_classes((IsAuthenticated,))
-def comment(request, type, idx):
+def comment(request):   
     if request.method =='POST':
-        if type == 'post':
+        if request.GET['type'] == 'post':
             Comment.objects.create(user_id=request.user.id,
-                                post_id=idx,
+                                post_id=request.GET['id'],#포스트 id
                                 content=request.data['content'])
-        elif type == 'comment':
+        elif request.GET['type'] == 'comment':
             Cocomment.objects.create(user_id=request.user.id,
-                                    comment_id=idx,
+                                    comment_id=request.GET['id'],#댓글 id
                                     content=request.data['content'])
         
         return Response(status=status.HTTP_201_CREATED)
     
     elif request.method =='PUT':
-        if type == 'post':
-            comment_obj = Comment.objects.get(id=request.data['id'])
+        if request.GET['type'] == 'post':
+            comment_obj = Comment.objects.get(id=request.data['id'])#댓글 id
             comment_obj.content=request.data['content']
             comment_obj.save()
         
-        elif type == 'comment':
-            cocomment_obj = Cocomment.objects.get(id=request.data['id'])
+        elif request.GET['type'] == 'comment':
+            cocomment_obj = Cocomment.objects.get(id=request.data['id'])#대댓글 id
             cocomment_obj.content=request.data['content']
             cocomment_obj.save()
         
         return Response(status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
-        if type == 'post':
+        if request.GET['type'] == 'post':
             try:
-                comment = Cocomment.objects.get(user_id=request.user.id, post_id=idx)
+                comment = Cocomment.objects.get(user_id=request.user.id, post_id=request.GET['posting_id'])
                 comment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-        elif type == 'comment':
+        elif request.GET['type'] == 'comment':
             try:
                 cocomment = Cocomment.objects.get(user_id=request.user.id, comment_id=idx)
                 cocomment.delete()
