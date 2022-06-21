@@ -161,13 +161,15 @@ def comment(request):
             comment_obj = Comment.objects.get(id=request.data['id'])#댓글 id
             comment_obj.content=request.data['content']
             comment_obj.save()
-        
+
+            return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
+
         elif request.GET['type'] == 'comment':
             cocomment_obj = Cocomment.objects.get(id=request.data['id'])#대댓글 id
             cocomment_obj.content=request.data['content']
             cocomment_obj.save()
-        
-        return Response(status=status.HTTP_200_OK)
+            
+            return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
     elif request.method == 'DELETE':
         if request.GET['type'] == 'post':
