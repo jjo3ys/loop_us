@@ -169,14 +169,14 @@ def comment(request):
     elif request.method == 'DELETE':
         if request.GET['type'] == 'post':
             try:
-                comment = Cocomment.objects.get(user_id=request.user.id, post_id=request.GET['posting_id'])
+                comment = Cocomment.objects.get(user_id=request.user.id, post_id=request.GET['id'])#포스트 id
                 comment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
         elif request.GET['type'] == 'comment':
             try:
-                cocomment = Cocomment.objects.get(user_id=request.user.id, comment_id=idx)
+                cocomment = Cocomment.objects.get(user_id=request.user.id, comment_id=request.data['id'])#댓글 id
                 cocomment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
