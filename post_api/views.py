@@ -102,30 +102,27 @@ def posting(request):
 
         postingSZ = PostingSerializer(post_obj).data
 
-        return_dict = {
-            'posting_info': postingSZ
-        }
-        
+
         if request.user.id == post_obj.user_id:
-            return_dict.update({"is_user":1})
+            postingSZ.update({"is_user":1})
         else:
             Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=4)
-            return_dict.update({"is_user":0})
+            postingSZ.update({"is_user":0})
 
         exists = Like.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
         if exists:
-            return_dict.update({"is_liked":1})
+            postingSZ.update({"is_liked":1})
         else:
-            return_dict.update({"is_liked":0})
+            postingSZ.update({"is_liked":0})
 
 
         exists = BookMark.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
         if exists:
-            return_dict.update({"is_marked":1})
+            postingSZ.update({"is_marked":1})
         else:
-            return_dict.update({"is_marked":0})
+            postingSZ.update({"is_marked":0})
 
-        return Response(return_dict)
+        return Response(postingSZ, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         post_obj = Post.objects.get(id=request.GET['id'])
