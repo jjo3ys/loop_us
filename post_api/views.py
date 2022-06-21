@@ -187,10 +187,14 @@ def comment(request):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def like(request, idx):
+def like(request):
     type = request.GET['type']
+    idx = request.GET['id']
     if type =='post':
-        like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+        try:
+            like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not created:
             like_obj.post.like_count -= 1
@@ -212,7 +216,10 @@ def like(request, idx):
             return Response('liked posting', status=status.HTTP_202_ACCEPTED)
 
     elif type =='comment':
-        like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+        try:
+            like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not created:
             like_obj.post.like_count -= 1
@@ -235,7 +242,10 @@ def like(request, idx):
             return Response('liked posting', status=status.HTTP_202_ACCEPTED)  
                  
     elif type =='cocomment':
-        like_obj, created = CocommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+        try:
+            like_obj, created = CocommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not created:
             like_obj.delete()
@@ -258,13 +268,14 @@ def like(request, idx):
                     
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def bookmark(request, idx):
+def bookmark(request):
+    idx = request.GET['id']
     try:
-        book_obj, valid = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
+        book_obj, created = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if not valid:
+    if not created:
         book_obj.delete()
         return Response('unmarked posting', status=status.HTTP_202_ACCEPTED)
     else:
@@ -421,7 +432,8 @@ def loop_load(request):
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
-def like_list_load(request, idx):
+def like_list_load(request):
+    idx = request.GET['id']
     like_list = []
     if request.GET['type'] == 'post':
         like_obj = Like.objects.filter(post_id=idx)
