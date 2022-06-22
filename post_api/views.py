@@ -116,15 +116,17 @@ def posting(request):
             post_obj.update({"is_liked":0})
         
         for comment in post_obj['comments']:
-            if comment['profile']['user_id'] == request.user.id:
+            exists = CommentLike.objects.filter(user_id=request.user.id, comment_id=comment['id']).exists()
+            if exists:
                 comment.update({'is_liked':1})
             else:
                 comment.update({'is_liked':1})
-            for cocomments in comment['cocomments']:
-                if cocomments['profile']['user_id'] == request.user.id:
-                    cocomments.update({'is_liked':1})
+            for cocomment in comment['cocomments']:
+                exists = CommentLike.objects.filter(user_id=request.user.id, cocomment_id=cocomment['id']).exists()
+                if exists:
+                    cocomment.update({'is_liked':1})
                 else:
-                    cocomments.update({'is_liked':0})
+                    cocomment.update({'is_liked':0})
 
         exists = BookMark.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
         if exists:
