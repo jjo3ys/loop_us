@@ -161,7 +161,8 @@ def comment(request):
         elif request.GET['type'] == 'comment':
             cocomment_obj = Cocomment.objects.create(user_id=request.user.id,
                                                      comment_id=request.GET['id'],#댓글 id
-                                                     content=request.data['content'])
+                                                     content=request.data['content'],
+                                                     tagged=request.data['tagged_user'])
         
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
