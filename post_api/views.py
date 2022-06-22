@@ -200,15 +200,15 @@ def like(request, idx):
         like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
 
         if not created:
-            like_obj.post.like_count -= 1
-            like_obj.post.save()
+            like_obj.comment.like_count -= 1
+            like_obj.comment.save()
             like_obj.delete()
 
             return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
 
         else:
-            like_obj.post.like_count += 1
-            like_obj.post.save()
+            like_obj.comment.like_count += 1
+            like_obj.comment.save()
             if like_obj.comment.user_id != request.user.id:
                 try:
                     token = FcmToken.objects.get(user_id=like_obj.post.user_id)
@@ -224,13 +224,13 @@ def like(request, idx):
 
         if not created:
             like_obj.delete()
-            like_obj.post.like_count -= 1
-            like_obj.post.save()
+            like_obj.cocomment.like_count -= 1
+            like_obj.cocomment.save()
             return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
 
         else:
-            like_obj.post.like_count += 1
-            like_obj.post.save()
+            like_obj.cocomment.like_count += 1
+            like_obj.cocomment.save()
             if like_obj.cocomment.user_id != request.user.id:
                 try:
                     token = FcmToken.objects.get(user_id=like_obj.post.user_id)
