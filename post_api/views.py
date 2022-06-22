@@ -200,7 +200,7 @@ def like(request):
             like_obj.post.like_count -= 1
             like_obj.post.save()
             like_obj.delete()
-            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+            return Response('unliked posting', status=status.HTTP_202_ACCEPTED)
 
         else:
             like_obj.post.like_count += 1
@@ -226,7 +226,7 @@ def like(request):
             like_obj.comment.save()
             like_obj.delete()
 
-            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+            return Response('unliked comment', status=status.HTTP_202_ACCEPTED)
 
         else:
             like_obj.comment.like_count += 1
@@ -239,7 +239,7 @@ def like(request):
                 except:
                     pass
 
-            return Response('liked posting', status=status.HTTP_202_ACCEPTED)  
+            return Response('liked comment', status=status.HTTP_202_ACCEPTED)  
                  
     elif type =='cocomment':
         try:
@@ -251,7 +251,7 @@ def like(request):
             like_obj.delete()
             like_obj.cocomment.like_count -= 1
             like_obj.cocomment.save()
-            return Response('disliked posting', status=status.HTTP_202_ACCEPTED)
+            return Response('unliked cocomment', status=status.HTTP_202_ACCEPTED)
 
         else:
             like_obj.cocomment.like_count += 1
@@ -264,7 +264,7 @@ def like(request):
                 except:
                     pass
 
-            return Response('liked posting', status=status.HTTP_202_ACCEPTED)    
+            return Response('liked cocomment', status=status.HTTP_202_ACCEPTED)    
                     
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
