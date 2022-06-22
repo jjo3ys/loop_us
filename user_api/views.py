@@ -37,7 +37,7 @@ from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
 from project_api.models import Project
 from project_api.serializers import ProjectSerializer
-from post_api.models import PostImage, Post
+from post_api.models import BookMark, Like, PostImage, Post
 from loop.models import Loopship
 from fcm.models import FcmToken
 from chat.models import Room, Msg
@@ -443,7 +443,19 @@ def posting(request):
     post_obj = Post.objects.filter(project_id=int(idx)).order_by('-id')
     post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
     post_obj = MainloadSerializer(post_obj, many=True, read_only=True).data
-
+    for post in post_obj:
+        exists = Like.objects.filter(post_id=idx, user_id=request.user.id).exists()
+        if exists:
+            post.update({"is_liked":1})
+        else:
+            post.update({"is_liked":0})
+        
+        exists = BookMark.objects.filter(user_id=request.user.id, post_id=idx).exists()
+        if exists:
+            post.update({"is_marked":1})
+        else:
+            post.update({"is_marked":0})
+            
     return Response(post_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
