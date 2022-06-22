@@ -122,7 +122,7 @@ def posting(request):
             else:
                 comment.update({'is_liked':1})
             for cocomment in comment['cocomments']:
-                exists = CommentLike.objects.filter(user_id=request.user.id, cocomment_id=cocomment['id']).exists()
+                exists = CocommentLike.objects.filter(user_id=request.user.id, cocomment_id=cocomment['id']).exists()
                 if exists:
                     cocomment.update({'is_liked':1})
                 else:
