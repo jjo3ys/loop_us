@@ -39,7 +39,7 @@ class CocommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cocomment
-        fields = ['profile', 'id', 'content', 'date']
+        fields = ['profile', 'id', 'content', 'date', 'like_count']
     
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
@@ -51,7 +51,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ['profile', 'id', 'content', 'cocomment_count', 'date', 'cocomments']
+        fields = ['profile', 'id', 'content', 'cocomment_count', 'date', 'cocomments', 'like_count']
     
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
