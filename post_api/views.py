@@ -15,7 +15,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import PostingSerializer, MainloadSerializer
+from .serializers import CocommentSerializer, CommentSerializer, PostingSerializer, MainloadSerializer
 from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment
 
 from loop.models import Loopship
@@ -102,30 +102,27 @@ def posting(request):
 
         postingSZ = PostingSerializer(post_obj).data
 
-        return_dict = {
-            'posting_info': postingSZ
-        }
-        
+
         if request.user.id == post_obj.user_id:
-            return_dict.update({"is_user":1})
+            postingSZ.update({"is_user":1})
         else:
             Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=4)
-            return_dict.update({"is_user":0})
+            postingSZ.update({"is_user":0})
 
         exists = Like.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
         if exists:
-            return_dict.update({"is_liked":1})
+            postingSZ.update({"is_liked":1})
         else:
-            return_dict.update({"is_liked":0})
+            postingSZ.update({"is_liked":0})
 
 
         exists = BookMark.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
         if exists:
-            return_dict.update({"is_marked":1})
+            postingSZ.update({"is_marked":1})
         else:
-            return_dict.update({"is_marked":0})
+            postingSZ.update({"is_marked":0})
 
-        return Response(return_dict)
+        return Response(postingSZ, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         post_obj = Post.objects.get(id=request.GET['id'])
@@ -138,32 +135,50 @@ def posting(request):
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 
-@api_view(['POST', 'DELETE'])
+@api_view(['POST', 'DELETE', 'PUT'])
 @permission_classes((IsAuthenticated,))
-def comment(request, type, idx):
+def comment(request):   
     if request.method =='POST':
-        if type == 'post':
-            Comment.objects.create(user_id=request.user.id,
-                                post_id=idx,
-                                content=request.data['content'])
-        elif type == 'comment':
-            Cocomment.objects.create(user_id=request.user.id,
-                                    comment_id=idx,
-                                    content=request.data['content'])
+        if request.GET['type'] == 'post':
+            comment_obj = Comment.objects.create(user_id=request.user.id,
+                                                 post_id=request.GET['id'],#포스트 id
+                                                 content=request.data['content'])
+
+            return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
+
+        elif request.GET['type'] == 'comment':
+            cocomment_obj = Cocomment.objects.create(user_id=request.user.id,
+                                                     comment_id=request.GET['id'],#댓글 id
+                                                     content=request.data['content'])
         
-        return Response(status=status.HTTP_201_CREATED)
+            return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
+    
+    elif request.method =='PUT':
+        if request.GET['type'] == 'post':
+            comment_obj = Comment.objects.get(id=request.data['id'])#댓글 id
+            comment_obj.content=request.data['content']
+            comment_obj.save()
+
+            return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
+
+        elif request.GET['type'] == 'comment':
+            cocomment_obj = Cocomment.objects.get(id=request.data['id'])#대댓글 id
+            cocomment_obj.content=request.data['content']
+            cocomment_obj.save()
+            
+            return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
     elif request.method == 'DELETE':
-        if type == 'post':
+        if request.GET['type'] == 'post':
             try:
-                comment = Cocomment.objects.get(user_id=request.user.id, post_id=idx)
+                comment = Cocomment.objects.get(user_id=request.user.id, post_id=request.GET['id'])#포스트 id
                 comment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-        elif type == 'comment':
+        elif request.GET['type'] == 'comment':
             try:
-                cocomment = Cocomment.objects.get(user_id=request.user.id, comment_id=idx)
+                cocomment = Cocomment.objects.get(user_id=request.user.id, comment_id=request.data['id'])#댓글 id
                 cocomment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
@@ -172,10 +187,14 @@ def comment(request, type, idx):
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def like(request, idx):
+def like(request):
     type = request.GET['type']
+    idx = request.GET['id']
     if type =='post':
-        like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+        try:
+            like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not created:
             like_obj.post.like_count -= 1
@@ -197,7 +216,10 @@ def like(request, idx):
             return Response('liked posting', status=status.HTTP_202_ACCEPTED)
 
     elif type =='comment':
-        like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+        try:
+            like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not created:
             like_obj.comment.like_count -= 1
@@ -220,7 +242,10 @@ def like(request, idx):
             return Response('liked posting', status=status.HTTP_202_ACCEPTED)  
                  
     elif type =='cocomment':
-        like_obj, created = CocommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+        try:
+            like_obj, created = CocommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not created:
             like_obj.delete()
@@ -243,13 +268,14 @@ def like(request, idx):
                     
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
-def bookmark(request, idx):
+def bookmark(request):
+    idx = request.GET['id']
     try:
-        book_obj, valid = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
+        book_obj, created = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if not valid:
+    if not created:
         book_obj.delete()
         return Response('unmarked posting', status=status.HTTP_202_ACCEPTED)
     else:
@@ -406,7 +432,8 @@ def loop_load(request):
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
-def like_list_load(request, idx):
+def like_list_load(request):
+    idx = request.GET['id']
     like_list = []
     if request.GET['type'] == 'post':
         like_obj = Like.objects.filter(post_id=idx)
