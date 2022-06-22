@@ -243,7 +243,7 @@ def like(request):
                  
     elif type =='cocomment':
         try:
-            like_obj, created = CocommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+            like_obj, created = CocommentLike.objects.get_or_create(cocomment_id=idx, user_id=request.user.id)
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
