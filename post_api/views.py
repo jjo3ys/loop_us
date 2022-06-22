@@ -100,29 +100,39 @@ def posting(request):
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        postingSZ = PostingSerializer(post_obj).data
+        post_obj = PostingSerializer(post_obj).data
 
 
-        if request.user.id == post_obj.user_id:
-            postingSZ.update({"is_user":1})
+        if request.user.id == post_obj['user_id']:
+            post_obj.update({"is_user":1})
         else:
-            Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=4)
-            postingSZ.update({"is_user":0})
+            # Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=4)
+            post_obj.update({"is_user":0})
 
         exists = Like.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
         if exists:
-            postingSZ.update({"is_liked":1})
+            post_obj.update({"is_liked":1})
         else:
-            postingSZ.update({"is_liked":0})
-
+            post_obj.update({"is_liked":0})
+        
+        for comment in post_obj['comments']:
+            if comment['profile']['user_id'] == request.user.id:
+                comment.update({'is_liked':1})
+            else:
+                comment.update({'is_liked':1})
+            for cocomments in comment['cocomments']:
+                if cocomments['profile']['user_id'] == request.user.id:
+                    cocomments.update({'is_liked':1})
+                else:
+                    cocomments.update({'is_liked':0})
 
         exists = BookMark.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
         if exists:
-            postingSZ.update({"is_marked":1})
+            post_obj.update({"is_marked":1})
         else:
-            postingSZ.update({"is_marked":0})
+            post_obj.update({"is_marked":0})
 
-        return Response(postingSZ, status=status.HTTP_200_OK)
+        return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         post_obj = Post.objects.get(id=request.GET['id'])

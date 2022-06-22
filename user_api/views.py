@@ -395,7 +395,7 @@ def profile(request):
                 profile.update({'new_message':False})
             
         else:
-            Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
+            # Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile.update({'is_user':0})
             if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(idx)).exists():
                 profile.update({'is_banned':1})
