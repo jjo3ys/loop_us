@@ -96,8 +96,7 @@ def posting(request):
     
     elif request.method == 'GET':
         try:
-            post_obj = Post.objects.get(id=request.GET['id'])
-
+            post_obj = Post.objects.select_related('project').select_related('user').filter(id=request.GET['id'])[0]
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -342,11 +341,11 @@ def recommend_load(request):
     post_list = []
     for post in Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).exclude(user_id__in=ban_list).exclude(user_id__in=loop_list):
         try:
-            post_list.append([post, tag_score[post.project_id]])
+            post_list.append([post, tag_score[post.id]])
         except KeyError:
             pass
 
-    post_list.sort(key=lambda x: (-x[1], -x[0].id))
+    post_list.sort(key=lambda x: (-x[1]))
     page = int(request.GET['page'])
     post_obj = MainloadSerializer([x[0] for x in post_list[5*(page-1):5*page]], many=True).data
     post_list = 0
@@ -382,9 +381,9 @@ def main_load(request):
     ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
 
     if request.GET['last'] == '0':
-        post_obj = Post.objects.all().exclude(user_id__in=ban_list).order_by('-id')[:5]
+        post_obj = Post.objects.select_related('project').select_related('user').all().exclude(user_id__in=ban_list).order_by('-id')[:5]
     else:
-        post_obj = Post.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).order_by('-id')[:5]
+        post_obj = Post.objects.select_related('project').select_related('user').filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).order_by('-id')[:5]
 
     post_obj = MainloadSerializer(post_obj, many=True).data
 
@@ -427,9 +426,9 @@ def loop_load(request):
     now = datetime.datetime.now()
 
     if request.GET['last'] == '0':
-        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).order_by('-id')[:5]
+        post_obj = Post.objects.select_related('project').select_related('user').filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).order_by('-id')[:5]
     else:
-        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).order_by('-id')[:5]
+        post_obj = Post.objects.select_related('project').select_related('user').filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).order_by('-id')[:5]
 
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
@@ -458,7 +457,7 @@ def loop_load(request):
         return Response({'posting':post_obj, 'news':news_obj}, status=status.HTTP_200_OK)
         
     else: return Response({'posting':post_obj})
-    
+
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def like_list_load(request):
