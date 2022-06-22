@@ -1,5 +1,6 @@
 from genericpath import exists
 from django.core.paginator import Paginator
+from crawling_api.models import News
 from project_api.models import Project
 from search.models import Get_log, InterestTag
 from search.views import interest_tag
@@ -15,7 +16,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import CocommentSerializer, CommentSerializer, PostingSerializer, MainloadSerializer
+from .serializers import CocommentSerializer, CommentSerializer, NewsSerializer, PostingSerializer, MainloadSerializer
 from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment
 
 from loop.models import Loopship
@@ -387,6 +388,7 @@ def main_load(request):
 
     post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
+
     for p in post_obj:
         if p['user_id'] == request.user.id:
             p.update({"is_user":1})
@@ -404,7 +406,15 @@ def main_load(request):
         else:
             p.update({"is_marked":0})
 
-    return Response(post_obj, status=status.HTTP_200_OK)
+    if request.GET['last'] == '0':
+        try:
+            news_obj = NewsSerializer(News.objects.filter(group_id=request.GET['group_id']), many=True).data
+        except:
+            news_obj = NewsSerializer(News.objects.all(), many=True).data
+
+        return Response({'posting':post_obj, 'news':news_obj}, status=status.HTTP_200_OK)
+        
+    else: return Response({'posting':post_obj})
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
