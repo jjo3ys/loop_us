@@ -382,11 +382,10 @@ def main_load(request):
     ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
 
     if request.GET['last'] == '0':
-        post_obj = list(Post.objects.all().exclude(user_id__in=ban_list))[-5:]
+        post_obj = Post.objects.all().exclude(user_id__in=ban_list).order_by('-id')[:5]
     else:
-        post_obj = list(Post.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list))[-5:]
+        post_obj = Post.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).order_by('-id')[:5]
 
-    post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
 
     for p in post_obj:
@@ -413,7 +412,7 @@ def main_load(request):
             news_obj = NewsSerializer(News.objects.all(), many=True).data
 
         return Response({'posting':post_obj, 'news':news_obj}, status=status.HTTP_200_OK)
-        
+
     else: return Response({'posting':post_obj})
 
 @api_view(['GET', ])
@@ -428,11 +427,10 @@ def loop_load(request):
     now = datetime.datetime.now()
 
     if request.GET['last'] == '0':
-        post_obj = list(Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list))[-5:]
+        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).order_by('-id')[:5]
     else:
-        post_obj = list(Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list))[-5:]
+        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).order_by('-id')[:5]
 
-    post_obj.reverse()
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
         if p['user_id'] == request.user.id:
@@ -451,8 +449,16 @@ def loop_load(request):
         else:
             p.update({"is_marked":0})
 
-    return Response(post_obj, status=status.HTTP_200_OK)
+    if request.GET['last'] == '0':
+        try:
+            news_obj = NewsSerializer(News.objects.filter(group_id=request.GET['group_id']), many=True).data
+        except:
+            news_obj = NewsSerializer(News.objects.all(), many=True).data
 
+        return Response({'posting':post_obj, 'news':news_obj}, status=status.HTTP_200_OK)
+        
+    else: return Response({'posting':post_obj})
+    
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def like_list_load(request):
