@@ -48,7 +48,7 @@ class CocommentSerializer(serializers.ModelSerializer):
     def get_tagged_user(self, obj):
         if obj.tagged == None:
             return None
-        else: return {'real_name':Profile.objects.get(user_id=obj.tagged.id).real_name, 'id':obj.tagged.id}
+        else: return {'real_name':Profile.objects.get(user_id=obj.tagged.id).real_name, 'user_id':obj.tagged.id}
 
 class CommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
