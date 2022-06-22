@@ -444,18 +444,18 @@ def posting(request):
     post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
     post_obj = MainloadSerializer(post_obj, many=True, read_only=True).data
     for post in post_obj:
-        exists = Like.objects.filter(post_id=idx, user_id=request.user.id).exists()
+        exists = Like.objects.filter(post_id=post['id'], user_id=request.user.id).exists()
         if exists:
             post.update({"is_liked":1})
         else:
             post.update({"is_liked":0})
         
-        exists = BookMark.objects.filter(user_id=request.user.id, post_id=idx).exists()
+        exists = BookMark.objects.filter(user_id=request.user.id, post_id=post['id']).exists()
         if exists:
             post.update({"is_marked":1})
         else:
             post.update({"is_marked":0})
-            
+
     return Response(post_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
