@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from project_api.models import Project
+from user_api.models import User
 # Create your models here.
 
 
@@ -28,7 +29,7 @@ class Comment(models.Model):
     content = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
     like_count = models.SmallIntegerField(default=0)
-
+    
     class Meta:
         db_table = "Post_comment"
 
@@ -38,7 +39,8 @@ class Cocomment(models.Model):
     content = models.TextField()
     date = models.DateTimeField(auto_now_add=True)
     like_count = models.SmallIntegerField(default=0)
-
+    tagged = models.ForeignKey(User, default=None, null=True, related_name='tagged_user', on_delete=models.DO_NOTHING)
+    
     class Meta:
         db_table = "Post_cocomment"
 

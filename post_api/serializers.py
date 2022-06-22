@@ -36,13 +36,19 @@ class PostingImageSerializer(serializers.ModelSerializer):
 
 class CocommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
+    tagged_user = serializers.SerializerMethodField()
 
     class Meta:
         model = Cocomment
-        fields = ['profile', 'id', 'content', 'date', 'like_count']
+        fields = ['profile', 'id', 'content', 'date', 'like_count', 'tagged_user']
     
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
+    
+    def get_tagged_user(self, obj):
+        if obj.tagged == None:
+            return None
+        else: return {'real_name':Profile.objects.get(user_id=obj.tagged.id).real_name, 'id':obj.tagged.id}
 
 class CommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()

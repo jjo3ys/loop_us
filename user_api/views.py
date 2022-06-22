@@ -381,7 +381,11 @@ def profile(request):
     
     elif request.method == 'GET':
         idx = request.GET['id']
-        profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
+        try:
+            profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         if str(request.user.id) == idx:
             profile.update({'is_user':1})
             if Alarm.objects.filter(user_id=request.user.id, is_read=False).exists():
@@ -422,7 +426,10 @@ def profile(request):
 @permission_classes((IsAuthenticated,))
 def project(request):
     idx = request.GET['id']
-    project_obj = Project.objects.filter(user_id=idx)
+    try:
+        project_obj = Project.objects.filter(user_id=idx)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
     project_obj = ProjectSerializer(project_obj, many=True).data
 
     sum_post = Post.objects.filter(user_id=idx).count()
