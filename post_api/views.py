@@ -28,12 +28,12 @@ import datetime
 @permission_classes((IsAuthenticated,))
 def posting(request):
     if request.method == 'POST':    
-        profile_obj = Profile.objects.get(user_id=request.user.id)       
+        profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
         post_obj = Post.objects.create(user_id=request.user.id, 
                                         project_id=request.GET['id'],    
                                         contents=request.data['contents'],
                                         department_id=profile_obj.department)
-        project_obj = Project.objects.get(id=request.GET['id'])
+        project_obj = Project.objects.filter(id=request.GET['id'])[0]
         project_obj.post_count += 1
 
         for image in request.FILES.getlist('image'):
@@ -50,18 +50,37 @@ def posting(request):
                 tag_obj.count += 1
                 tag_obj.save()
 
+            elif created: continue
+
             if str(tag_obj.group_id) in project_group:
                 project_group[str(tag_obj.group_id)] += 1
             else:
                 project_group[str(tag_obj.group_id)] = 1
 
             Post_Tag.objects.create(post=post_obj, tag=tag_obj)
-            
-        
+
+        project_obj.group = project_group
         project_obj.save()
+
+        project_obj = Project.objects.filter(user_id=request.user.id)
+        for project in project_obj:
+            if project.group == None:
+                continue
+
+            group = [k for k, v in project.group.items() if max(project.group.values())==v]
+            for g in group:
+                if g in project_group:
+                    project_group[g] += 1
+                else:
+                    project_group[g] = 1
+        if len(project_group) == 0:
+            pass
+        else:
+            profile_obj.group = max(project_group, key=project_group.get)
+            profile_obj.save()  
+
         interest_list.save()
-        post_obj = PostingSerializer(post_obj).data
-        return Response(post_obj, status=status.HTTP_200_OK)
+        return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
         post_obj = Post.objects.filter(id=request.GET['id'])[0]
@@ -77,9 +96,11 @@ def posting(request):
             post_obj.contents = request.data['contents']
         
         elif request.GET['type'] == 'tag':
+            profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
             interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tags')
             project_group = post_obj.project.group
+
             for tag in tag_obj:
                 interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
                 tag.delete()
@@ -99,13 +120,33 @@ def posting(request):
 
                 if not created:
                     tag_obj.count = tag_obj.count+1
-                    tag_obj.save()    
+                    tag_obj.save()  
+                elif created: continue
+
                 if tag.tag.group in project_group:
                     project_group[tag.tag.group] += 1
                 else:
                     project_group[tag.tag.group] = 1
+
+            post_obj.project.group = project_group
+            post_obj.project.save()  
             
-            post_obj.project.save()
+            project_obj = Project.objects.filter(user_id=request.user_id)
+            for project in project_obj:
+                if project.group == None:
+                    continue
+
+                group = [k for k, v in project.group.items() if max(project.group.values())==v]
+                for g in group:
+                    if g in project_group:
+                        project_group[g] += 1
+                    else:
+                        project_group[g] = 1
+            if len(project_group) == 0: pass
+            else:
+                profile_obj.group = max(project_group, key=project_group.get)
+                profile_obj.save()
+
             interest_list.save()
 
         post_obj.save()
