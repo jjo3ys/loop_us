@@ -1,3 +1,4 @@
+from email.policy import default
 from django.db import models
 from django.conf import settings
 
@@ -8,7 +9,7 @@ class Project(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     post_count = models.PositiveSmallIntegerField(default=0)
-    group = models.PositiveSmallIntegerField(default=10)
+    group = models.JSONField(default={})
 
     class Meta:
         db_table = 'Project'

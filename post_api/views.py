@@ -33,12 +33,15 @@ def posting(request):
                                         project_id=request.GET['id'],    
                                         contents=request.data['contents'],
                                         department_id=profile_obj.department)
-
+        project_obj = Project.objects.get(id=request.GET['id'])
+        project_obj.post_count += 1
 
         for image in request.FILES.getlist('image'):
             PostImage.objects.create(post_id=post_obj.id,
                                      image=image)
 
+        project_group = project_obj.group
+        
         interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
         for tag in eval(request.data['tag']):
             tag_obj, created = Tag.objects.get_or_create(tag=tag)
@@ -46,17 +49,22 @@ def posting(request):
             if not created:
                 tag_obj.count += 1
                 tag_obj.save()
+
+            if str(tag_obj.group_id) in project_group:
+                project_group[str(tag_obj.group_id)] += 1
+            else:
+                project_group[str(tag_obj.group_id)] = 1
+
             Post_Tag.objects.create(post=post_obj, tag=tag_obj)
             
-        project_obj = Project.objects.get(id=request.GET['id'])
-        project_obj.post_count += 1
+        
         project_obj.save()
         interest_list.save()
         post_obj = PostingSerializer(post_obj).data
         return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
-        post_obj = Post.objects.get(id=request.GET['id'])
+        post_obj = Post.objects.filter(id=request.GET['id'])[0]
         
         if request.GET['type'] == 'image':
             images = PostImage.objects.filter(post_id=post_obj.id)
@@ -70,7 +78,8 @@ def posting(request):
         
         elif request.GET['type'] == 'tag':
             interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-            tag_obj = Post_Tag.objects.filter(post_id=post_obj.id)
+            tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tags')
+            project_group = post_obj.project.group
             for tag in tag_obj:
                 interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
                 tag.delete()
@@ -78,6 +87,9 @@ def posting(request):
                 if tag.tag.count == 0:
                     tag.tag.delete()
                 tag.tag.save()
+
+                if tag.tag.group in project_group:
+                    project_group[tag.tag.group] -= 1
 
             tag_list = eval(request.data['tag'])      
             for tag in tag_list:
@@ -88,7 +100,12 @@ def posting(request):
                 if not created:
                     tag_obj.count = tag_obj.count+1
                     tag_obj.save()    
-
+                if tag.tag.group in project_group:
+                    project_group[tag.tag.group] += 1
+                else:
+                    project_group[tag.tag.group] = 1
+            
+            post_obj.project.save()
             interest_list.save()
 
         post_obj.save()

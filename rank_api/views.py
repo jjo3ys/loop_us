@@ -5,8 +5,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from project_api.models import Project
+
 from .models import PostingRanking
 
+from user_api.models import Profile
 from post_api.models import Post
 from post_api.serializers import MainloadSerializer
 from tag.models import Group
@@ -23,6 +26,27 @@ def posting_ranking():
 
     for group in group_list:
         PostingRanking.objects.bulk_create(group_list[group][:10])
+
+def set_profile_group():
+    profile_obj = Profile.objects.all()
+    for profile in profile_obj:
+        project_group = {}
+        project_obj = Project.objects.filter(user_id=profile.user_id)
+        for project in project_obj:
+            if project.group == None:
+                continue
+
+            group = [k for k, v in project.group.items() if max(project.group.values())==v]
+            for g in group:
+                if g in project_group:
+                    project_group[g] += 1
+                else:
+                    project_group[g] = 1
+        if len(project_group) == 0:
+            continue
+        else:
+            profile.group = max(project_group, key=project_group.get)
+            profile.save()
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))

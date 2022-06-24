@@ -11,7 +11,7 @@ class Group(models.Model):
 class Tag(models.Model):
     tag = models.CharField(max_length=50, unique=True)
     count = models.IntegerField(default=1)
-    group = models.ForeignKey(Group, related_name='tag', default=1, on_delete=models.DO_NOTHING)
+    group = models.ForeignKey(Group, related_name='tag', default=10, on_delete=models.DO_NOTHING)
     
     class Meta:
         db_table = "Tag"
