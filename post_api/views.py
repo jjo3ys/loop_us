@@ -421,7 +421,7 @@ def main_load(request):
         else:
             p.update({"is_marked":0})
     
-    profile = Profile.objects.filter(user_id=request.user.id)
+    profile = Profile.objects.filter(user_id=request.user.id)[0]
     if request.GET['last'] == '0':
         if profile.group == 10:
             news_obj = NewsSerializer(News.objects.all(), many=True).data
