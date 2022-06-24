@@ -34,10 +34,11 @@ def news_crawling():
     url = 'https://search.naver.com/search.naver?where=news&query='
 
     group_id = Group.objects.all()
-    last = News.objects.all().last()
-
+    last = News.objects.last()
+    
     for group in group_id:
         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]
+        link_dict = {}
         for tag in tag_list:
             news_url = url+tag.tag
             driver.get(news_url)
@@ -48,13 +49,15 @@ def news_crawling():
                     sub_news_list = driver.find_elements_by_css_selector('#sp_nws{} > div.news_cluster > ul > li'.format(i+news_count))
                     news_count += len(sub_news_list)
                 except:
-                    try:                        
+                    try:    
                         link = driver.find_element_by_css_selector('#sp_nws{} > div > div > a'.format(i+news_count)).get_attribute('href')
                     except:
                         pass
                 
                 try:
-                    News.objects.create(urls=link, group=group)
+                    if link not in link_dict:
+                        News.objects.create(urls=link, group=group)
+                        link_dict[link] = True
                 except:
                     continue
     News.objects.filter(id__lte=last.id).delete()
