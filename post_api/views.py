@@ -426,7 +426,7 @@ def main_load(request):
         if profile.group == 10:
             news_obj = NewsSerializer(News.objects.all(), many=True).data
         else:
-            news_obj = NewsSerializer(News.objects.filter(group_id=profile.group, many=True)).data         
+            news_obj = NewsSerializer(News.objects.filter(group_id=profile.group), many=True).data         
 
         return Response({'posting':post_obj, 'news':news_obj}, status=status.HTTP_200_OK)
 
