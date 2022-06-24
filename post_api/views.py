@@ -420,12 +420,13 @@ def main_load(request):
             p.update({"is_marked":1})
         else:
             p.update({"is_marked":0})
-
+    
+    profile = Profile.objects.filter(user_id=request.user.id)
     if request.GET['last'] == '0':
-        try:
-            news_obj = NewsSerializer(News.objects.filter(group_id=request.GET['group_id']), many=True).data
-        except:
+        if profile.group == 10:
             news_obj = NewsSerializer(News.objects.all(), many=True).data
+        else:
+            news_obj = NewsSerializer(News.objects.filter(group_id=profile.group, many=True)).data         
 
         return Response({'posting':post_obj, 'news':news_obj}, status=status.HTTP_200_OK)
 
