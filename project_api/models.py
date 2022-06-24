@@ -8,6 +8,7 @@ class Project(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(blank=True, null=True)
     post_count = models.PositiveSmallIntegerField(default=0)
+    group = models.PositiveSmallIntegerField(default=10)
 
     class Meta:
         db_table = 'Project'
