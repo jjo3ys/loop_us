@@ -55,12 +55,15 @@ class CocommentSerializer(serializers.ModelSerializer):
         fields = ['profile', 'id', 'content', 'date', 'like_count', 'tagged_user']
     
     def get_profile(self, obj):
-        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
+        try:
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
+        except:
+            return None
     
     def get_tagged_user(self, obj):
         if obj.tagged == None:
             return None
-        else: return {'real_name':Profile.objects.get(user_id=obj.tagged.id).real_name, 'user_id':obj.tagged.id}
+        else: return {'real_name':Profile.objects.filter(user_id=obj.tagged_id)[0].real_name, 'user_id':obj.tagged_id}
 
 class CommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
@@ -72,8 +75,11 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['profile', 'id', 'content', 'cocomment_count', 'date', 'cocomments', 'like_count']
     
     def get_profile(self, obj):
-        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
-    
+        try:
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
+        except:
+            return None
+
     def get_cocomment_count(self, obj):
         return Cocomment.objects.filter(comment_id=obj.id).count()
 
@@ -85,8 +91,11 @@ class MainCommentSerializer(serializers.ModelSerializer):
         fields = ['profile', 'content', 'like_count']
     
     def get_profile(self, obj):
-        profile_obj = Profile.objects.get(user_id=obj.user_id)
-        return {'real_name':profile_obj.real_name, 'user_id':obj.user_id}
+        try:
+            profile_obj = Profile.objects.filter(user_id=obj.user_id)[0]
+            return {'real_name':profile_obj.real_name, 'user_id':obj.user_id}
+        except:
+            return None
 
 class MainloadSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
@@ -101,7 +110,10 @@ class MainloadSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments', 'contents_link']
 
     def get_profile(self, obj):
-        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
+        try:
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
+        except:
+            return None
     
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data
@@ -130,7 +142,10 @@ class PostingSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'profile', 'project', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link']
         
     def get_profile(self, obj):
-        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
+        try:
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
+        except:
+            return None
     
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data

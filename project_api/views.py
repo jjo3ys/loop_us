@@ -25,7 +25,7 @@ def project(request):
         if request.data['end_date'] == '':
             end_date = None
 
-        profile_obj = Profile.objects.get(user_id=user.id)    
+        profile_obj = Profile.objects.filter(user_id=user.id)[0]
         project_obj = Project.objects.create(user=user, 
                                              project_name = request.data['project_name'],                             
                                              start_date = start_date,
@@ -35,7 +35,7 @@ def project(request):
 
     elif request.method == 'PUT':
         type = request.GET['type']
-        project_obj = Project.objects.get(id=request.GET['id'])
+        project_obj = Project.objects.filter(id=request.GET['id'])[0]
         if type == 'project_name':
             project_obj.project_name = request.data['project_name']
 
@@ -49,7 +49,7 @@ def project(request):
             project_obj.end_date = end_date
 
         elif type == 'looper':
-            profile_obj = Profile.objects.get(user_id=request.user.id)
+            profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
             looper_list = eval(request.data['looper'])
 
             old_looper = TagLooper.objects.filter(project_id=project_obj.id)
@@ -61,7 +61,7 @@ def project(request):
                 looper, created = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
                 if created:
                     try:
-                        token = FcmToken.objects.get(user_id=looper.looper_id)
+                        token = FcmToken.objects.filter(user_id=looper.looper_id)[0]
                         tag_fcm(token, profile_obj.real_name, request.user.id, project_obj.project_name, project_obj.id)
                     except:
                         pass
@@ -71,8 +71,8 @@ def project(request):
 
     elif request.method == 'GET':
         try:
-            project_obj = Project.objects.get(id=request.GET['id'])
-        except Project.DoesNotExist:
+            project_obj = Project.objects.filter(id=request.GET['id'])[0]
+        except IndexError:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         project = ProjectPostSerializer(project_obj).data
@@ -84,13 +84,13 @@ def project(request):
 
         for post in project['post']:
             try:
-                Like.objects.get(post_id=post['id'], user_id=request.user.id)
+                Like.objects.filter(post_id=post['id'], user_id=request.user.id)[0]
                 post.update({"is_liked":1})
             except:
                 post.update({"is_liked":0})
             
             try:
-                BookMark.objects.get(post_id=post['id'], user_id=request.user.id)
+                BookMark.objects.filter(post_id=post['id'], user_id=request.user.id)[0]
                 post.update({"is_marked":1})
             except:
                 post.update({"is_marked":0})
@@ -98,7 +98,7 @@ def project(request):
         return Response(project, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
-        project_obj = Project.objects.get(id=request.GET['id'])
+        project_obj = Project.objects.filter(id=request.GET['id'])[0]
 
         for post in Post.objects.filter(project_id=request.GET['id']):
             for image in PostImage.objects.filter(post_id=post.id):

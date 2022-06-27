@@ -65,7 +65,7 @@ def search(request, type):
     query = request.GET['query']
     page = request.GET['page']
     try:
-        ban_list = Banlist.objects.get(user_id=request.user.id).banlist
+        ban_list = Banlist.objects.filter(user_id=request.user.id)[0].banlist
     except:
         ban_list = []
 

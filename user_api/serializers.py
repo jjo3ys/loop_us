@@ -42,7 +42,7 @@ class BanlistSerializer(serializers.ModelSerializer):
     def get_banlist(self, obj):
         ban_list = []
         for ban in obj.banlist:
-            ban_list.append(SimpleProfileSerializer(Profile.objects.get(user_id=ban)).data)
+            ban_list.append(SimpleProfileSerializer(Profile.objects.filter(user_id=ban)[0]).data)
         
         return ban_list
 
@@ -59,14 +59,14 @@ class AlarmSerializer(serializers.ModelSerializer):
             return None
         elif int(obj.type) == 3:
             try:
-                return Project.objects.get(id=obj.target_id).project_name
-            except Project.DoesNotExist:
+                return Project.objects.filter(id=obj.target_id)[0].project_name
+            except IndexError:
                 return None
         elif int(obj.type) == 4:
             try:
-                return Post.objects.get(id=obj.target_id).title
-            except Post.DoesNotExist:
+                return Post.objects.filter(id=obj.target_id)[0].title
+            except IndexError:
                 return
     
     def get_profile(self, obj):
-        return SimpleProfileSerializer(Profile.objects.get(user_id=obj.alarm_from_id)).data
+        return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id)[0]).data
