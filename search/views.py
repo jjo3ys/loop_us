@@ -97,7 +97,7 @@ def search(request, type):
     elif type == 'profile':
         obj = Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
         obj = Paginator(obj, 10)
-        if obj.num_pages() < int(page):
+        if obj.num_pages < int(page):
             return Response(status=status.HTTP_204_NO_CONTENT)
         obj = ProfileSerializer(obj.get_page(page), many=True).data
 
@@ -108,7 +108,7 @@ def search(request, type):
         #     if o.post.user_id not in ban_list:
         #         result.append(o.post)
         obj = Paginator(obj, 5)
-        if obj.num_pages() < int(page):
+        if obj.num_pages < int(page):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         obj = MainloadSerializer(obj.get_page(page), many=True).data
