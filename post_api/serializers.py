@@ -39,7 +39,7 @@ class LikeSerializer(serializers.ModelSerializer):
 class PostingImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostImage
-        fields = ['id', 'post_id', 'image']
+        fields = ['image']
 
 class CocommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
