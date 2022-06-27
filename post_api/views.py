@@ -27,7 +27,7 @@ import datetime
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
 def posting(request):
-    if request.method == 'POST':    
+    if request.method == 'POST': 
         profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
         post_obj = Post.objects.create(user_id=request.user.id, 
                                         project_id=request.GET['id'],    
@@ -43,7 +43,7 @@ def posting(request):
         project_group = project_obj.group
         
         interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-        for tag in eval(request.data['tag']):
+        for tag in request.data.getlist('tag'):
             tag_obj, created = Tag.objects.get_or_create(tag=tag)
             interest_tag(interest_list, 'plus', tag_obj.id, 10)
             if not created:
@@ -100,33 +100,38 @@ def posting(request):
             interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tags')
             project_group = post_obj.project.group
+            tag_list = request.data.getlist('tag')
 
+            old_tag_list = []
             for tag in tag_obj:
-                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
-                tag.delete()
-                tag.tag.count = tag.tag.count-1
-                if tag.tag.count == 0:
-                    tag.tag.delete()
-                tag.tag.save()
+                if tag.tag not in tag_list:
+                    interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
+                    tag.delete()
+                    tag.tag.count = tag.tag.count-1
+                    if tag.tag.count == 0:
+                        tag.tag.delete()
+                    tag.tag.save()
 
-                if tag.tag.group in project_group:
-                    project_group[tag.tag.group] -= 1
-
-            tag_list = eval(request.data['tag'])      
-            for tag in tag_list:
-                tag_obj, created = Tag.objects.get_or_create(tag=tag)
-                Post_Tag.objects.create(tag = tag_obj, post_id = post_obj.id)
-                interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 10)
-
-                if not created:
-                    tag_obj.count = tag_obj.count+1
-                    tag_obj.save()  
-                elif created: continue
-
-                if tag.tag.group in project_group:
-                    project_group[tag.tag.group] += 1
+                    if tag.tag.group in project_group:
+                        project_group[tag.tag.group] -= 1
                 else:
-                    project_group[tag.tag.group] = 1
+                    old_tag_list.append(tag.tag)
+
+            for tag in tag_list:
+                if tag not in old_tag_list:
+                    tag_obj, created = Tag.objects.get_or_create(tag=tag)
+                    Post_Tag.objects.create(tag = tag_obj, post_id = post_obj.id)
+                    interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 10)
+
+                    if not created:
+                        tag_obj.count = tag_obj.count+1
+                        tag_obj.save()  
+                    elif created: continue
+
+                    if tag.tag.group in project_group:
+                        project_group[tag.tag.group] += 1
+                    else:
+                        project_group[tag.tag.group] = 1
 
             post_obj.project.group = project_group
             post_obj.project.save()  
