@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import CocommentSerializer, CommentSerializer, NewsSerializer, PostingSerializer, MainloadSerializer
-from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment
+from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment, PostLink
 
 from loop.models import Loopship
 
@@ -43,6 +43,10 @@ def posting(request):
         project_group = project_obj.group
         
         interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+
+        for link in request.data.getlist('link'):
+            PostLink.objects.create(post_id=post_obj.id, link=link)
+
         for tag in request.data.getlist('tag'):
             tag_obj, created = Tag.objects.get_or_create(tag=tag)
             interest_tag(interest_list, 'plus', tag_obj.id, 10)
@@ -85,12 +89,19 @@ def posting(request):
     elif request.method == 'PUT':
         post_obj = Post.objects.filter(id=request.GET['id'])[0]
         
-        if request.GET['type'] == 'image':
-            images = PostImage.objects.filter(post_id=post_obj.id)
-            for image in images:
-                image.delete(save=False)
-            for image in request.FILES.getlist('image'):
-                PostImage.objects.create(post_id=post_obj.id, image=image)
+        if request.GET['type'] == 'link':
+            old_link_list = []
+            link_list = request.FILES.get_list('link')
+            old_link_obj = PostLink.objects.filter(post_id=post_obj.id)
+            for link in old_link_obj:
+                if link.link not in link_list:
+                    link.delete()
+                else:
+                    old_link_list.append(link.link)
+            
+            for link in link_list:
+                if link not in old_link_list:
+                    PostLink.objects.create(post_id=post_obj.id, link=link)
                         
         elif request.GET['type'] == 'contents':
             post_obj.contents = request.data['contents']

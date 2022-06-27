@@ -16,12 +16,12 @@ class Post(models.Model):
     class Meta:
         db_table = "Posting"
 
-# class PostLink(models.Model):
-#     post = models.ForeignKey(Post, related_name='contents_link', on_delete=models.CASCADE)
-#     linke = models.TextField()
+class PostLink(models.Model):
+    post = models.ForeignKey(Post, related_name='contents_link', on_delete=models.CASCADE)
+    link = models.TextField()
 
-#     class Meta:
-#         db_table = "Post_link"
+    class Meta:
+        db_table = "Post_link"
 
 class PostImage(models.Model):
     post = models.ForeignKey(Post, related_name='contents_image', on_delete=models.CASCADE)

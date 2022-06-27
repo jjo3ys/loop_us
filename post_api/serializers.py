@@ -1,7 +1,7 @@
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
 from tag.models import Post_Tag
-from .models import CommentLike, Post, PostImage, Like, Cocomment, Comment
+from .models import CommentLike, Post, PostImage, Like, Cocomment, Comment, PostLink
 from project_api.models import Project
 from crawling_api.models import News
 
@@ -40,6 +40,11 @@ class PostingImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostImage
         fields = ['image']
+
+class PostingLinkeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostLink
+        fields = ['link']
 
 class CocommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
@@ -89,10 +94,11 @@ class MainloadSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField()
     post_tag = PostTagSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
+    contents_link = PostingLinkeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments']
+        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments', 'contents_link']
 
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
@@ -117,10 +123,11 @@ class PostingSerializer(serializers.ModelSerializer):
     post_tag = PostTagSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
+    contets_link = PostingLinkeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'profile', 'project', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments']
+        fields = ['id', 'user_id', 'profile', 'project', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link']
         
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.get(user_id=obj.user_id)).data
