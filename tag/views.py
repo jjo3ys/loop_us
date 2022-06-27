@@ -34,7 +34,7 @@ def tag(request):
 def search_tag(request):
     return_dict = {}
     try:
-        tag = Tag.objects.get(tag=request.GET['query'])
+        tag = Tag.objects.filter(tag=request.GET['query'])[0]
         result_list = [tag]
         interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
         interest_list = interest_tag(interest_list, 'plus', tag.id, 20)
@@ -42,8 +42,7 @@ def search_tag(request):
     except:
         result_list = []
 
-    tags = Tag.objects.filter(tag__icontains=request.GET['query']).order_by('-count')
-    tags = tags[:10]
+    tags = Tag.objects.filter(tag__icontains=request.GET['query']).order_by('-count')[:10]
     
     for tag in tags:
         if tag not in result_list:

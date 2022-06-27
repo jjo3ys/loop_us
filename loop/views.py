@@ -46,7 +46,7 @@ from rest_framework.permissions import IsAuthenticated
 @permission_classes((IsAuthenticated,))
 def loop(request, idx):
     user = request.user
-    profile = Profile.objects.get(user_id=user.id)
+    profile = Profile.objects.filter(user_id=user.id)[0]
     try:
         token = FcmToken.objects.get(user_id=idx)
         loop_fcm(token, profile.real_name, user.id)
@@ -75,7 +75,10 @@ def get_list(request, type, idx):
         loop_obj = Loopship.objects.filter(user=idx)
 
         for l in loop_obj:
-            profile_sz = SimpleProfileSerializer(Profile.objects.get(user_id=l.friend_id)).data
+            try:
+                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=l.friend_id)[0]).data
+            except:
+                continue
             if l.friend_id == request.user.id:
                 profile_sz.update({"is_user":1})
             else:
@@ -99,7 +102,10 @@ def get_list(request, type, idx):
         loop_obj = Loopship.objects.filter(friend_id = idx)
         
         for l in loop_obj:
-            profile_sz = SimpleProfileSerializer(Profile.objects.get(user_id=l.user_id)).data
+            try:
+                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=l.user_id)[0]).data
+            except:
+                continue
             if l.user_id == request.user.id:
                 profile_sz.update({"is_user":1})
             else:
@@ -123,7 +129,10 @@ def get_list(request, type, idx):
                 looper_list.append(follow.user_id)
 
         for follow in looper_list:
-            profile_sz = SimpleProfileSerializer(Profile.objects.get(user_id=follow)).data
+            try:
+                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=follow)[0]).data
+            except:
+                continue
             if follow == request.user.id:
                 profile_sz.update({"is_user":1})
             else:

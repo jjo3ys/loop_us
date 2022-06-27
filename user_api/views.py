@@ -86,7 +86,7 @@ def check_email(user, type):
 
     for i in range(90):
         time.sleep(2)
-        if User.objects.get(id=user.id).is_active:
+        if User.objects.filter(id=user.id)[0].is_active:
             return True
 
     if type == 'create':
@@ -105,9 +105,9 @@ def create_user(request):
     password_obj = request.data['password']
     username_obj = email_obj
     try:
-        user = User.objects.get(username=email_obj)
+        user = User.objects.filter(username=email_obj)[0]
         try:
-            Token.objects.get(user_id=user.id)
+            Token.objects.filter(user_id=user.id)[0]
             return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_BAD_REQUEST)
 
         except Token.DoesNotExist:
@@ -137,7 +137,7 @@ def create_user(request):
 def activate(request, uidb64, token):
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
-        user = User.objects.get(pk=uid)
+        user = User.objects.filter(pk=uid)[0]
         user_dic = jwt.decode(token, algorithms='HS256')
         if user.id == user_dic['id']:
             user.is_active = True
@@ -185,9 +185,9 @@ def signup(request):
     type = request.data['type']
 
     if int(type) == 1:
-        user = User.objects.get(username=request.data['username'])
+        user = User.objects.filter(username=request.data['username'])[0]
     else:
-        user = User.objects.get(username=request.data['email'])
+        user = User.objects.filter(username=request.data['email'])[0]
     
 
     if user.is_active:
@@ -205,7 +205,7 @@ def signup(request):
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
 
         if type == 1:
-            corp = Activation.objects.get(user_id=user.id)
+            corp = Activation.objects.filter(user_id=user.id)[0]
             Company_Inform.objects.create(profile_id = profile_obj.id,
                                         corp_num = corp.corp_num,
                                         corp_name = corp.corp_name)
@@ -223,18 +223,18 @@ def login(request):
     password=request.data['password'],
     )
     if user is not None and user.is_active:
-        token_obj = Token.objects.get(user=user)
+        token_obj = Token.objects.filter(user_id=user.id)[0]
         user.last_login = timezone.now()
         user.save()
         
         try:
-            fcm_obj = FcmToken.objects.get(user_id=user.id)
+            fcm_obj = FcmToken.objects.filter(user_id=user.id)[0]
             if fcm_obj.token != request.data['fcm_token']:
                 logout_push(fcm_obj.token)
                 fcm_obj.token = request.data['fcm_token']
                 fcm_obj.save()
 
-        except FcmToken.DoesNotExist:
+        except IndexError:
             FcmToken.objects.create(user_id=user.id,
                                     token=request.data['fcm_token'])
 
@@ -248,7 +248,7 @@ def login(request):
 @permission_classes((IsAuthenticated,))
 def check_token(request):
     try:
-        if request.data['fcm_token'] != FcmToken.objects.get(user_id=request.user.id).token:
+        if request.data['fcm_token'] != FcmToken.objects.filter(user_id=request.user.id)[0].token:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response(status=status.HTTP_200_OK)
@@ -260,7 +260,7 @@ def check_token(request):
 def logout(request):
     user = request.user
     try:
-        fcm_obj = FcmToken.objects.get(user_id=user.id)
+        fcm_obj = FcmToken.objects.filter(user_id=user.id)[0]
         fcm_obj.delete()
     except:
         pass
@@ -270,7 +270,7 @@ def logout(request):
 @permission_classes((IsAuthenticated,))
 def check_token(request):
     try:
-        if request.data['fcm_token'] != FcmToken.objects.get(user_id=request.user.id).token:
+        if request.data['fcm_token'] != FcmToken.objects.filter(user_id=request.user.id)[0].token:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response(status=status.HTTP_200_OK)
@@ -293,7 +293,7 @@ def password(request):
 
         elif request.GET['type'] == 'find':
             try:
-                user = User.objects.get(email=request.data['email'])
+                user = User.objects.filter(email=request.data['email'])[0]
                 user.set_password(request.data['password'])
                 user.save()
                 return Response(status=status.HTTP_200_OK)
@@ -302,7 +302,7 @@ def password(request):
                 return Response(stauts=status.HTTP_401_UNAUTHORIZED)
 
     elif request.method =='POST':
-        user = User.objects.get(email=request.data['email'])
+        user = User.objects.filter(email=request.data['email'])[0]
 
         user.is_active = False
         user.save()
@@ -317,7 +317,7 @@ def password(request):
 def resign(request):   
     if check_password(request.data['password'], request.user.password):
         user = request.user
-        profile_obj = Profile.objects.get(user_id=user.id)
+        profile_obj = Profile.objects.filter(user_id=user.id)[0]
         profile_obj.profile_image.delete(save=False)
         message = EmailMessage('{}님 탈퇴 사유'.format(profile_obj.real_name), '학과:{} \n 사유:{}'.format(request.data['department'], request.data['reason']), to=['loopus@loopus.co.kr'])
         try:
@@ -326,7 +326,7 @@ def resign(request):
             return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
         try:
-            intereset_list = InterestTag.objects.get(user_id=user.id)
+            intereset_list = InterestTag.objects.filter(user_id=user.id)[0]
             intereset_list.delete()
         except:
             pass
@@ -339,7 +339,7 @@ def resign(request):
         tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
         delete_tag(tag_obj)
         
-        user = User.objects.get(id=user.id)
+        user = User.objects.filter(id=user.id)[0]
         user.delete()
         return Response("resign from loop", status=status.HTTP_200_OK)
 
@@ -366,7 +366,7 @@ def ask(request):
 @permission_classes((IsAuthenticated,))
 def profile(request):
     if request.method == 'PUT':
-        profile_obj = Profile.objects.get(user_id=request.user.id)
+        profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
         type = request.GET['type']
 
         if type == 'image':
@@ -382,7 +382,7 @@ def profile(request):
     elif request.method == 'GET':
         idx = request.GET['id']
         try:
-            profile = ProfileSerializer(Profile.objects.get(user_id=idx)).data
+            profile = ProfileSerializer(Profile.objects.filter(user_id=idx)[0]).data
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -495,26 +495,26 @@ def ban(request):
 
         banlist_obj.save() 
         try:
-            Loopship.objects.get(user_id=request.user.id, friend_id=request.GET['id']).delete()
+            Loopship.objects.filter(user_id=request.user.id, friend_id=request.GET['id']).delete()
         except:
             pass
 
         try:
-            Loopship.objects.get(user_id=request.GET['id'], friend_id=request.user.id).delete()
+            Loopship.objects.filter(user_id=request.GET['id'], friend_id=request.user.id).delete()
         except:
             pass
 
         return Response(status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
-        banlist_obj = Banlist.objects.get(user_id=request.user.id)
+        banlist_obj = Banlist.objects.filter(user_id=request.user.id)[0]
         banlist_obj.banlist.remove(int(request.GET['id']))
         banlist_obj.save()
         return Response(status=status.HTTP_200_OK)
 
     elif request.method == 'GET':
         try:
-            banlist_obj = Banlist.objects.get(user_id=request.user.id)  
+            banlist_obj = Banlist.objects.filter(user_id=request.user.id)[0]
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(BanlistSerializer(banlist_obj).data, status=status.HTTP_200_OK)
@@ -563,6 +563,6 @@ def alarm(request):
             return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
-        alarm_obj = Alarm.objects.get(id=request.GET['id'])
+        alarm_obj = Alarm.objects.filter(id=request.GET['id'])[0]
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)

@@ -30,7 +30,7 @@ def chatting(request):
                 message.filter(receiver_id=user.id).update(is_read=True)
             message = list(message)[-50:]
             try:
-                return_dict['profile'] = SimpleProfileSerializer(Profile.objects.get(user_id=request.GET['id'])).data
+                return_dict['profile'] = SimpleProfileSerializer(Profile.objects.filter(user_id=request.GET['id'])[0]).data
                 if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(request.GET['id'])).exists():
                     return_dict['profile']['is_banned'] = 1
                 elif Banlist.objects.filter(user_id=request.GET['id'], banlist__contains=int(request.user.id)).exists():
@@ -38,7 +38,7 @@ def chatting(request):
                 else:
                     return_dict['profile']['is_banned'] = 0
                     
-            except Profile.DoesNotExist:
+            except IndexError:
                 return_dict['profile'] = None
         else:
             message = list(Msg.objects.filter(room_id=room.id, id__lt=request.GET['last']))[-50:]
@@ -55,7 +55,7 @@ def chatting(request):
                            is_read=False)
         
         try:
-            send_profile = Profile.objects.get(user_id=user.id) 
+            send_profile = Profile.objects.filter(user_id=user.id)[0]
             receiver_token = FcmToken.objects.get(user_id=request.GET['id'])    
             chat_fcm(receiver_token.token, send_profile.real_name, request.data['message'], user.id) 
         except:
@@ -78,7 +78,7 @@ def get_list(request):
         msg_obj = Msg.objects.filter(room_id=r.id)
         r.member.remove(request.user.id)
         try:
-            profile = SimpleProfileSerializer(Profile.objects.get(user_id=r.member[0])).data
+            profile = SimpleProfileSerializer(Profile.objects.filter(user_id=r.member[0])[0]).data
         except:
             profile = None
         return_list.append({"profile":profile,
