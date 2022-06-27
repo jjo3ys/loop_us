@@ -123,7 +123,7 @@ class PostingSerializer(serializers.ModelSerializer):
     post_tag = PostTagSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
-    contets_link = PostingLinkeSerializer(many=True, read_only=True)
+    contents_link = PostingLinkeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
