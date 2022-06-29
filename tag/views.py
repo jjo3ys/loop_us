@@ -59,8 +59,11 @@ def tagged_post(request):
         post_list = []
 
         if request.GET['type'] == 'new':
-            post_obj = Paginator(post_tag_obj.order_by('-id'), 5).get_page(request.GET['page'])
-            for post in post_obj:
+            post_obj = Paginator(post_tag_obj.order_by('-id'), 5)
+            if post_obj.num_pages < int (request.GET['page']):
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
+            for post in post_obj.get_page(request.GET['page']):
                 post_list.append(post.post)
 
             post_tag_obj = MainloadSerializer(post_list, many=True).data
@@ -69,8 +72,11 @@ def tagged_post(request):
                              'related_new':post_tag_obj}, status=status.HTTP_200_OK)
         
         elif request.GET['type'] == 'pop':
-            post_obj = Paginator(post_tag_obj.order_by('-post__like_count'), 5).get_page(request.GET['page'])
-            for post in post_obj:
+            post_obj = Paginator(post_tag_obj.order_by('-post__like_count'), 5)
+            if post_obj.num_pages < int (request.GET['page']):
+                return Response(status=status.HTTP_204_NO_CONTENT)
+                
+            for post in post_obj.get_page(request.GET['page']):
                 post_list.append(post.post)
 
             post_tag_obj = MainloadSerializer(post_list, many=True).data
