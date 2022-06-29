@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from django.core.paginator import Paginator
 
 from post_api.serializers import MainloadSerializer
@@ -36,7 +38,17 @@ def tag(request):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
 def tagged_post(request):
+    lastmonth = date.today().month
+
     tag_obj = Tag.objects.filter(id=request.GET['id'])[0]
+    for i in range(1, 7):
+        if lastmonth - i <= 0:
+            month = str(12 + lastmonth - i )
+        else:
+            month = str(lastmonth - i)
+        if month not in tag_obj.monthly_count:
+            tag_obj.monthly_count[month] = 0
+
     post_tag_obj = Post_Tag.objects.filter(tag_id=request.GET['id']).select_related('post')
     
     if request.GET['page'] == '1':
