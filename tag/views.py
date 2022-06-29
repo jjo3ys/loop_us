@@ -64,6 +64,9 @@ def tagged_post(request):
                 post_list.append(post.post)
 
             post_tag_obj = MainloadSerializer(post_list, many=True).data
+
+            return Response({'monthly_count':tag_obj.monthly_count,
+                             'related_new':post_tag_obj}, status=status.HTTP_200_OK)
         
         elif request.GET['type'] == 'pop':
             post_obj = Paginator(post_tag_obj.order_by('-post__like_count'), 5).get_page(request.GET['page'])
@@ -72,8 +75,8 @@ def tagged_post(request):
 
             post_tag_obj = MainloadSerializer(post_list, many=True).data
         
-        return Response({'monthly_count':tag_obj.monthly_count,
-                         'posting':post_tag_obj}, status=status.HTTP_200_OK)
+            return Response({'monthly_count':tag_obj.monthly_count,
+                             'related_pop':post_tag_obj}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
