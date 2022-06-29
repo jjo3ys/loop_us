@@ -8,5 +8,4 @@ class PostApiConfig(AppConfig):
     def ready(self):
         if os.environ.get("RUN_MAIN", None) != 'true':
             from app_scheduler import timer
-            print('start!!')
             timer.start()
