@@ -13,7 +13,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'loop_count', 'total_post_count']
+        fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'loop_count', 'total_post_count', 'group']
     
     def get_department(self, obj):
         return DEPARTMENT[obj.department]

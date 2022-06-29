@@ -69,33 +69,33 @@ def project(request):
         project_obj.save()
         return Response(status=status.HTTP_200_OK)
 
-    elif request.method == 'GET':
-        try:
-            project_obj = Project.objects.filter(id=request.GET['id'])[0]
-        except IndexError:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+    # elif request.method == 'GET':
+    #     try:
+    #         project_obj = Project.objects.filter(id=request.GET['id'])[0]
+    #     except IndexError:
+    #         return Response(status=status.HTTP_404_NOT_FOUND)
 
-        project = ProjectPostSerializer(project_obj).data
-        if request.user.id == project_obj.user_id:
-            project.update({"is_user":1})
-        else:
-            # Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=3)
-            project.update({"is_user":0})
+    #     project = ProjectPostSerializer(project_obj).data
+    #     if request.user.id == project_obj.user_id:
+    #         project.update({"is_user":1})
+    #     else:
+    #         # Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=3)
+    #         project.update({"is_user":0})
 
-        for post in project['post']:
-            try:
-                Like.objects.filter(post_id=post['id'], user_id=request.user.id)[0]
-                post.update({"is_liked":1})
-            except:
-                post.update({"is_liked":0})
+    #     for post in project['post']:
+    #         try:
+    #             Like.objects.filter(post_id=post['id'], user_id=request.user.id)[0]
+    #             post.update({"is_liked":1})
+    #         except:
+    #             post.update({"is_liked":0})
             
-            try:
-                BookMark.objects.filter(post_id=post['id'], user_id=request.user.id)[0]
-                post.update({"is_marked":1})
-            except:
-                post.update({"is_marked":0})
+    #         try:
+    #             BookMark.objects.filter(post_id=post['id'], user_id=request.user.id)[0]
+    #             post.update({"is_marked":1})
+    #         except:
+    #             post.update({"is_marked":0})
 
-        return Response(project, status=status.HTTP_200_OK)
+    #     return Response(project, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
         project_obj = Project.objects.filter(id=request.GET['id'])[0]

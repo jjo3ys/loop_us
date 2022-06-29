@@ -21,7 +21,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
     class Meta:
         model = Project
-        fields = ['id', 'user_id', 'project_name', 'start_date', 'end_date', 'post_count', 'looper']
+        fields = ['id', 'user_id', 'project_name', 'start_date', 'end_date', 'post_count', 'looper', 'group']
 
 class ProjectPostSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
