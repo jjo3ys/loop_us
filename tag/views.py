@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.core.paginator import Paginator
+from post_api.models import Like
 
 from post_api.serializers import MainloadSerializer
 
@@ -38,31 +39,41 @@ def tag(request):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
 def tagged_post(request):
-    lastmonth = date.today().month
-
-    tag_obj = Tag.objects.filter(id=request.GET['id'])[0]
-    for i in range(1, 7):
-        if lastmonth - i <= 0:
-            month = str(12 + lastmonth - i )
-        else:
-            month = str(lastmonth - i)
-        if month not in tag_obj.monthly_count:
-            tag_obj.monthly_count[month] = 0
-
     post_tag_obj = Post_Tag.objects.filter(tag_id=request.GET['id']).select_related('post')
     
     if request.GET['page'] == '1':
+        lastmonth = date.today().month
+
+        tag_obj = Tag.objects.filter(id=request.GET['id'])[0]
+        for i in range(1, 7):
+            if lastmonth - i <= 0:
+                month = str(12 + lastmonth - i )
+            else:
+                month = str(lastmonth - i)
+            if month not in tag_obj.monthly_count:
+                tag_obj.monthly_count[month] = 0
+                
         post_list = []
         post_obj = Paginator(post_tag_obj.order_by('-id'), 5).get_page('1')
         for post in post_obj:
             post_list.append(post.post)
         new_post_tag_obj = MainloadSerializer(post_list, many=True).data
+        for post in new_post_tag_obj:
+            if Like.objects.filter(user_id=request.user.id, post_id=post['id']).exists():
+                post.update({"is_liked":1})
+            else:
+                post.update({"is_liked":0})
 
         post_list = []
         post_obj = Paginator(post_tag_obj.order_by('-post__like_count'), 5).get_page('1')
         for post in post_obj:
             post_list.append(post.post)
         pop_post_tag_obj = MainloadSerializer(post_list, many=True).data
+        for post in pop_post_tag_obj:
+            if Like.objects.filter(user_id=request.user.id, post_id=post['id']).exists():
+                post.update({"is_liked":1})
+            else:
+                post.update({"is_liked":0})
 
         return Response({'monthly_count':tag_obj.monthly_count,
                         'related_new':new_post_tag_obj,
@@ -79,9 +90,13 @@ def tagged_post(request):
                 post_list.append(post.post)
 
             post_tag_obj = MainloadSerializer(post_list, many=True).data
+            for post in post_tag_obj:
+                if Like.objects.filter(user_id=request.user.id, post_id=post['id']).exists():
+                    post.update({"is_liked":1})
+                else:
+                    post.update({"is_liked":0})
 
-            return Response({'monthly_count':tag_obj.monthly_count,
-                             'related_new':post_tag_obj}, status=status.HTTP_200_OK)
+            return Response({'related_new':post_tag_obj}, status=status.HTTP_200_OK)
         
         elif request.GET['type'] == 'pop':
             post_obj = Paginator(post_tag_obj.order_by('-post__like_count'), 5)
@@ -92,9 +107,13 @@ def tagged_post(request):
                 post_list.append(post.post)
 
             post_tag_obj = MainloadSerializer(post_list, many=True).data
-        
-            return Response({'monthly_count':tag_obj.monthly_count,
-                             'related_pop':post_tag_obj}, status=status.HTTP_200_OK)
+            for post in post_tag_obj:
+                if Like.objects.filter(user_id=request.user.id, post_id=post['id']).exists():
+                    post.update({"is_liked":1})
+                else:
+                    post.update({"is_liked":0})
+
+            return Response({'related_pop':post_tag_obj}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
