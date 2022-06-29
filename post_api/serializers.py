@@ -119,15 +119,11 @@ class MainloadSerializer(serializers.ModelSerializer):
         return SimpleProjectserializer(obj.project).data
     
     def get_comments(self, obj):
-        comment_obj = Comment.objects.filter(post_id=obj.id)
-        comment_like_obj = CommentLike.objects.filter(comment_id__in=comment_obj.values_list('id', flat=True))
-        if comment_like_obj.count() > 0:
-            return MainCommentSerializer(comment_obj.order_by('-like_count')[0]).data
+        comment_obj = Comment.objects.filter(post_id=obj.id).order_by('like_count')
+        if comment_obj.count() == 0:
+            return []
         else:
-            if len(comment_obj) == 0:
-                return []
-            else:
-                return MainCommentSerializer(list(comment_obj)[-1]).data
+            return MainCommentSerializer(comment_obj.last()).data
 
 class PostingSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()

@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, date, timedelta
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -10,16 +10,28 @@ from project_api.models import Project
 from .models import PostingRanking
 
 from user_api.models import Profile
+from tag.models import Post_Tag, Tag
 from post_api.models import Post
 from post_api.serializers import MainloadSerializer
 from tag.models import Group
 
+def set_monthly_tag_count():
+    today = date.today()
+    post_tags = Post_Tag.objects.select_related('post').filter(post__date__range=[today-timedelta(days=183), today])
+    for tag in post_tags:
+        month = str(tag.post.date.month)
+        if month not in tag.tag.monthly_count:
+            tag.tag.monthly_count[month] = 1
+        else:
+            tag.tag.monthly_count[month] += 1
+        tag.tag.save()
+    
 def posting_ranking():
     group_list = Group.objects.all().values_list('id', flat=True)
     group_list = {i:[] for i in group_list}
     
-    now = datetime.datetime.now()
-    post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).select_related('project').order_by('-like_count', '-id')
+    now = datetime.now()
+    post_obj = Post.objects.filter(date__range=[now-timedelta(days=7), now]).select_related('project').order_by('-like_count', '-id')
     
     for post in post_obj:
         group_list[post.project.group].append(PostingRanking(post_id=post.id, group=post.project.group, score=post.like_count))
