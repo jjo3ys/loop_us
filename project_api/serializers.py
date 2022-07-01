@@ -28,7 +28,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         try:
             return max(obj.group, key=obj.group.get)
         except:
-            return 10
+            return "10"
 
 class ProjectPostSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
