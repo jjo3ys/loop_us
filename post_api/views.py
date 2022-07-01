@@ -200,7 +200,7 @@ def posting(request):
         return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
-        post_obj = Post.objects.filter(id=request.GET['id'])[0]
+        post_obj = Post.objects.filter(id=request.GET['id']).select_related('project')[0]
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
         for image in contents_image_obj:
             image.image.delete(save=False)
