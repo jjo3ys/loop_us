@@ -6,4 +6,5 @@ urlpatterns = [
     path('tag_count', views.set_monthly_tag_count),
     path('set_ranking', views.posting_ranking),
     path('set_profile_group', views.set_profile_group),
+    path('posting_trends', views.posting_with_group),
 ]
