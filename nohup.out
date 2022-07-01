@@ -3141,3 +3141,141 @@ Django version 3.1.3, using settings 'config.settings'
 Starting development server at http://0.0.0.0:8000/
 Quit the server with CONTROL-C.
 Watching for file changes with StatReloader
+Watching for file changes with StatReloader
+System check identified some issues:
+
+WARNINGS:
+project_api.Project.group: (fields.E010) JSONField default should be a callable instead of an instance so that it's not shared between all field instances.
+	HINT: Use a callable instead, e.g., use `dict` instead of `{}`.
+
+System check identified 1 issue (0 silenced).
+[27/Jun/2022 12:00:41] "GET /user_api/profile?id=15 HTTP/1.1" 200 201
+[27/Jun/2022 12:00:41] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5250
+[27/Jun/2022 12:00:42] "GET /user_api/project?id=15 HTTP/1.1" 200 683
+[27/Jun/2022 12:00:43] "GET /user_api/posting?id=1&page=1 HTTP/1.1" 200 1658
+[27/Jun/2022 12:00:48] "GET /search_api/search/profile?query=%EB%B0%95%EC%A7%80%ED%99%98&page=1 HTTP/1.1" 200 429
+[27/Jun/2022 12:00:50] "GET /search_api/search/profile?query=%EB%B0%95%EC%A7%80%ED%99%98&page=2 HTTP/1.1" 204 0
+[27/Jun/2022 12:01:46] "GET /user_api/profile?id=15 HTTP/1.1" 200 201
+[27/Jun/2022 12:01:46] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5250
+[27/Jun/2022 12:01:48] "GET /user_api/project?id=15 HTTP/1.1" 200 683
+[27/Jun/2022 12:01:49] "GET /user_api/posting?id=1&page=1 HTTP/1.1" 200 1658
+[27/Jun/2022 12:01:53] "GET /search_api/search/profile?query=%EB%B0%95%EC%A7%80%ED%99%98&page=1 HTTP/1.1" 200 429
+[27/Jun/2022 12:01:56] "GET /search_api/search/profile?query=%EB%B0%95%EC%A7%80%ED%99%98&page=2 HTTP/1.1" 204 0
+[27/Jun/2022 12:03:01] "GET /user_api/profile?id=15 HTTP/1.1" 200 201
+[27/Jun/2022 12:03:02] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5250
+[27/Jun/2022 12:03:02] "GET /user_api/project?id=15 HTTP/1.1" 200 683
+[27/Jun/2022 12:03:03] "GET /user_api/posting?id=1&page=1 HTTP/1.1" 200 1658
+[27/Jun/2022 12:03:13] "GET /search_api/search/profile?query=%EB%B0%95%EC%A7%80%ED%99%98&page=1 HTTP/1.1" 200 429
+[27/Jun/2022 12:03:15] "GET /search_api/search/profile?query=%EB%B0%95%EC%A7%80%ED%99%98&page=2 HTTP/1.1" 204 0
+[27/Jun/2022 12:03:59] "GET /search_api/search/post?query=&page=1 HTTP/1.1" 200 4035
+[27/Jun/2022 12:04:19] "GET /user_api/profile?id=15 HTTP/1.1" 200 201
+[27/Jun/2022 12:04:20] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5250
+[27/Jun/2022 12:04:20] "GET /user_api/project?id=15 HTTP/1.1" 200 683
+[27/Jun/2022 12:04:21] "GET /user_api/posting?id=1&page=1 HTTP/1.1" 200 1658
+[27/Jun/2022 12:04:26] "GET /search_api/search/profile?query=%E3%85%8C%E3%84%B4%E3%85%81%E3%85%87%E3%85%81&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:04:27] "GET /search_api/search/profile?query=%E3%85%8C%E3%84%B4%E3%85%81%E3%85%87&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:04:28] "GET /search_api/search/profile?query=&page=1 HTTP/1.1" 200 1410
+[27/Jun/2022 12:04:33] "GET /search_api/search/post?query=%E3%84%B9%E3%85%87%E3%85%8E%E3%85%87%E3%84%B9&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:04:34] "GET /search_api/search/post?query=%E3%84%B9%E3%85%87%E3%85%8E%E3%85%87&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:04:35] "GET /search_api/search/post?query=&page=1 HTTP/1.1" 200 4035
+[27/Jun/2022 12:04:51] "GET /search_api/search/post?query=&page=2 HTTP/1.1" 200 3541
+[27/Jun/2022 12:04:56] "GET /search_api/search/post?query=&page=3 HTTP/1.1" 200 345
+[27/Jun/2022 12:04:56] "GET /search_api/search/post?query=&page=4 HTTP/1.1" 204 0
+[27/Jun/2022 12:05:53] "GET /user_api/profile?id=15 HTTP/1.1" 200 201
+[27/Jun/2022 12:05:53] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5250
+[27/Jun/2022 12:05:54] "GET /user_api/project?id=15 HTTP/1.1" 200 683
+[27/Jun/2022 12:05:55] "GET /user_api/posting?id=1&page=1 HTTP/1.1" 200 1658
+[27/Jun/2022 12:06:02] "GET /search_api/search/profile?query=%E3%84%B4%E3%85%81%E3%85%87%E3%85%81%E3%84%B4&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:06:02] "GET /search_api/search/profile?query=%E3%84%B4%E3%85%81%E3%85%87%E3%85%81&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:06:03] "GET /search_api/search/profile?query=&page=1 HTTP/1.1" 200 1410
+[27/Jun/2022 12:06:08] "GET /search_api/search/post?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:06:08] "GET /search_api/search/post?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:06:09] "GET /search_api/search/post?query=&page=1 HTTP/1.1" 200 4035
+[27/Jun/2022 12:06:21] "GET /search_api/search/profile?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:06:21] "GET /search_api/search/profile?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:06:22] "GET /search_api/search/profile?query=&page=1 HTTP/1.1" 200 1410
+[27/Jun/2022 12:08:25] "GET /search_api/search/profile?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:08:26] "GET /search_api/search/profile?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4%E3%85%87%E3%85%81&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:08:26] "GET /search_api/search/profile?query=&page=1 HTTP/1.1" 200 1410
+[27/Jun/2022 12:08:28] "GET /tag_api/tag?query= HTTP/1.1" 200 312
+[27/Jun/2022 12:08:30] "GET /search_api/search/post?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4%E3%85%87%E3%84%B4%E3%85%81&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:08:32] "GET /search_api/search/post?query=&page=1 HTTP/1.1" 200 4035
+[27/Jun/2022 12:16:18] "GET /search_api/search/post?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4%E3%85%87&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:16:19] "GET /search_api/search/post?query=&page=1 HTTP/1.1" 200 4035
+[27/Jun/2022 12:16:22] "GET /search_api/search/profile?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4%E3%85%87%E3%84%B4&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 12:16:23] "GET /search_api/search/profile?query=&page=1 HTTP/1.1" 200 1410
+[27/Jun/2022 12:22:49] "GET /tag_api/tag?query= HTTP/1.1" 200 312
+[27/Jun/2022 12:22:49] "GET /tag_api/tag?query= HTTP/1.1" 200 312
+[27/Jun/2022 12:22:52] "GET /tag_api/tag?query= HTTP/1.1" 200 312
+[27/Jun/2022 12:25:12] "GET /user_api/profile?id=143 HTTP/1.1" 200 203
+[27/Jun/2022 12:25:12] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5804
+[27/Jun/2022 12:25:14] "GET /user_api/project?id=143 HTTP/1.1" 200 125
+[27/Jun/2022 12:25:15] "GET /user_api/posting?id=6&page=1 HTTP/1.1" 200 2
+Not Found: /
+[27/Jun/2022 12:55:56] "GET / HTTP/1.1" 404 3134
+[27/Jun/2022 13:13:48] "GET /user_api/profile?id=15 HTTP/1.1" 200 201
+[27/Jun/2022 13:13:48] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5250
+[27/Jun/2022 13:13:48] "GET /user_api/project?id=15 HTTP/1.1" 200 683
+[27/Jun/2022 13:13:49] "GET /user_api/posting?id=1&page=1 HTTP/1.1" 200 1658
+[27/Jun/2022 13:13:58] "GET /post_api/posting?id=16 HTTP/1.1" 200 600
+[27/Jun/2022 13:14:01] "GET /user_api/posting?id=2&page=1 HTTP/1.1" 200 1209
+[27/Jun/2022 13:14:01] "GET /user_api/posting?id=3&page=1 HTTP/1.1" 200 2080
+[27/Jun/2022 13:14:11] "GET /user_api/posting?id=1&page=2 HTTP/1.1" 200 1658
+[27/Jun/2022 13:14:23] "GET /search_api/search/profile?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4%E3%85%87&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 13:14:26] "GET /search_api/search/profile?query=&page=1 HTTP/1.1" 200 1410
+[27/Jun/2022 13:14:30] "GET /search_api/search/post?query=%E3%85%81%E3%84%B4%E3%85%87%E3%84%B4%E3%85%81%E3%85%87&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 13:14:31] "GET /search_api/search/post?query=%E3%85%81%E3%84%B4&page=1 HTTP/1.1" 200 1221
+[27/Jun/2022 13:14:32] "GET /search_api/search/post?query=&page=1 HTTP/1.1" 200 4035
+[27/Jun/2022 13:25:07] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5804
+[27/Jun/2022 13:25:19] "GET /post_api/posting?id=21 HTTP/1.1" 200 1007
+[27/Jun/2022 13:25:23] "GET /post_api/main_load?last=0 HTTP/1.1" 200 5804
+[27/Jun/2022 13:25:50] "GET /tag_api/tag?query= HTTP/1.1" 200 312
+Internal Server Error: /post_api/posting
+Traceback (most recent call last):
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/django/core/handlers/exception.py", line 47, in inner
+    response = get_response(request)
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/django/core/handlers/base.py", line 179, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/django/views/decorators/csrf.py", line 54, in wrapped_view
+    return view_func(*args, **kwargs)
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/django/views/generic/base.py", line 70, in view
+    return self.dispatch(request, *args, **kwargs)
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+  File "/home/ubuntu/.local/lib/python3.8/site-packages/rest_framework/decorators.py", line 50, in handler
+    return func(*args, **kwargs)
+  File "/home/ubuntu/loopus/post_api/views.py", line 46, in posting
+    for tag in eval(request.data['tag']):
+  File "<string>", line 1, in <module>
+NameError: name '안드로이드' is not defined
+[27/Jun/2022 13:25:58] "POST /post_api/posting?id=6 HTTP/1.1" 500 99432
+[27/Jun/2022 13:26:18] "GET /user_api/profile?id=15 HTTP/1.1" 200 201
+[27/Jun/2022 13:26:18] "GET /post_api/main_load?last=0 HTTP/1.1" 200 4956
+[27/Jun/2022 13:26:18] "GET /user_api/project?id=15 HTTP/1.1" 200 683
+[27/Jun/2022 13:26:19] "GET /user_api/posting?id=1&page=1 HTTP/1.1" 200 1658
+[27/Jun/2022 13:26:29] "GET /post_api/posting?id=22 HTTP/1.1" 200 453
+[27/Jun/2022 13:26:46] "GET /search_api/search/profile?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4%E3%85%87&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 13:26:47] "GET /search_api/search/profile?query=&page=1 HTTP/1.1" 200 1410
+[27/Jun/2022 13:26:56] "GET /search_api/search/post?query=%E3%85%81%E3%84%B4%E3%85%87%E3%85%81%E3%84%B4&page=1 HTTP/1.1" 200 2
+[27/Jun/2022 13:26:57] "GET /search_api/search/post?query=&page=1 HTTP/1.1" 200 3741
+/home/ubuntu/loopus/post_api/views.py changed, reloading.
+Performing system checks...
+
+June 27, 2022 - 12:00:18
+Django version 3.1.3, using settings 'config.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CONTROL-C.
+Watching for file changes with StatReloader
+System check identified some issues:
+
+WARNINGS:
+project_api.Project.group: (fields.E010) JSONField default should be a callable instead of an instance so that it's not shared between all field instances.
+	HINT: Use a callable instead, e.g., use `dict` instead of `{}`.
+
+System check identified 1 issue (0 silenced).
