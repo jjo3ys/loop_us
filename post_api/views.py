@@ -202,11 +202,28 @@ def posting(request):
     elif request.method == 'DELETE':
         post_obj = Post.objects.filter(id=request.GET['id']).select_related('project')[0]
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
+        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+        tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tags')
+        project_group = post_obj.project.group
+
+        for tag in tag_obj:
+            interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
+            
+            tag.tag.count = tag.tag.count-1
+            if tag.tag.count == 0:
+                tag.tag.delete()
+            tag.tag.save()
+
+            if tag.tag.group in project_group:
+                project_group[tag.tag.group] -= 1
+            tag.delete()
+
         if contents_image_obj.count() != 0:
             for image in contents_image_obj:
                 image.image.delete(save=False)
 
         post_obj.project.post_count -=1
+        post_obj.project.group = project_group
         post_obj.project.save()
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
