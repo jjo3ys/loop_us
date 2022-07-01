@@ -204,7 +204,7 @@ def posting(request):
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
         for image in contents_image_obj:
             image.image.delete(save=False)
-            
+
         post_obj.project.post_count -=1
         post_obj.project.save()
         post_obj.delete()
