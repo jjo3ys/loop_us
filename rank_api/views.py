@@ -15,7 +15,11 @@ from post_api.models import Post
 from post_api.serializers import MainloadSerializer
 from tag.models import Group
 
-def set_monthly_tag_count():
+@api_view(['GET'])   
+@permission_classes((IsAuthenticated, ))
+def set_monthly_tag_count(request):
+    if request.user.id != 5:
+        return Response(stauts=status.HTTP_403_FORBIDDEN)
     today = date.today()
     post_tags = Post_Tag.objects.select_related('post').filter(post__date__range=[today-timedelta(days=183), today])
     for tag in post_tags:
@@ -25,21 +29,36 @@ def set_monthly_tag_count():
         else:
             tag.tag.monthly_count[month] += 1
         tag.tag.save()
-    
-def posting_ranking():
+
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET'])   
+@permission_classes((IsAuthenticated, ))
+def posting_ranking(request):
+    last = PostingRanking.objects.last()
+
+    if request.user.id != 5:
+        return Response(stauts=status.HTTP_403_FORBIDDEN)
     group_list = Group.objects.all().values_list('id', flat=True)
     group_list = {i:[] for i in group_list}
     
     now = datetime.now()
-    post_obj = Post.objects.filter(date__range=[now-timedelta(days=7), now]).select_related('project').order_by('-like_count', '-id')
-    
+    post_obj = Post.objects.filter(date__range=[now-timedelta(days=7), now]).prefetch_related('post_tag').order_by('-like_count', '-id')
     for post in post_obj:
-        group_list[post.project.group].append(PostingRanking(post_id=post.id, group=post.project.group, score=post.like_count))
+        for tag in post.post_tag.filter(post_id=post.id).select_related('tag'):
+            group_list[tag.tag.group_id].append(PostingRanking(post_id=post.id, group=tag.tag.group_id, score=post.like_count))
 
     for group in group_list:
         PostingRanking.objects.bulk_create(group_list[group][:10])
+    PostingRanking.objects.filter(id__lte=last.id).delete()
 
-def set_profile_group():
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET'])   
+@permission_classes((IsAuthenticated, ))
+def set_profile_group(request):
+    if request.user.id != 5:
+        return Response(stauts=status.HTTP_403_FORBIDDEN)
     profile_obj = Profile.objects.all()
     for profile in profile_obj:
         project_group = {}
@@ -59,6 +78,8 @@ def set_profile_group():
         else:
             profile.group = max(project_group, key=project_group.get)
             profile.save()
+
+    return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
