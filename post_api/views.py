@@ -202,14 +202,16 @@ def posting(request):
     elif request.method == 'DELETE':
         post_obj = Post.objects.filter(id=request.GET['id']).select_related('project')[0]
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
+        count = 0
         if contents_image_obj.count() != 0:
             for image in contents_image_obj:
-                image.image.delete(save=False)
-        
+                # image.image.delete(save=False)
+                count += 1
         post_obj.project.post_count -=1
         post_obj.project.save()
         post_obj.delete()
-        return Response("delete posting", status=status.HTTP_200_OK)
+        return Response(count, status=status.HTTP_200_OK)
+        # return Response("delete posting", status=status.HTTP_200_OK)
 
 @api_view(['POST', 'DELETE', 'PUT'])
 @permission_classes((IsAuthenticated,))
