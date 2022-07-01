@@ -19,9 +19,16 @@ class ProjectLooperSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
+    group = serializers.SerializerMethodField()
     class Meta:
         model = Project
         fields = ['id', 'user_id', 'project_name', 'start_date', 'end_date', 'post_count', 'looper', 'group']
+    
+    def get_group(self, obj):
+        try:
+            return max(obj.group, key=obj.group.get)
+        except:
+            return 10
 
 class ProjectPostSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
