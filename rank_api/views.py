@@ -15,6 +15,44 @@ from post_api.models import Post
 from post_api.serializers import MainloadSerializer
 from tag.models import Group
 
+@api_view(['POST', 'GET'])   
+@permission_classes((IsAuthenticated, ))
+def posting_with_group(request):
+    if request.method == 'POST' and request.user.id == 5:
+        today = date.today()
+        group_obj= Group.objects.all()
+        group_list = group_obj.values_list('id', flat=True)
+        group_list = {i:{} for i in group_list}
+
+        post_obj = Post.objects.filter(date__range=[today-timedelta(days=183), today]).prefetch_related('post_tag')
+
+        for post in post_obj:
+            month = str(post.date.month)
+            for tag in post.post_tag.filter(post_id=post.id).select_related('tag'):
+                if month not in group_list[tag.tag.group_id]:
+                    group_list[tag.tag.group_id][month] = 1
+                else:
+                    group_list[tag.tag.group_id][month] += 1
+        
+        for group in group_list:
+            g_obj = group_obj.filter(id=group)[0]
+            g_obj.monthly_count = group_list[group]
+            g_obj.save()
+        return Response(status=status.HTTP_200_OK)
+
+    elif request.method == 'GET':
+        lastmonth = date.today().month
+        group_obj = Group.objects.filter(id=request.GET['id'])[0]
+        for i in range(1, 7):
+            if lastmonth - i <= 0:
+                month = str(12 + lastmonth - i)
+            else:
+                month = str(lastmonth - i)
+            if month not in group_obj.monthly_count:
+                group_obj.monthly_count[month] = 0
+        
+        return Response({'monthly_count':group_obj.monthly_count}, status=status.HTTP_200_OK)
+
 @api_view(['GET'])   
 @permission_classes((IsAuthenticated, ))
 def set_monthly_tag_count(request):
