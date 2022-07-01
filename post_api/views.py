@@ -209,7 +209,7 @@ def posting(request):
                 count += 1
         post_obj.project.post_count -=1
         post_obj.project.save()
-        post_obj.delete()
+        post_obj.delete(save=False)
         return Response(count, status=status.HTTP_200_OK)
         # return Response("delete posting", status=status.HTTP_200_OK)
 
