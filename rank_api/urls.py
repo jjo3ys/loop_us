@@ -3,5 +3,7 @@ from . import views
 
 urlpatterns = [
     path('ranking', views.career_board_ranking),
-    # path('test', views.monthly_tagged_count),
+    path('tag_count', views.set_monthly_tag_count),
+    path('set_ranking', views.posting_ranking),
+    path('set_profile_group', views.set_profile_group),
 ]

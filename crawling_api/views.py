@@ -28,8 +28,11 @@ def feed_crawling(type):
     if type == 'insta':
         pass
 
-
-def news_crawling():
+@api_view(['GET'])
+@permission_classes((IsAuthenticated, ))
+def news_crawling(request):
+    if request.user.id !=5:
+        return Response(status=status.HTTP_403_FORBIDDEN)
     driver = webdriver.Chrome(path, chrome_options=chrome_options)
     url = 'https://search.naver.com/search.naver?where=news&query='
 
@@ -62,3 +65,4 @@ def news_crawling():
                     continue
     News.objects.filter(id__lte=last.id).delete()
     driver.close()
+    return Response(status=status.HTTP_200_OK)
