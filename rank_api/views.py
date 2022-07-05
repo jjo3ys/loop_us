@@ -79,15 +79,16 @@ def posting_ranking(request):
         return Response(stauts=status.HTTP_403_FORBIDDEN)
     group_list = Group.objects.all().values_list('id', flat=True)
     group_list = {i:[] for i in group_list}
-    
+    posting_list = []
     now = datetime.now()
     post_obj = Post.objects.filter(date__range=[now-timedelta(days=7), now]).prefetch_related('post_tag').order_by('-like_count', '-id')
     for post in post_obj:
         for tag in post.post_tag.filter(post_id=post.id).select_related('tag'):
-            group_list[tag.tag.group_id].append(PostingRanking(post_id=post.id, group=tag.tag.group_id, score=post.like_count))
+            if  post.id not in group_list[tag.tag.group_id] and len(group_list[tag.tag.group_id]) < 10:
+                group_list[tag.tag.group_id].append(post.id)
+                posting_list.append(PostingRanking(post_id=post.id, group=tag.tag.group_id, score=post.like_count))
 
-    for group in group_list:
-        PostingRanking.objects.bulk_create(group_list[group][:10])
+    PostingRanking.objects.bulk_create(posting_list)
     PostingRanking.objects.filter(id__lte=last.id).delete()
 
     return Response(status=status.HTTP_200_OK)
