@@ -382,7 +382,8 @@ def profile(request):
     elif request.method == 'GET':
         idx = request.GET['id']
         try:
-            profile = ProfileSerializer(Profile.objects.filter(user_id=idx)[0]).data
+            profile_obj = Profile.objects.filter(user_id=idx)[0]
+            profile = ProfileSerializer(profile_obj).data
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -400,6 +401,9 @@ def profile(request):
             
         else:
             # Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
+            profile_obj.view_count += 1
+            profile_obj.save()
+            
             profile.update({'is_user':0})
             if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(idx)).exists():
                 profile.update({'is_banned':1})

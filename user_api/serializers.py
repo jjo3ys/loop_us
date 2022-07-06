@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from project_api.models import Project
 from .models import Alarm, Banlist, Profile
 from .department import DEPARTMENT
@@ -23,6 +24,16 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_total_post_count(self, obj):
         return Post.objects.filter(user_id=obj.user_id).count()
+
+class RankProfileSerailizer(serializers.ModelSerializer):
+    recent_post_count = serializers.SerializerMethodField()
+    class Meta:
+        model = Profile
+        fields = ['user_id', 'real_name', 'rank', 'profile_image', 'department', 'recent_post_count']
+    
+    def get_recent_post_count(self, obj):
+        now = datetime.now()
+        return Post.objects.filter(user_id=obj.user_id).filter(date__range=[now-timedelta(days=30), now]).count()
 
 class SimpleProfileSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()

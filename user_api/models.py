@@ -10,7 +10,10 @@ class Profile(models.Model):
     profile_image = models.ImageField(null = True, upload_to='profile_image/')
     department = models.PositiveSmallIntegerField(default=0)
     group = models.PositiveSmallIntegerField(default=10)
-
+    rank = models.PositiveBigIntegerField(default=0)
+    score = models.IntegerField(default=0)
+    last_lank = models.PositiveBigIntegerField(default=0)
+    view_count = models.PositiveBigIntegerField(default=0)
     class Meta:
         db_table = "Profile"
 
