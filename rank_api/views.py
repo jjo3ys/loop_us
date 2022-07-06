@@ -127,21 +127,25 @@ def user_ranking(request):
     if request.user.id != 5:
         return Response(stauts=status.HTTP_403_FORBIDDEN)
     profile_obj = Profile.objects.all()
+    group_list = Group.objects.all().values_list('id', flat=True)
     score_list = {}
+    for g in group_list:
+        score_list[g] = {}
     now = datetime.now()
 
     for profile in profile_obj:
         post_obj = Post.objects.filter(user_id=profile.user_id)
         recent_post_count = post_obj.filter(date__range = [now-timedelta(days=30), now]).count()
         score = sum(post_obj.values_list('like_count', flat=True)) + 0.5 * sum(post_obj.values_list('view_count', flat=True)) + 2 * recent_post_count
-        score_list[profile] = score
+        score_list[profile.group][profile] = score
     
-    score_list = sorted(score_list.items(), key=lambda x: -x[1])
-    for i, profile in enumerate(score_list):
-        profile[0].score = profile[1]
-        profile[0].last_rank = profile[0].rank
-        profile[0].rank = i+1
-        profile[0].save()
+    for group in score_list:
+        sorted_list = sorted(score_list[group].items(), key=lambda x:-x[1])
+        for i, profile in enumerate(sorted_list):
+            profile[0].score = profile[1]
+            profile[0].last_rank = profile[0].rank
+            profile[0].rank = i+1
+            profile[0].save()
     
     return Response(status=status.HTTP_200_OK)
 

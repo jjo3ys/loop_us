@@ -403,7 +403,7 @@ def profile(request):
             # Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile_obj.view_count += 1
             profile_obj.save()
-            
+
             profile.update({'is_user':0})
             if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(idx)).exists():
                 profile.update({'is_banned':1})
@@ -424,6 +424,7 @@ def profile(request):
         else:
             profile.update({'looped':0})
 
+        profile.update({"group_rank":round(profile_obj.rank/Profile.objects.filter(group=profile_obj.group).count(), 2)})
         return Response(profile, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
