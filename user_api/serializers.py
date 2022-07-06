@@ -29,7 +29,7 @@ class RankProfileSerailizer(serializers.ModelSerializer):
     recent_post_count = serializers.SerializerMethodField()
     trend = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Profile
         fields = ['user_id', 'real_name', 'rank', 'profile_image', 'department', 'recent_post_count', 'trend']
@@ -39,7 +39,7 @@ class RankProfileSerailizer(serializers.ModelSerializer):
         return Post.objects.filter(user_id=obj.user_id).filter(date__range=[now-timedelta(days=30), now]).count()
     
     def get_trend(self, obj):
-        return obj.rank - obj.last_lank
+        return obj.last_lank - obj.rank
     
     def get_department(self, obj):
         return DEPARTMENT[obj.department]
