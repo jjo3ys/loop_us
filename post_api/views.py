@@ -162,7 +162,8 @@ def posting(request):
             post_obj = Post.objects.select_related('project').select_related('user').filter(id=request.GET['id'])[0]
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
+        post_obj.view_count += 1
+        post_obj.save()
         post_obj = PostingSerializer(post_obj).data
 
 

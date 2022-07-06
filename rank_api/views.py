@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from project_api.models import Project
+from user_api.serializers import RankProfileSerailizer
 
 from .models import PostingRanking
 
@@ -122,10 +123,55 @@ def set_profile_group(request):
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
-def career_board_ranking(request):
-    ranked_post_obj = PostingRanking.objects.filter(group=request.GET['id']).select_related('post')
-    post_list = []
-    for ranked_post in ranked_post_obj:
-        post_list.append(ranked_post.post)
+def user_ranking(request):
+    if request.user.id != 5:
+        return Response(stauts=status.HTTP_403_FORBIDDEN)
+    profile_obj = Profile.objects.all()
+    score_list = {}
+    now = datetime.now()
+
+    for profile in profile_obj:
+        post_obj = Post.objects.filter(user_id=profile.user_id)
+        recent_post_count = post_obj.filter(date__range = [now-timedelta(days=30), now]).count()
+        score = sum(post_obj.values_list('like_count', flat=True)) + 0.5 * sum(post_obj.values_list('view_count', flat=True)) + 2 * recent_post_count
+        score_list[profile] = score
     
-    return Response(MainloadSerializer(post_list, many=True).data, status=status.HTTP_200_OK)
+    score_list = sorted(score_list.items(), key=lambda x: -x[1])
+    for i, profile in enumerate(score_list):
+        profile[0].score = profile[1]
+        profile[0].last_rank = profile[0].rank
+        profile[0].rank = i+1
+        profile[0].save()
+    
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def career_board_ranking(request):
+    group_id = request.GET['id']
+    if group_id == '10':
+        ranked_post_obj = PostingRanking.objects.all().select_related('post')
+        post_list = []
+        for ranked_post in ranked_post_obj:
+            post_list.append(ranked_post.post)
+        
+        return Response(MainloadSerializer(post_list, many=True).data, status=status.HTTP_200_OK)
+
+    else:
+        if request.GET['type'] == 'main':
+            return_dict = {}
+            ranked_post_obj = PostingRanking.objects.filter(group=group_id).select_related('post')
+            post_list = []
+            for ranked_post in ranked_post_obj:
+                post_list.append(ranked_post.post)
+
+            profile_obj = Profile.objects.filter(group=group_id).order_by('rank')[:3]
+
+            return_dict['posting'] = MainloadSerializer(post_list, many=True).data
+            return_dict['profile'] = RankProfileSerailizer(profile_obj, many=True).data
+
+            return Response(return_dict, status=status.HTTP_200_OK)
+        
+        elif request.GET['type'] == 'all':
+            profile_obj = Profile.objects.filter(group=group_id).order_by('rank')[:100]
+            return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
