@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_elasticsearch_dsl',
 
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
@@ -52,6 +53,13 @@ INSTALLED_APPS = [
 
     'storages'
 ]
+
+#elastic search settings
+ELASTICSEARCH_DSL = {
+    'default':{
+        'hosts':'localhost:9200'
+    }
+}
 
 REST_FRAMEWORK = {
 

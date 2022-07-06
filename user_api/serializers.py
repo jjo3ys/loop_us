@@ -1,14 +1,12 @@
 from datetime import datetime, timedelta
 from project_api.models import Project
 from .models import Alarm, Banlist, Profile
-from .department import DEPARTMENT
 from loop.models import Loopship
 from post_api.models import Post
 
 from rest_framework import serializers
 
 class ProfileSerializer(serializers.ModelSerializer):
-    department = serializers.SerializerMethodField()
     loop_count = serializers.SerializerMethodField()
     total_post_count = serializers.SerializerMethodField()
 
@@ -16,9 +14,6 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'loop_count', 'total_post_count', 'group']
     
-    def get_department(self, obj):
-        return DEPARTMENT[obj.department]
-
     def get_loop_count(self, obj):
         return Loopship.objects.filter(friend_id=obj.user_id).count()
 
@@ -28,7 +23,6 @@ class ProfileSerializer(serializers.ModelSerializer):
 class RankProfileSerailizer(serializers.ModelSerializer):
     recent_post_count = serializers.SerializerMethodField()
     trend = serializers.SerializerMethodField()
-    department = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -40,18 +34,11 @@ class RankProfileSerailizer(serializers.ModelSerializer):
     
     def get_trend(self, obj):
         return obj.last_lank - obj.rank
-    
-    def get_department(self, obj):
-        return DEPARTMENT[obj.department]
 
 class SimpleProfileSerializer(serializers.ModelSerializer):
-    department = serializers.SerializerMethodField()
     class Meta:
         model = Profile
         fields = ['user_id', 'real_name', 'profile_image', 'department']
-
-    def get_department(self, obj):
-        return DEPARTMENT[obj.department]
 
 class BanlistSerializer(serializers.ModelSerializer):
     banlist = serializers.SerializerMethodField()
