@@ -30,7 +30,7 @@ from post_api.serializers import MainloadSerializer
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
-from .department import DEPARTMENT, R_DEPARTMENT
+from .department import DEPARTMENT
 from .university import UNIVERSITY
 
 from search.models import Get_log, InterestTag
@@ -194,12 +194,11 @@ def signup(request):
         token = Token.objects.create(user_id=user.id)
 
         try:
-            department_id = R_DEPARTMENT[request.data['department']]
             profile_obj = Profile.objects.create(user_id = user.id,
                                                 type = type,
                                                 real_name = request.data['real_name'],
                                                 profile_image = None,
-                                                department = department_id)
+                                                department = request.data['department'])
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -374,7 +373,7 @@ def profile(request):
             profile_obj.profile_image = request.FILES.get('image')
         
         elif type == 'department':
-            profile_obj.department = R_DEPARTMENT[request.data['department']]
+            profile_obj.department = request.data['department']
 
         profile_obj.save()
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)

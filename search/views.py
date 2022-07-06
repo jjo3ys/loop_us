@@ -9,6 +9,7 @@ from rest_framework import status
 
 
 from .models import Log, InterestTag#, Connect_log
+from .builk import ProfileDocument
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
@@ -95,11 +96,13 @@ def search(request, type):
                 p.update({"is_marked":0})
 
     elif type == 'profile':
-        obj = Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
-        obj = Paginator(obj, 10)
-        if obj.num_pages < int(page):
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        obj = ProfileSerializer(obj.get_page(page), many=True).data
+        results = ProfileDocument.search().filter(query)[(int(page)-1)*10:int(page)*10]
+        results_obj = results.to_queryset()
+        # obj = Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
+        # obj = Paginator(obj, 10)
+        # if obj.num_pages < int(page):
+        #     return Response(status=status.HTTP_204_NO_CONTENT)
+        obj = ProfileSerializer(results_obj, many=True).data
 
     elif type == 'tag_post':
         obj = Post_Tag.objects.filter(tag_id=int(query)).select_for_update('post_tag').order_by('-id')
