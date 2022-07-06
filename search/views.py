@@ -1,6 +1,6 @@
 import datetime
-from django.db.models import Q
 from django.core.paginator import Paginator
+from elasticsearch_dsl import Q
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
@@ -96,7 +96,8 @@ def search(request, type):
                 p.update({"is_marked":0})
 
     elif type == 'profile':
-        results = ProfileDocument.search().filter(query)[(int(page)-1)*10:int(page)*10]
+        q = Q('multi_match', query=query, fields=['real_name', 'department'])
+        results = ProfileDocument.search().query(q)[(int(page)-1)*10:int(page)*10]
         results_obj = results.to_queryset()
         # obj = Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
         # obj = Paginator(obj, 10)
