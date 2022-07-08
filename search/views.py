@@ -1,13 +1,13 @@
 import datetime
 from django.core.paginator import Paginator
-from elasticsearch_dsl import Q
+# from elasticsearch_dsl import Q
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from user_api.builk import ProfileDocument
+# from user_api.builk import ProfileDocument
 
 
 from .models import Log, InterestTag#, Connect_log
