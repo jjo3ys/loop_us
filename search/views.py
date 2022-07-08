@@ -98,13 +98,13 @@ def search(request, type):
                 p.update({"is_marked":0})
 
     elif type == 'profile':
-        q = Q('multi_match', query=query, fields=['real_name', 'department'])
-        results = ProfileDocument.search().query(q)[(int(page)-1)*10:int(page)*10]
-        obj = results.to_queryset()
-        # obj = Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
-        # obj = Paginator(obj, 10)
-        # if obj.num_pages < int(page):
-        #     return Response(status=status.HTTP_204_NO_CONTENT)
+        # q = Q('multi_match', query=query, fields=['real_name', 'department'])
+        # results = ProfileDocument.search().query(q)[(int(page)-1)*10:int(page)*10]
+        # obj = results.to_queryset()
+        obj = Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
+        obj = Paginator(obj, 10)
+        if obj.num_pages < int(page):
+            return Response(status=status.HTTP_204_NO_CONTENT)
         obj = ProfileSerializer(obj.get_page(page), many=True).data
 
     elif type == 'tag_post':
