@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'django_elasticsearch_dsl',
+    # 'django_elasticsearch_dsl_drf',
     
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
@@ -56,7 +57,7 @@ INSTALLED_APPS = [
 #elastic search settings
 ELASTICSEARCH_DSL = {
     'default':{
-        'hosts':'localhost:9200',
+        'hosts':'localhost:8000',
     }
 }
 
