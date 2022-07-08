@@ -160,7 +160,7 @@ def career_board_ranking(request):
         post_obj = Post.objects.filter(date__range=[now-timedelta(hours=24), now]).order_by('-like_count')
         post_obj = Paginator(post_obj, 5)
         if post_obj.num_pages < int(request.GET['page']):
-            return Response(stauts=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         
         return Response(MainloadSerializer(post_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
 
