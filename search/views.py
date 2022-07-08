@@ -1,6 +1,6 @@
 import datetime
-from django.db.models import Q
 from django.core.paginator import Paginator
+from elasticsearch_dsl import Q
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
@@ -9,15 +9,14 @@ from rest_framework import status
 
 
 from .models import Log, InterestTag#, Connect_log
+# from .builk import ProfileDocument
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
 from project_api.serializers import ProjectSerializer
 from user_api.models import Banlist, Profile
 from user_api.serializers import ProfileSerializer
-from question_api.models import Question
-from question_api.serializers import OnlyQSerializer as QuestionSerializer
-from tag.models import Project_Tag, Question_Tag
+from tag.models import Post_Tag
 # Create your views here.
 
 # @api_view(['POST'])
@@ -41,7 +40,7 @@ from tag.models import Project_Tag, Question_Tag
 #     }
 
 #     return Response(return_dict, status=status.HTTP_200_OK)
-type_int = {'post':1, 'profile':2, 'question':3}    
+type_int = {'post':1, 'profile':2}    
 
 def interest_tag(interest_list, type, tag, score):
     if type == 'plus':
@@ -67,17 +66,19 @@ def search(request, type):
     query = request.GET['query']
     page = request.GET['page']
     try:
-        ban_list = Banlist.objects.get(user_id=request.user.id).banlist
+        ban_list = Banlist.objects.filter(user_id=request.user.id)[0].banlist
     except:
         ban_list = []
 
     ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
 
     if type == 'post':
-        obj = list(Post.objects.filter(Q(contents__icontains=query)|Q(title__icontains=query)).exclude(user_id__in=ban_list))
-        obj.reverse()
-        obj = Paginator(obj, 5).get_page(page)
-        obj = MainloadSerializer(obj, many=True).data
+        obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
+        obj = Paginator(obj, 5)
+        if obj.num_pages < int(page):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        obj = MainloadSerializer(obj.get_page(page), many=True).data
         for p in obj:
             if request.user.id == p['user_id']:
                 p.update({"is_user":1})
@@ -95,46 +96,31 @@ def search(request, type):
                 p.update({"is_marked":0})
 
     elif type == 'profile':
-        obj = list(Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list))
-        obj.reverse()
-        obj = Paginator(obj, 10).get_page(page)
-        obj = ProfileSerializer(obj, many=True).data
+        # q = Q('multi_match', query=query, fields=['real_name', 'department'])
+        # results = ProfileDocument.search().query(q)[(int(page)-1)*10:int(page)*10]
+        # results_obj = results.to_queryset()
+        obj = Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
+        obj = Paginator(obj, 10)
+        if obj.num_pages < int(page):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        obj = ProfileSerializer(obj.get_page(page), many=True).data
 
-    elif type == 'question':
-        obj = list(Question.objects.filter(content__icontains=query).exclude(user_id__in=ban_list))
-        obj.reverse()
-        obj = Paginator(obj, 5).get_page(page)
-        obj = QuestionSerializer(obj, many=True).data
+    elif type == 'tag_post':
+        obj = Post_Tag.objects.filter(tag_id=int(query)).select_for_update('post_tag').order_by('-id')
+        # result = []
+        # for o in obj:
+        #     if o.post.user_id not in ban_list:
+        #         result.append(o.post)
+        obj = Paginator(obj, 5)
+        if obj.num_pages < int(page):
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-    elif type == 'tag_project':
-        obj = list(Project_Tag.objects.filter(tag_id=int(query)))
-        obj.reverse()
-        result = []
-        for o in obj:
-            if o.project.user_id not in ban_list and o.project not in result:
-                result.append(o.project)
-        result.reverse()
-        obj = ProjectSerializer(result[(int(page)-1)*5:int(page)*5], many=True).data
+        obj = MainloadSerializer(obj.get_page(page), many=True).data
         for p in obj:
             if request.user.id == p['user_id']:
                 p.update({"is_user":1})
             else:
                 p.update({"is_user":0})
-  
-    elif type == 'tag_question':
-        obj = list(Question_Tag.objects.filter(tag_id=int(query)))
-        obj.reverse()
-        result = []
-        for o in obj:
-            if o.question.user_id not in ban_list and o.question not in result:
-                result.append(o.question)
-        result.reverse()
-        obj = QuestionSerializer(result[(int(page)-1)*5:int(page)*5], many=True).data
-        for q in obj:
-            if request.user.id == q['user_id']:
-                q.update({"is_user":1})
-            else:
-                q.update({"is_user":0})
 
     elif type == 'notice':
         return Response("unrealized", status=status.HTTP_204_NO_CONTENT)

@@ -9,7 +9,6 @@ class Log(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        app_label = 'log'
         db_table = 'Search_Log'
 
 class InterestTag(models.Model):
@@ -17,7 +16,6 @@ class InterestTag(models.Model):
     user_id = models.PositiveBigIntegerField()
 
     class Meta:
-        app_label = 'log'
         db_table = "Interest_tag"
 
 class Get_log(models.Model):
@@ -27,7 +25,6 @@ class Get_log(models.Model):
     type = models.PositiveSmallIntegerField()
 
     class Meta:
-        app_label = 'log'
         db_table = 'Get_log'
 
 #chat model migrate 할 때 Meta의 app_label부분 주석처리 상태에서 makemigrations,

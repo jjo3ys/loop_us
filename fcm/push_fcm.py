@@ -1,22 +1,6 @@
 from firebase_admin import messaging
 from fcm.models import FcmToken
 from user_api.models import Alarm
-
-def answer_fcm(token, req_from, question, id, real_name):
-    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=1, target_id=id, alarm_from_id=req_from)
-    if valid:
-        message = messaging.Message(notification=messaging.Notification(
-            title=question,
-            body='질문에 어떤 답변이 달렸는지 확인해보세요.'
-        ),
-        data={
-            'type':'answer',
-            'real_name':real_name,
-            'id':str(id)
-        },
-        token = token.token,
-        )
-        messaging.send(message)
     
 def loop_fcm(token, req_from, id):
     alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=2, target_id=id, alarm_from_id=id)
@@ -64,6 +48,22 @@ def like_fcm(token, req_from, id, from_id):
         token = token.token,
         )
         messaging.send(message)
+
+def comment_like_fcm(token, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=5, target_id=id, alarm_from_id=from_id)
+    if valid:
+        message = messaging.Message(notification=messaging.Notification(
+            title='루프어스',
+            body='{0}님이 회원님의 댓글을 좋아합니다.'.format(req_from)
+        ),
+        data={
+            'type':'comment_like',
+            'id':str(id)
+        },
+        token = token.token,
+        )
+        messaging.send(message)
+
 
 def chat_fcm(token, req_from, msg, user_id):
     message = messaging.Message(notification=messaging.Notification(

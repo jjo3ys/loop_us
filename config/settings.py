@@ -1,8 +1,9 @@
 import os
+import platform
 import firebase_admin
 
 from pathlib import Path
-from .my_settings import DB_SETTING, DJANGO_KEY, EMAIL, S3
+from .my_settings import EMAIL, S3, DB_SETTING, DJANGO_KEY
 from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -10,14 +11,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = DJANGO_KEY
 
-# DEBUG = True
-# ALLOWED_HOSTS = ["*"]
+DEBUG = True
+ALLOWED_HOSTS = ["*"]
 
-DEBUG = False
-ALLOWED_HOSTS = ['3.35.253.151']
+# DEBUG = False
+# ALLOWED_HOSTS = ['3.35.253.151']
 
 
 SITE_URL = "http://3.35.253.151:8000/"
+# SITE_URL = "http://192.168.35.235:8000/"
 
 cred_path = os.path.join(BASE_DIR, "serviceAccountKey.json")
 cred = credentials.Certificate(cred_path)
@@ -31,16 +33,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_elasticsearch_dsl',
 
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
     'project_api.apps.ProjectApiConfig',
-    'question_api.apps.QuestionApiConfig',
+    'rank_api.apps.RankApiConfig',
     'tag.apps.TagConfig',
     'fcm.apps.FcmConfig',
     'loop.apps.LoopConfig',
     'search.apps.SearchConfig',
-    'portfolio_api.apps.PortfolioApiConfig',
+    'crawling_api.apps.CrawlingApiConfig',
     'chat',
     
     'rest_framework',
@@ -50,6 +53,13 @@ INSTALLED_APPS = [
 
     'storages'
 ]
+
+#elastic search settings
+ELASTICSEARCH_DSL = {
+    'default':{
+        'hosts':'localhost:8000'
+    }
+}
 
 REST_FRAMEWORK = {
 
@@ -104,7 +114,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASE_ROUTERS = ['config.router.Router']
 
 DATABASES = DB_SETTING
-
+DATABASES['OPTIONS'] = {'init_command':'SET sql_mode=STRICT_TRANS_TABLES'}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -176,3 +186,21 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 1024000000
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # AUTH_USER_MODEL = 'user_api.UserCustom'
+#django cacheops 설정
+if platform.system() == 'Linux':
+    INSTALLED_APPS += ['cacheops']
+    
+    CACHEOPS_LRU = True # maxmemory-policy: volatile-lru 설정 
+                        # (직접 redis config에서 수정하긴 했는데, 그렇게 안해도 되는지는 잘 모르겠네요)
+    
+    CACHEOPS_REDIS = "redis://127.0.0.1:6379/1" # local redis
+    
+    CACHEOPS_DEFAULTS = {
+        'timeout': 60 * 60 * 1, # 1시간
+        'ops': 'get', # get, fetch ... 모든 동작 ex) 'ops': 'get' 이러면 get 할 때만 캐시
+        'cache_on_save': False # save()할때 캐시 할건지 (굳이 필요없을 것 같아서 False 로함)
+    }
+    
+    CACHEOPS = {
+        '*.*': {}, # 모든 앱에대해서 캐시적용
+    }

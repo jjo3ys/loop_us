@@ -46,7 +46,7 @@ from rest_framework.permissions import IsAuthenticated
 @permission_classes((IsAuthenticated,))
 def loop(request, idx):
     user = request.user
-    profile = Profile.objects.get(user_id=user.id)
+    profile = Profile.objects.filter(user_id=user.id)[0]
     try:
         token = FcmToken.objects.get(user_id=idx)
         loop_fcm(token, profile.real_name, user.id)
@@ -75,7 +75,10 @@ def get_list(request, type, idx):
         loop_obj = Loopship.objects.filter(user=idx)
 
         for l in loop_obj:
-            profile_sz = SimpleProfileSerializer(Profile.objects.get(user_id=l.friend_id)).data
+            try:
+                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=l.friend_id)[0]).data
+            except:
+                continue
             if l.friend_id == request.user.id:
                 profile_sz.update({"is_user":1})
             else:
@@ -99,21 +102,41 @@ def get_list(request, type, idx):
         loop_obj = Loopship.objects.filter(friend_id = idx)
         
         for l in loop_obj:
-            profile_sz = SimpleProfileSerializer(Profile.objects.get(user_id=l.user_id)).data
+            try:
+                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=l.user_id)[0]).data
+            except:
+                continue
             if l.user_id == request.user.id:
                 profile_sz.update({"is_user":1})
             else:
-                # follow = Loopship.objects.filter(user_id=request.user.id, friend_id=l.user_id).exists()
-                # following = Loopship.objects.filter(user_id=l.user_id, friend_id=request.user.id).exists()
-                # if follow and following:
-                #     profile_sz.update({"looped":3})
-                # elif follow:
-                #     profile_sz.update({"looped":2})
-                # elif following:
-                #     profile_sz.update({"looped":1})
-                # else:
-                #     profile_sz.update({"looped":0})
+
                 profile_sz.update({"is_user":0})
             follwer_list.append(profile_sz)
+        
+        return Response({"follow":follwer_list}, status=status.HTTP_200_OK)
 
-    return Response({"follow":follwer_list}, status=status.HTTP_200_OK)
+    elif type =='all':
+        looper_list = []
+        looper = []
+
+        following = Loopship.objects.filter(user_id=idx)
+        for follow in following:
+            looper_list.append(follow.friend_id)
+
+        follower = Loopship.objects.filter(friend_id=idx)
+        for follow in follower:
+            if follow.user_id not in looper_list:
+                looper_list.append(follow.user_id)
+
+        for follow in looper_list:
+            try:
+                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=follow)[0]).data
+            except:
+                continue
+            if follow == request.user.id:
+                profile_sz.update({"is_user":1})
+            else:
+                profile_sz.update({"is_user":0})
+            looper.append(profile_sz)
+        
+        return Response({"looper":looper}, status=status.HTTP_200_OK)

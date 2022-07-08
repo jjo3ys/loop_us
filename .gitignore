@@ -14,4 +14,15 @@ requirements.txt
 
 confing/__pycache__
 config/my_settings.py
+/serviceAccountKey.json
+
+config/__pycache__
+
+/**/migrations
+*.exe
+
+# /**/migrations
+config/my_settings.py
+firebase.json
 serviceAccountKey.json
+
