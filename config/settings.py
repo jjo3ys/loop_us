@@ -5,7 +5,6 @@ import firebase_admin
 from pathlib import Path
 from .my_settings import EMAIL, S3, DB_SETTING, DJANGO_KEY
 from firebase_admin import credentials
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -34,7 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_elasticsearch_dsl',
-
+    
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
     'project_api.apps.ProjectApiConfig',
@@ -57,7 +56,7 @@ INSTALLED_APPS = [
 #elastic search settings
 ELASTICSEARCH_DSL = {
     'default':{
-        'hosts':'localhost:8000'
+        'hosts':'localhost:9200',
     }
 }
 
