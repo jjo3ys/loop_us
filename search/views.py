@@ -103,7 +103,7 @@ def search(request, type):
         obj = Paginator(obj, 10)
         if obj.num_pages < int(page):
             return Response(status=status.HTTP_204_NO_CONTENT)
-        obj = ProfileSerializer(obj, many=True).data
+        obj = ProfileSerializer(obj.get_page(page), many=True).data
 
     elif type == 'tag_post':
         obj = Post_Tag.objects.filter(tag_id=int(query)).select_for_update('post_tag').order_by('-id')
