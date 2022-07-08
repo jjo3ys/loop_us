@@ -1,5 +1,7 @@
 from datetime import datetime, date, timedelta
 
+from django.core.paginator import Paginator
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -154,12 +156,13 @@ def user_ranking(request):
 def career_board_ranking(request):
     group_id = request.GET['id']
     if group_id == '10':
-        ranked_post_obj = PostingRanking.objects.all().select_related('post')
-        post_list = []
-        for ranked_post in ranked_post_obj:
-            post_list.append(ranked_post.post)
+        now = datetime.now()
+        post_obj = Post.objects.filter(date__range=[now-timedelta(hours=24), now]).order_by('-like_count')
+        post_obj = Paginator(post_obj, 5)
+        if post_obj.num_pages < int(request.GET['page']):
+            return Response(stauts=status.HTTP_204_NO_CONTENT)
         
-        return Response(MainloadSerializer(post_list, many=True).data, status=status.HTTP_200_OK)
+        return Response(MainloadSerializer(post_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
 
     else:
         if request.GET['type'] == 'main':
