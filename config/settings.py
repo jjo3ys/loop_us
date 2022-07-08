@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_elasticsearch_dsl',
+    # 'django_elasticsearch_dsl',
     
     'post_api.apps.PostApiConfig',
     'user_api.apps.UserApiConfig',
