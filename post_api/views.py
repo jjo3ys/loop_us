@@ -31,8 +31,7 @@ def posting(request):
         profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
         post_obj = Post.objects.create(user_id=request.user.id, 
                                         project_id=request.GET['id'],    
-                                        contents=request.data['contents'],
-                                        department_id=profile_obj.department)
+                                        contents=request.data['contents'])
         project_obj = Project.objects.filter(id=request.GET['id'])[0]
         project_obj.post_count += 1
 

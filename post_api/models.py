@@ -10,7 +10,6 @@ class Post(models.Model):
     project = models.ForeignKey(Project, related_name='post', on_delete=models.CASCADE)
     contents = models.TextField(null=True)
     date = models.DateTimeField(auto_now_add=True)
-    department_id = models.PositiveSmallIntegerField(default=0)
     like_count = models.SmallIntegerField(default=0)
     view_count = models.PositiveBigIntegerField(default=0)
 
