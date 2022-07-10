@@ -242,17 +242,6 @@ def login(request):
     
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
-
-@api_view(['POST'])
-@permission_classes((IsAuthenticated,))
-def check_token(request):
-    try:
-        if request.data['fcm_token'] != FcmToken.objects.filter(user_id=request.user.id)[0].token:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            return Response(status=status.HTTP_200_OK)
-    except:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
         
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
