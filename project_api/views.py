@@ -25,7 +25,6 @@ def project(request):
         if request.data['end_date'] == '':
             end_date = None
 
-        profile_obj = Profile.objects.filter(user_id=user.id)[0]
         project_obj = Project.objects.create(user=user, 
                                              project_name = request.data['project_name'],                             
                                              start_date = start_date,
