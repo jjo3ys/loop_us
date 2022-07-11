@@ -1,4 +1,3 @@
-from genericpath import exists
 from django.core.paginator import Paginator
 from crawling_api.models import News
 from project_api.models import Project
@@ -48,6 +47,7 @@ def posting(request):
 
         for tag in request.data.getlist('tag'):
             tag_obj, created = Tag.objects.get_or_create(tag=tag)
+            Post_Tag.objects.create(post=post_obj, tag=tag_obj)
             interest_tag(interest_list, 'plus', tag_obj.id, 10)
             if not created:
                 tag_obj.count += 1
@@ -60,7 +60,6 @@ def posting(request):
             else:
                 project_group[str(tag_obj.group_id)] = 1
 
-            Post_Tag.objects.create(post=post_obj, tag=tag_obj)
 
         project_obj.group = project_group
         project_obj.save()
@@ -87,79 +86,56 @@ def posting(request):
     
     elif request.method == 'PUT':
         post_obj = Post.objects.filter(id=request.GET['id'])[0]
-        
-        if request.GET['type'] == 'link':
-            link_list = request.FILES.get_list('link')
-            PostLink.objects.filter(post_id=post_obj.id).delete()
-            
-            for link in link_list:
-                PostLink.objects.create(post_id=post_obj.id, link=link)
-                        
-        elif request.GET['type'] == 'contents':
-            post_obj.contents = request.data['contents']
-        
-        elif request.GET['type'] == 'tag':
-            profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
-            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-            tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tags')
-            project_group = post_obj.project.group
-            tag_list = request.data.getlist('tag')
+        post_obj.contents = request.data['contents']
+        origin_tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tag')
+        origin_tag_list = origin_tag_obj.values_list('tag__tag', flat=True)
+        tag_list = request.data.getlist('tag')
 
-            for tag in tag_obj:
-                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
-                
-                tag.tag.count = tag.tag.count-1
-                if tag.tag.count == 0:
-                    tag.tag.delete()
-                tag.tag.save()
-
-                if tag.tag.group in project_group:
-                    project_group[tag.tag.group] -= 1
-                tag.delete()
-
-            for tag in tag_list:
+        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+        project_group = post_obj.project.group
+        for tag in tag_list:
+            if tag not in origin_tag_list:
                 tag_obj, created = Tag.objects.get_or_create(tag=tag)
-                Post_Tag.objects.create(tag = tag_obj, post_id = post_obj.id)
+                Post_Tag.objects.create(tag=tag_obj, post_id=post_obj.id)
                 interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 10)
-
+                group_id = str(tag_obj.group.id)
+                
                 if not created:
-                    tag_obj.count = tag_obj.count+1
-                    tag_obj.save()  
+                    tag_obj.count += 1
+                    tag_obj.save()
                 elif created: continue
 
-                if tag.tag.group in project_group:
-                    project_group[tag.tag.group] += 1
+                if group_id in project_group:
+                    project_group[group_id] += 1
                 else:
-                    project_group[tag.tag.group] = 1
+                    project_group[group_id] = 1
 
-            post_obj.project.group = project_group
-            post_obj.project.save()  
-            
-            project_obj = Project.objects.filter(user_id=request.user_id)
-            for project in project_obj:
-                if project.group == None:
-                    continue
+        for tag in origin_tag_obj:
+            if tag.tag.tag not in tag_list:
+                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
+                tag.tag.count -=1
+                group_id = str(tag.tag.group.id)
+                if group_id in project_group:
+                    project_group[group_id] -= 1
+                    if project_group[group_id] == 0:
+                        del project_group[group_id]
 
-                group = [k for k, v in project.group.items() if max(project.group.values())==v]
-                for g in group:
-                    if g in project_group:
-                        project_group[g] += 1
-                    else:
-                        project_group[g] = 1
-            if len(project_group) == 0: pass
-            else:
-                profile_obj.group = max(project_group, key=project_group.get)
-                profile_obj.save()
+                tag.delete()
+                if tag.tag.count == 0:
+                    tag.tag.delete()
+                else:
+                    tag.tag.save()
 
-            interest_list.save()
-
+        post_obj.project.group = project_group
+        post_obj.project.save()
+        interest_list.save()
         post_obj.save()
         return Response(status=status.HTTP_200_OK)
     
     elif request.method == 'GET':
         try:
             post_obj = Post.objects.select_related('project').select_related('user').filter(id=request.GET['id'])[0]
-        except Post.DoesNotExist:
+        except IndexError:
             return Response(status=status.HTTP_404_NOT_FOUND)
         post_obj.view_count += 1
         post_obj.save()
@@ -208,15 +184,18 @@ def posting(request):
 
         for tag in tag_obj:
             interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
-            
             tag.tag.count = tag.tag.count-1
+            group_id = str(tag.tag.group.id)
+            if group_id in project_group:
+                project_group[group_id] -= 1
+                if project_group[group_id] == 0:
+                    del project_group[group_id]
+                
+            tag.delete()
             if tag.tag.count == 0:
                 tag.tag.delete()
-            tag.tag.save()
-
-            if tag.tag.group in project_group:
-                project_group[tag.tag.group] -= 1
-            tag.delete()
+            else: 
+                tag.tag.save()
 
         if contents_image_obj.count() != 0:
             for image in contents_image_obj:
