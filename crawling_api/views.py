@@ -34,11 +34,14 @@ def news_crawling(request):
     if request.user.id !=5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     driver = webdriver.Chrome(path, chrome_options=chrome_options)
-    url = 'https://search.naver.com/search.naver?where=news&query='
-
+    
     group_id = Group.objects.all()
     last = News.objects.last()
-    
+    #Naver
+    # url = 'https://search.naver.com/search.naver?where=news&query='
+    #Goggle
+    url = 'https://www.google.com/search?tbm=nws&q='
+
     for group in group_id:
         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]
         link_dict = {}
@@ -47,16 +50,29 @@ def news_crawling(request):
             driver.get(news_url)
             news_count = 0
             for i in range(1, 4):            
+                #Naver
+                # try:
+                #     link = driver.find_element_by_css_selector('#sp_nws{} > div.news_wrap.api_ani_send > div > a'.format(i+news_count)).get_attribute('href')
+                #     sub_news_list = driver.find_elements_by_css_selector('#sp_nws{} > div.news_cluster > ul > li'.format(i+news_count))
+                #     news_count += len(sub_news_list)
+                # except:
+                #     try:    
+                #         link = driver.find_element_by_css_selector('#sp_nws{} > div > div > a'.format(i+news_count)).get_attribute('href')
+                #     except:
+                #         pass
+                #Goggle
                 try:
-                    link = driver.find_element_by_css_selector('#sp_nws{} > div.news_wrap.api_ani_send > div > a'.format(i+news_count)).get_attribute('href')
-                    sub_news_list = driver.find_elements_by_css_selector('#sp_nws{} > div.news_cluster > ul > li'.format(i+news_count))
-                    news_count += len(sub_news_list)
+                    link = driver.find_element_by_css_selector("#rso > div:nth-child({}) > div > a".format(i+news_count)).get_attribute('href')
                 except:
-                    try:    
-                        link = driver.find_element_by_css_selector('#sp_nws{} > div > div > a'.format(i+news_count)).get_attribute('href')
-                    except:
-                        pass
-                
+                    while True:
+                        news_count += 1
+                        if news_count + i > 10:
+                            break
+                        try:
+                            link = driver.find_element_by_css_selector("#rso > div:nth-child({}) > div > a".format(i+news_count)).get_attribute('href')
+                            break
+                        except:
+                            pass
                 try:
                     if link not in link_dict:
                         News.objects.create(urls=link, group=group)

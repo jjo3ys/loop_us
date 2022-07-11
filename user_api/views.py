@@ -110,10 +110,10 @@ def create_user(request):
             Token.objects.filter(user_id=user.id)[0]
             return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_BAD_REQUEST)
 
-        except Token.DoesNotExist:
+        except IndexError:
             user.delete()
             
-    except User.DoesNotExist:
+    except IndexError:
         pass
     
     except:
@@ -290,14 +290,17 @@ def password(request):
                 user.save()
                 return Response(status=status.HTTP_200_OK)
 
-            except User.DoesNotExist:
-                return Response(stauts=status.HTTP_401_UNAUTHORIZED)
+            except IndexError:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     elif request.method =='POST':
-        user = User.objects.filter(email=request.data['email'])[0]
+        try:
+            user = User.objects.filter(email=request.data['email'])[0]
+            user.is_active = False
+            user.save()
+        except IndexError:
+                return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        user.is_active = False
-        user.save()
         valid = check_email(user, 'find')
         if valid:
             return Response(status=status.HTTP_200_OK)
