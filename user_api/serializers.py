@@ -1,14 +1,25 @@
 from datetime import datetime, timedelta
 from project_api.models import Project
-from .models import Alarm, Banlist, Profile
+from .models import Alarm, Banlist, Profile, School, Department
 from loop.models import Loopship
 from post_api.models import Post
 
 from rest_framework import serializers
 
+class SchoolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = ['id', 'school', 'email']
+
+class DepSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['id', 'department']
+
 class ProfileSerializer(serializers.ModelSerializer):
     loop_count = serializers.SerializerMethodField()
     total_post_count = serializers.SerializerMethodField()
+    department = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -19,10 +30,14 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_total_post_count(self, obj):
         return Post.objects.filter(user_id=obj.user_id).count()
+    
+    def get_department(self, obj):
+        return obj.department.department
 
 class RankProfileSerailizer(serializers.ModelSerializer):
     recent_post_count = serializers.SerializerMethodField()
     trend = serializers.SerializerMethodField()
+    department = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -35,10 +50,18 @@ class RankProfileSerailizer(serializers.ModelSerializer):
     def get_trend(self, obj):
         return obj.last_lank - obj.rank
 
+    def get_department(self, obj):
+        return obj.department.department
+
 class SimpleProfileSerializer(serializers.ModelSerializer):
+    department = serializers.SerializerMethodField()
+
     class Meta:
         model = Profile
         fields = ['user_id', 'real_name', 'profile_image', 'department']
+    
+    def get_department(self, obj):
+        return obj.department.department
 
 class BanlistSerializer(serializers.ModelSerializer):
     banlist = serializers.SerializerMethodField()

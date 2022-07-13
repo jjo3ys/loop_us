@@ -30,8 +30,6 @@ from post_api.serializers import MainloadSerializer
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
-from .department import DEPARTMENT
-from .university import UNIVERSITY
 
 from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
@@ -198,7 +196,7 @@ def signup(request):
                                                 type = type,
                                                 real_name = request.data['real_name'],
                                                 profile_image = None,
-                                                department = request.data['department'])
+                                                department_id = request.data['department'])
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -460,14 +458,6 @@ def posting(request):
             post.update({"is_marked":0})
 
     return Response(post_obj, status=status.HTTP_200_OK)
-
-@api_view(['GET', ])
-def department_list(request):
-    return Response(DEPARTMENT, status=status.HTTP_200_OK)
-
-@api_view(['GET', ])
-def university_list(request):
-    return Response(UNIVERSITY, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))

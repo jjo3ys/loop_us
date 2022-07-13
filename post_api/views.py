@@ -532,7 +532,7 @@ def like_list_load(request):
     elif request.GET['type'] == 'cocomment':
         like_list = CocommentLike.objects.filter(cocomment_id=idx).values_list('user_id', flat=True)
 
-    return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=like_list), many=True).data, status=status.HTTP_200_OK)
+    return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=like_list).select_related('department'), many=True).data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
