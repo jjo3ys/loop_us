@@ -150,8 +150,8 @@ def search_university(request):
     
     elif request.GET['type'] == 'department':
         try:
-            obj = Department.objects.filter(school_id=request.GET['id'],
-                                            department__icontains=request.GET['query'])[:10]
+            obj = Department.objects.filter(school_id=request.GET['id'])
+            obj = obj.filter(department__icontains=request.GET['query'])[:10]
 
             return Response(DepSerializer(obj, many=True).data, status=status.HTTP_200_OK)
         except:
