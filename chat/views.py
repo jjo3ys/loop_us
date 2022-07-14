@@ -88,3 +88,25 @@ def get_list(request):
 
     return_list.sort(key=lambda x: x['message']['date'], reverse=True)
     return Response(return_list, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def get_profile(request):
+    
+    return_list = []
+
+    for member in eval(request.GET['members']):
+      
+        data = SimpleProfileSerializer(Profile.objects.get(user_id = int(member))).data
+
+        if Banlist.objects.filter(user_id=request.user.id, banlist__contains=member).exists():
+            data['is_banned'] = 1
+
+        elif Banlist.objects.filter(user_id=request.GET['id'], banlist__contains=member).exists():
+            data['is_banned'] = 2
+        else:
+            data['is_banned'] = 0
+
+        return_list.append(data)
+    
+    return Response(return_list, status=status.HTTP_200_OK)
