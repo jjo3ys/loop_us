@@ -16,8 +16,8 @@ from .models import Log, InterestTag#, Connect_log
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
 from project_api.serializers import ProjectSerializer
-from user_api.models import Banlist, Profile
-from user_api.serializers import ProfileSerializer
+from user_api.models import Banlist, Profile, School, Department
+from user_api.serializers import ProfileSerializer, SchoolSerializer, DepSerializer
 from tag.models import Post_Tag
 # Create your views here.
 
@@ -138,3 +138,21 @@ def search(request, type):
     
     return Response(obj, status=status.HTTP_200_OK)
 
+@api_view(['GET', ])
+def search_university(request):
+    if request.GET['type'] == 'school':
+        try:
+            obj = School.objects.filter(school__icontains=request.GET['query'])[:10]
+            
+            return Response(SchoolSerializer(obj, many=True).data, status=status.HTTP_200_OK)
+        except:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    elif request.GET['type'] == 'department':
+        try:
+            obj = Department.objects.filter(school_id=request.GET['id'])
+            obj = obj.filter(department__icontains=request.GET['query'])[:10]
+
+            return Response(DepSerializer(obj, many=True).data, status=status.HTTP_200_OK)
+        except:
+            return Response(status=status.HTTP_204_NO_CONTENT)

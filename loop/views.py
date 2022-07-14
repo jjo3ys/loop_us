@@ -73,13 +73,10 @@ def get_list(request, type, idx):
     if type == 'following':
         following_list = []
         loop_obj = Loopship.objects.filter(user=idx)
-
-        for l in loop_obj:
-            try:
-                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=l.friend_id)[0]).data
-            except:
-                continue
-            if l.friend_id == request.user.id:
+        loop_list = loop_obj.values_list('freind_id', flat=True)
+        profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list), many=True).data
+        for l in profile_sz:
+            if l['user_id'] == request.user.id:
                 profile_sz.update({"is_user":1})
             else:
                 # follow = Loopship.objects.filter(user_id=request.user.id, friend_id=l.friend_id).exists()
@@ -92,28 +89,22 @@ def get_list(request, type, idx):
                 #     profile_sz.update({"looped":1})
                 # else:
                 #     profile_sz.update({"looped":0})
-                profile_sz.update({"is_user":0})
-            following_list.append(profile_sz)
+                l.update({"is_user":0})
 
-        return Response({"follow":following_list}, status=status.HTTP_200_OK)
+        return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
 
     elif type == 'follower':
         follwer_list = []
         loop_obj = Loopship.objects.filter(friend_id = idx)
-        
-        for l in loop_obj:
-            try:
-                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=l.user_id)[0]).data
-            except:
-                continue
-            if l.user_id == request.user.id:
-                profile_sz.update({"is_user":1})
+        loop_list = loop_obj.values_list('user_id', flat=True)
+        profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=l.user_id), many=True).data
+        for l in profile_sz:
+            if l['user_id'] == request.user.id:
+                l.update({"is_user":1})
             else:
-
-                profile_sz.update({"is_user":0})
-            follwer_list.append(profile_sz)
+                l.update({"is_user":0})
         
-        return Response({"follow":follwer_list}, status=status.HTTP_200_OK)
+        return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
 
     elif type =='all':
         looper_list = []
