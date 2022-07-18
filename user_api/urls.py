@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-# from .. import school
+# from . import school
 
 urlpatterns = [
     path('check_email', views.create_user),

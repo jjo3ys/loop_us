@@ -12,7 +12,7 @@ from user_api.serializers import RankProfileSerailizer
 
 from .models import PostingRanking
 
-from user_api.models import Profile
+from user_api.models import Profile, School
 from tag.models import Post_Tag, Tag
 from post_api.models import Post
 from post_api.serializers import MainloadSerializer
@@ -151,6 +151,14 @@ def user_ranking(request):
             profile[0].rank = i+1
             profile[0].save()
     
+    school_obj = School.objects.all()
+    for school in school_obj:
+        profile_obj = Profile.objects.filter(school=school).order_by('-score')
+        for i , profile in enumerate(profile_obj):
+            profile.school_last_rank = profile.school_rank
+            profile.school_rank = i+1
+            profile.save()
+    
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -174,13 +182,18 @@ def career_board_ranking(request):
             for ranked_post in ranked_post_obj:
                 post_list.append(ranked_post.post)
 
-            profile_obj = Profile.objects.filter(group=group_id).order_by('rank')[:3]
-
+            profile = Profile.objects.filter(user_id=request.user.id)[0]
             return_dict['posting'] = MainloadSerializer(post_list, many=True).data
-            return_dict['profile'] = RankProfileSerailizer(profile_obj, many=True).data
+            return_dict['group_ranking'] = RankProfileSerailizer(Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:3], many=True).data
+            return_dict['school_ranking'] = RankProfileSerailizer(Profile.objects.filter(school_id=profile.school_id).exclude(school_rank=0).order_by('school_rank')[:3], many=True).data
 
             return Response(return_dict, status=status.HTTP_200_OK)
         
-        elif request.GET['type'] == 'all':
-            profile_obj = Profile.objects.filter(group=group_id).order_by('rank')[:100]
+        elif request.GET['type'] == 'school':
+            profile = Profile.objects.filter(user_id=request.user.id)[0]
+            profile_obj = Profile.objects.filter(school_id=profile.school_id).exclude(rank=0).order_by('school_rank')[:100]
+            return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
+        
+        elif request.GET['type'] == 'group':
+            profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:100]
             return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
