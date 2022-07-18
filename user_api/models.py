@@ -18,6 +18,7 @@ class Profile(models.Model):
     real_name = models.CharField(max_length=10)
     type = models.SmallIntegerField(default=0)
     profile_image = models.ImageField(null = True, upload_to='profile_image/')
+    school = models.ForeignKey(School, on_delete=models.DO_NOTHING, default=275)
     department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, default=52)
     group = models.PositiveSmallIntegerField(default=10)
     rank = models.PositiveBigIntegerField(default=0)
