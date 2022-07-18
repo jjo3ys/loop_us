@@ -55,12 +55,14 @@ def posting_with_group(request):
                 group_obj.monthly_count[month] = 0
         
         return Response({'monthly_count':group_obj.monthly_count}, status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
 @api_view(['GET'])   
 @permission_classes((IsAuthenticated, ))
 def set_monthly_tag_count(request):
     if request.user.id != 5:
-        return Response(stauts=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_403_FORBIDDEN)
     today = date.today()
     post_tags = Post_Tag.objects.select_related('post').filter(post__date__range=[today-timedelta(days=183), today])
     for tag in post_tags:
@@ -79,7 +81,7 @@ def posting_ranking(request):
     last = PostingRanking.objects.last()
 
     if request.user.id != 5:
-        return Response(stauts=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_403_FORBIDDEN)
     group_list = Group.objects.all().values_list('id', flat=True)
     group_list = {i:[] for i in group_list}
     posting_list = []
@@ -100,7 +102,7 @@ def posting_ranking(request):
 @permission_classes((IsAuthenticated, ))
 def set_profile_group(request):
     if request.user.id != 5:
-        return Response(stauts=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_403_FORBIDDEN)
     profile_obj = Profile.objects.all()
     for profile in profile_obj:
         project_group = {}
@@ -127,7 +129,7 @@ def set_profile_group(request):
 @permission_classes((IsAuthenticated,))
 def user_ranking(request):
     if request.user.id != 5:
-        return Response(stauts=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_403_FORBIDDEN)
     profile_obj = Profile.objects.all()
     group_list = Group.objects.all().values_list('id', flat=True)
     score_list = {}

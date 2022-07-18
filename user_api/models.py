@@ -23,7 +23,7 @@ class Profile(models.Model):
     group = models.PositiveSmallIntegerField(default=10)
     rank = models.PositiveBigIntegerField(default=0)
     score = models.IntegerField(default=0)
-    last_lank = models.PositiveBigIntegerField(default=0)
+    last_rank = models.PositiveBigIntegerField(default=0)
     view_count = models.PositiveBigIntegerField(default=0)
     class Meta:
         db_table = "Profile"
