@@ -50,15 +50,18 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'drf_yasg',
+    'haystack',
 
     'storages'
 ]
 
 #elastic search settings
-ELASTICSEARCH_DSL = {
-    'default':{
-        'hosts':'localhost:8000',
-    }
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch7_backend.Elasticsearch7SearchEngine',
+        'URL': 'http://127.0.0.1:8000/',
+        'INDEX_NAME': 'haystack',
+    },
 }
 
 REST_FRAMEWORK = {

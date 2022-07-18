@@ -19,5 +19,6 @@ urlpatterns = [
     path('alarm/', include('fcm.urls')),
     path('chat/', include('chat.urls')),
     path('rank/', include('rank_api.urls')),
-    path('get_data/', include('crawling_api.urls'))
+    path('get_data/', include('crawling_api.urls')),
+    # path('search/', include('haystack.urls'))
 ]+ staticfiles_urlpatterns()
