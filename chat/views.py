@@ -92,19 +92,20 @@ def get_list(request):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def get_profile(request):
-    
+
+    user_id = int(request.user.id)
     return_list = []
 
     for member in eval(request.GET['members']):
-      
-        data = SimpleProfileSerializer(Profile.objects.get(user_id = int(member))).data
+        try:
+            data = SimpleProfileSerializer(Profile.objects.get(user_id = int(member))).data
+        
+        except Profile.DoesNotExist:
+            continue
 
-        if Banlist.objects.filter(user_id=request.user.id, banlist__contains=member).exists():
-            data['is_banned'] = 1
-
-        elif Banlist.objects.filter(user_id=request.GET['id'], banlist__contains=member).exists():
+        if Banlist.objects.filter(user_id=member, banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
             data['is_banned'] = 2
-        else:
+        else:       
             data['is_banned'] = 0
 
         return_list.append(data)
