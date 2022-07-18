@@ -9,6 +9,7 @@ class School(models.Model):
         db_table = 'School'
 
 class Department(models.Model):
+    school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
     department = models.CharField(max_length=50)
     class Meta:
         db_table = 'Department'
@@ -24,6 +25,8 @@ class Profile(models.Model):
     rank = models.PositiveBigIntegerField(default=0)
     score = models.IntegerField(default=0)
     last_rank = models.PositiveBigIntegerField(default=0)
+    school_last_rank = models.PositiveBigIntegerField(default=0)
+    school_rank = models.PositiveBigIntegerField(default=0)
     view_count = models.PositiveBigIntegerField(default=0)
     class Meta:
         db_table = "Profile"

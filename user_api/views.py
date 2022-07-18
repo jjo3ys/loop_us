@@ -414,6 +414,7 @@ def profile(request):
             profile.update({'looped':0})
 
         profile.update({"group_rank":round(profile_obj.rank/Profile.objects.filter(group=profile_obj.group).count(), 2)})
+        profile.update({"school_rank":round(profile_obj.school_rank/Profile.objects.filter(school=profile_obj.school).count(), 2)})
         return Response(profile, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
