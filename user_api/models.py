@@ -9,7 +9,6 @@ class School(models.Model):
         db_table = 'School'
 
 class Department(models.Model):
-    school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
     department = models.CharField(max_length=50)
     class Meta:
         db_table = 'Department'
@@ -19,7 +18,7 @@ class Profile(models.Model):
     real_name = models.CharField(max_length=10)
     type = models.SmallIntegerField(default=0)
     profile_image = models.ImageField(null = True, upload_to='profile_image/')
-    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING)
+    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, default=52)
     group = models.PositiveSmallIntegerField(default=10)
     rank = models.PositiveBigIntegerField(default=0)
     score = models.IntegerField(default=0)

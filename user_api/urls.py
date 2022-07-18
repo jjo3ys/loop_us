@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import school
 
 urlpatterns = [
     path('check_email', views.create_user),
@@ -20,5 +21,5 @@ urlpatterns = [
     path('ask', views.ask),
     path('ban', views.ban),
     path('check_token', views.check_token),
-    # path('noti', views.noti)
+    path('school', school.set_school)
 ]
