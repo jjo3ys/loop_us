@@ -53,3 +53,18 @@
 #         model = Profile
 
 #         fields = ['id', 'real_name', 'department']
+# from haystack import indexes
+# from .models import Profile
+
+# class ProfileIndex(indexes.SearchIndex, indexes.Indexable):
+#     text = indexes.CharField(document=True)
+#     id = indexes.IntegerField(model_attr='id')
+#     department = indexes.CharField(model_attr='department')
+#     school = indexes.CharField(model_attr='school')
+#     real_name = indexes.CharField(model_attr='real_name')
+
+#     def get_model(self):
+#         return Profile
+    
+#     def index_queryset(self, using=None):
+#         return self.get_model().objects.all()
