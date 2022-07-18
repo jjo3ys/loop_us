@@ -116,6 +116,6 @@ def get_profile(request):
 @permission_classes((IsAuthenticated,))
 def get_token(request):
     try:
-        return Response(FcmToken.objects.filter(user_id=request.GET['id'])[0].token, status=status.HTTP_200_OK)
+        return Response({'token':FcmToken.objects.filter(user_id=request.GET['id'])[0].token}, status=status.HTTP_200_OK)
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
