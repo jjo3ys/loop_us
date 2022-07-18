@@ -14,6 +14,7 @@ from .models import PostingRanking
 
 from user_api.models import Profile, School
 from tag.models import Post_Tag, Tag
+from tag.serializer import TagSerializer
 from post_api.models import Post
 from post_api.serializers import MainloadSerializer
 from tag.models import Group
@@ -186,7 +187,7 @@ def career_board_ranking(request):
             return_dict['posting'] = MainloadSerializer(post_list, many=True).data
             return_dict['group_ranking'] = RankProfileSerailizer(Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:3], many=True).data
             return_dict['school_ranking'] = RankProfileSerailizer(Profile.objects.filter(school_id=profile.school_id).exclude(school_rank=0).order_by('school_rank')[:3], many=True).data
-
+            return_dict['tag'] = TagSerializer(Tag.objects.filter(group_id=group_id).order_by('-count')[:5], many=True).data
             return Response(return_dict, status=status.HTTP_200_OK)
         
         elif request.GET['type'] == 'school':

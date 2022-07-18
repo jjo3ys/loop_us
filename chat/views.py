@@ -111,3 +111,11 @@ def get_profile(request):
         return_list.append(data)
     
     return Response(return_list, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def get_token(request):
+    try:
+        return Response(FcmToken.objects.filter(user_id=request.GET['id'])[0].token, status=status.HTTP_200_OK)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
