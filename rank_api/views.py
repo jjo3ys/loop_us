@@ -168,7 +168,7 @@ def career_board_ranking(request):
     group_id = request.GET['id']
     if group_id == '10':
         now = datetime.now()
-        post_obj = Post.objects.filter(date__range=[now-timedelta(hours=24), now]).order_by('-like_count')
+        post_obj = Post.objects.filter(date__range=[now-timedelta(days=7), now]).order_by('-like_count')
         post_obj = Paginator(post_obj, 5)
         if post_obj.num_pages < int(request.GET['page']):
             return Response(status=status.HTTP_204_NO_CONTENT)
