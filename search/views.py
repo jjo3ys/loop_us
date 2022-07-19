@@ -15,10 +15,13 @@ from .models import Log, InterestTag#, Connect_log
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
-from project_api.serializers import ProjectSerializer
 from user_api.models import Banlist, Profile, School, Department
-from user_api.serializers import ProfileSerializer, SchoolSerializer, DepSerializer
+from user_api.serializers import SchoolSerializer, DepSerializer, SimpleProfileSerializer
 from tag.models import Post_Tag
+
+from elasticsearch import Elasticsearch
+
+es = Elasticsearch(hosts=['localhost:9200'])
 # Create your views here.
 
 # @api_view(['POST'])
@@ -98,14 +101,12 @@ def search(request, type):
                 p.update({"is_marked":0})
 
     elif type == 'profile':
-        # q = Q('multi_match', query=query, fields=['real_name', 'department'])
-        # results = ProfileDocument.search().query(q)[(int(page)-1)*10:int(page)*10]
-        # obj = results.to_queryset()
-        obj = Profile.objects.filter(real_name__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
-        obj = Paginator(obj, 10)
-        if obj.num_pages < int(page):
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        obj = ProfileSerializer(obj.get_page(page), many=True).data
+        results = es.search(index='profile', body={'query':{'match':{"text":query}}}, size=1000)['hits']['hits'][(page-1)*10:page*10]
+        return_list = []
+        for hit in results:
+            return_list.append(hit['_source']['user_id'])
+    
+        obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=return_list), many=True).data
 
     elif type == 'tag_post':
         obj = Post_Tag.objects.filter(tag_id=int(query)).select_for_update('post_tag').order_by('-id')
@@ -132,8 +133,8 @@ def search(request, type):
             interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
             interest_list = interest_tag(interest_list, 'plus', int(query), 1)
             interest_list.save()
-        else:         
-            Log.objects.create(user_id=request.user.id, query=query, type=type_int[type])
+        # else:         
+        #     Log.objects.create(user_id=request.user.id, query=query, type=type_int[type])
 
     
     return Response(obj, status=status.HTTP_200_OK)

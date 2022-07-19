@@ -1,0 +1,4 @@
+{{object.user_id}}
+{{object.department.department}}
+{{object.school.school}}
+{{object.real_name}}
