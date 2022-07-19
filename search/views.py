@@ -101,6 +101,7 @@ def search(request, type):
                 p.update({"is_marked":0})
 
     elif type == 'profile':
+        page= int(page)
         results = es.search(index='profile', body={'query':{'match':{"text":query}}}, size=1000)['hits']['hits'][(page-1)*10:page*10]
         return_list = []
         for hit in results:
