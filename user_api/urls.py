@@ -22,5 +22,5 @@ urlpatterns = [
     path('ask', views.ask),
     path('ban', views.ban),
     path('check_token', views.check_token),
-    # path('school', school.set_school)
+    path('indexing', views.profile_indexing)
 ]

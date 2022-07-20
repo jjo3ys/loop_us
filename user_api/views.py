@@ -40,6 +40,8 @@ from loop.models import Loopship
 from fcm.models import FcmToken
 from chat.models import Room, Msg
 
+from elasticsearch import Elasticsearch
+
 import jwt
 import json
 import time
@@ -197,6 +199,12 @@ def signup(request):
                                                 real_name = request.data['real_name'],
                                                 profile_image = None,
                                                 department_id = request.data['department'])
+            es = Elasticsearch()
+            body = {
+                "user_id":user.id,
+                "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
+            }
+            es.index(index='profile', doc='_doc', body=body)
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -557,3 +565,52 @@ def alarm(request):
         alarm_obj = Alarm.objects.filter(id=request.GET['id'])[0]
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def profile_indexing(request):
+    if request.user.id != 5:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    es = Elasticsearch()
+    index = "profile"
+    if es.indices.exists(index=index):
+        es.indices.delete(index=index)
+        
+    body = {
+        "settings":{
+            "analysis":{
+                "analyzer":{
+                    "ngram_analyzer":{
+                        "tokenizer":"ngram_tokenizer"
+                    }
+                },
+                "tokenizer":{
+                    "ngram_tokenizer":{
+                        "type":"ngram",
+                        "min_gram":"2",
+                        "max_gram":"3",
+                        "token_chars":["letter","digit"]
+                    }
+                }
+            }
+        },
+        "mappings":{
+            "properties":{
+                "user_id":{
+                    "type":"integer"
+                },
+                "text":{
+                    "type":"text",
+                    "analyzer":"ngram_analyzer"
+                }
+            }
+        }
+    }
+    es.indices.create(index=index, body=body)
+    profile_obj = Profile.objects.all().select_related('school').select_related('department')
+    for profile in profile_obj:
+        doc = {
+            "user_id":profile.user_id,
+            "text":profile.school.school + " " + profile.department.department + " " + profile.real_name
+        }
+        es.index(index=index, doc_type='_doc', body=doc)
+    return Response(status=status.HTTP_200_OK)

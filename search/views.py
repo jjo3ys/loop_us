@@ -103,18 +103,12 @@ def search(request, type):
     elif type == 'profile':
         page= int(page)
         results = es.search(index='profile', body={'query':{'match':{"text":query}}}, size=1000)['hits']['hits'][(page-1)*10:page*10]
-        return_list = []
-        for hit in results:
-            return_list.append(hit['_source']['user_id'])
+        results = list(map(lambda x: x['_source']['user_id'], results))
     
-        obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=return_list), many=True).data
+        obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=results), many=True).data
 
     elif type == 'tag_post':
         obj = Post_Tag.objects.filter(tag_id=int(query)).select_for_update('post_tag').order_by('-id')
-        # result = []
-        # for o in obj:
-        #     if o.post.user_id not in ban_list:
-        #         result.append(o.post)
         obj = Paginator(obj, 5)
         if obj.num_pages < int(page):
             return Response(status=status.HTTP_204_NO_CONTENT)
