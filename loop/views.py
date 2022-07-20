@@ -71,7 +71,6 @@ def unloop(request, idx):
 @permission_classes((IsAuthenticated,))
 def get_list(request, type, idx):
     if type == 'following':
-        following_list = []
         loop_obj = Loopship.objects.filter(user=idx)
         loop_list = loop_obj.values_list('freind_id', flat=True)
         profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list), many=True).data
@@ -94,10 +93,9 @@ def get_list(request, type, idx):
         return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
 
     elif type == 'follower':
-        follwer_list = []
         loop_obj = Loopship.objects.filter(friend_id = idx)
         loop_list = loop_obj.values_list('user_id', flat=True)
-        profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=l.user_id), many=True).data
+        profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list), many=True).data
         for l in profile_sz:
             if l['user_id'] == request.user.id:
                 l.update({"is_user":1})
