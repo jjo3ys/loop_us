@@ -574,7 +574,7 @@ def profile_indexing(request):
     index = "profile"
     if es.indices.exists(index=index):
         es.indices.delete(index=index)
-        
+
     body = {
         "settings":{
             "analysis":{
@@ -587,7 +587,7 @@ def profile_indexing(request):
                     "ngram_tokenizer":{
                         "type":"ngram",
                         "min_gram":"2",
-                        "max_gram":"3",
+                        "max_gram":"2",
                         "token_chars":["letter","digit"]
                     }
                 }
