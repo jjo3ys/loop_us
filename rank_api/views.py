@@ -79,8 +79,6 @@ def set_monthly_tag_count(request):
 @api_view(['GET'])   
 @permission_classes((IsAuthenticated, ))
 def posting_ranking(request):
-    last = PostingRanking.objects.last()
-
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     group_list = Group.objects.all().values_list('id', flat=True)
@@ -93,10 +91,13 @@ def posting_ranking(request):
             if  post.id not in group_list[tag.tag.group_id] and len(group_list[tag.tag.group_id]) < 10:
                 group_list[tag.tag.group_id].append(post.id)
                 posting_list.append(PostingRanking(post_id=post.id, group=tag.tag.group_id, score=post.like_count))
-
+    
+    last = PostingRanking.objects.last()
     PostingRanking.objects.bulk_create(posting_list)
-    PostingRanking.objects.filter(id__lte=last.id).delete()
-
+    try:
+        PostingRanking.objects.filter(id__lte=last.id).delete()
+    except AttributeError:
+        pass
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])   
