@@ -478,11 +478,7 @@ def main_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def loop_load(request):
-    loop = list(Loopship.objects.filter(user_id=request.user.id))
-
-    loop_list = []
-    for l in loop:
-        loop_list.append(l.friend_id)
+    loop_list = Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', flat=True)
 
     now = datetime.datetime.now()
 
