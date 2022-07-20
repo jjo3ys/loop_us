@@ -102,10 +102,10 @@ def search(request, type):
 
     elif type == 'profile':
         page= int(page)
-        results = es.search(index='profile', body={'query':{'match':{"text":query}}}, size=1000)['hits']['hits'][(page-1)*10:page*10]
-        results = list(map(lambda x: x['_source']['user_id'], results))
+        results = es.search(index='profile', body={'query':{'match':{"text":{"query":query, "analyzer":"ngram_analyzer"}}}}, size=1000)['hits']['hits'][(page-1)*10:page*10]
+        results = list(map(lambda x: Profile.objects.filter(user_id=x['_source']['user_id'])[0], results))
     
-        obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=results), many=True).data
+        obj = SimpleProfileSerializer(results, many=True).data
 
     elif type == 'tag_post':
         obj = Post_Tag.objects.filter(tag_id=int(query)).select_for_update('post_tag').order_by('-id')
