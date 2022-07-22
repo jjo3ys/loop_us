@@ -40,20 +40,35 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class RankProfileSerailizer(serializers.ModelSerializer):
     recent_post_count = serializers.SerializerMethodField()
-    trend = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
     school = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'rank', 'profile_image', 'department', 'recent_post_count', 'trend', 'school']
+        fields = ['user_id', 'real_name', 'rank', 'last_rank', 'profile_image', 'department', 'recent_post_count', 'school']
     
     def get_recent_post_count(self, obj):
         now = datetime.now()
         return Post.objects.filter(user_id=obj.user_id).filter(date__range=[now-timedelta(days=30), now]).count()
+
+    def get_department(self, obj):
+        return obj.department.department
     
-    def get_trend(self, obj):
-        return obj.last_rank - obj.rank
+    def get_school(self, obj):
+        return obj.school.school
+
+class SchoolRankProfileSerailizer(serializers.ModelSerializer):
+    recent_post_count = serializers.SerializerMethodField()
+    department = serializers.SerializerMethodField()
+    school = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ['user_id', 'real_name', 'school_rank', 'school_last_rank', 'profile_image', 'department', 'recent_post_count', 'trend', 'school']
+    
+    def get_recent_post_count(self, obj):
+        now = datetime.now()
+        return Post.objects.filter(user_id=obj.user_id).filter(date__range=[now-timedelta(days=30), now]).count()
 
     def get_department(self, obj):
         return obj.department.department

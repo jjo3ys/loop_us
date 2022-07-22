@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from project_api.models import Project
-from user_api.serializers import RankProfileSerailizer
+from user_api.serializers import RankProfileSerailizer, SchoolRankProfileSerailizer
 
 from .models import PostingRanking
 
@@ -61,7 +61,7 @@ def posting_with_group(request):
 
 @api_view(['GET'])   
 @permission_classes((IsAuthenticated, ))
-def set_monthly_tag_count(request):
+def monthly_tag_count(request):
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     today = date.today()
@@ -102,7 +102,29 @@ def posting_ranking(request):
 
 @api_view(['GET'])   
 @permission_classes((IsAuthenticated, ))
-def set_profile_group(request):
+def project_group(request):
+    if request.user.id != 5:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    now = datetime.now()
+    project_obj = Project.objects.filter(post_update_date__range=[now-timedelta(days=1), now]).prefetch_related('post')
+    for project in project_obj:
+        group = {}
+        post_list =  project.post.filter(project_id=project.id).values_list('id', flat=True)
+        group_list = Post_Tag.objects.filter(post_id__in=post_list).select_related('tag').values_list('tag__group_id', flat=True)
+        for id in group_list:
+            if id in group:
+                group[id] += 1
+            else:
+                group[id] = 1
+        if len(group) == 0:
+            continue        
+        project.group = max(group.items(), key=lambda x: x[1])[0]
+        project.save()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET'])   
+@permission_classes((IsAuthenticated, ))
+def profile_group(request):
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     profile_obj = Profile.objects.all()
@@ -110,20 +132,21 @@ def set_profile_group(request):
         project_group = {}
         project_obj = Project.objects.filter(user_id=profile.user_id)
         for project in project_obj:
-            if project.group == None:
+            group_id = project.group
+            if group_id == 10:
                 continue
+            if group_id in project_group:
+                project_group[group_id] += 1
+            else:
+                project_group[group_id] = 1     
 
-            group = [k for k, v in project.group.items() if max(project.group.values())==v]
-            for g in group:
-                if g in project_group:
-                    project_group[g] += 1
-                else:
-                    project_group[g] = 1
         if len(project_group) == 0:
             continue
-        else:
-            profile.group = max(project_group, key=project_group.get)
-            profile.save()
+
+        if max(project_group, key=project_group.get) != profile.group:
+            profile.last_rank=0
+        profile.group = max(project_group, key=project_group.get)
+        profile.save()
 
     return Response(status=status.HTTP_200_OK)
 
@@ -186,8 +209,10 @@ def career_board_ranking(request):
 
             profile = Profile.objects.filter(user_id=request.user.id)[0]
             return_dict['posting'] = MainloadSerializer(post_list, many=True).data
-            return_dict['group_ranking'] = RankProfileSerailizer(Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:3], many=True).data
-            return_dict['school_ranking'] = RankProfileSerailizer(Profile.objects.filter(school_id=profile.school_id).exclude(school_rank=0).order_by('school_rank')[:3], many=True).data
+            obj = Profile.objects.filter(group=group_id)
+            
+            return_dict['group_ranking'] = RankProfileSerailizer(obj.exclude(rank=0).order_by('rank')[:3], many=True).data
+            return_dict['school_ranking'] = SchoolRankProfileSerailizer(obj.filter(school_id=profile.school_id).exclude(school_rank=0).order_by('school_rank')[:3], many=True).data
             return_dict['tag'] = TagSerializer(Tag.objects.filter(group_id=group_id).order_by('-count')[:5], many=True).data
             return Response(return_dict, status=status.HTTP_200_OK)
         
