@@ -5,15 +5,15 @@ header = {'Authorization':'Token 9c661c35fb3d6795f39f7c660a414f17a7fd77ec'}
 
 def rank_api():
     try:
+        requests.get('http://3.35.253.151:8000/rank/posting_ranking', headers=header)
+    except:
+        pass
+    try:
         requests.get('http://3.35.253.151:8000/rank/project_group', headers=header)
     except:
         pass
     try:
-        requests.get('http://3.35.253.151:8000/rank/set_ranking', headers=header)
-    except:
-        pass
-    try:
-        requests.get('http://3.35.253.151:8000/rank/set_profile_group', headers=header)
+        requests.get('http://3.35.253.151:8000/rank/profile_group', headers=header)
     except:
         pass
     try:

@@ -179,10 +179,12 @@ def user_ranking(request):
     school_obj = School.objects.all()
     for school in school_obj:
         profile_obj = Profile.objects.filter(school=school).order_by('-score')
-        for i , profile in enumerate(profile_obj):
-            profile.school_last_rank = profile.school_rank
-            profile.school_rank = i+1
-            profile.save()
+        for group in group_list:
+            group_school_profile_obj = profile_obj.filter(group=group)
+            for i , profile in enumerate(group_school_profile_obj):
+                profile.school_last_rank = profile.school_rank
+                profile.school_rank = i+1
+                profile.save()
     
     return Response(status=status.HTTP_200_OK)
 
