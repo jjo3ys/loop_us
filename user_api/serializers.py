@@ -64,7 +64,7 @@ class SchoolRankProfileSerailizer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'school_rank', 'school_last_rank', 'profile_image', 'department', 'recent_post_count', 'trend', 'school']
+        fields = ['user_id', 'real_name', 'school_rank', 'school_last_rank', 'profile_image', 'department', 'recent_post_count', 'school']
     
     def get_recent_post_count(self, obj):
         now = datetime.now()
