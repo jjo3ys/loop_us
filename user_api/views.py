@@ -319,8 +319,6 @@ def password(request):
 @permission_classes((IsAuthenticated,))
 def resign(request):   
     if check_password(request.data['password'], request.user.password):
-        es = Elasticsearch()
-        es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id}}}})
         user = request.user
         profile_obj = Profile.objects.filter(user_id=user.id).select_related('department').select_related('school')[0]
         profile_obj.profile_image.delete(save=False)
@@ -343,7 +341,8 @@ def resign(request):
 
         tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
         delete_tag(tag_obj)
-        
+        es = Elasticsearch()
+        es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id}}}})
         user = User.objects.filter(id=user.id)[0]
         user.delete()
         return Response("resign from loop", status=status.HTTP_200_OK)
