@@ -100,9 +100,6 @@ def check_email(user, type):
 
 @api_view(['POST', ])
 def create_user(request):
-    
-    email_obj = request.data['email']
-    username_obj = email_obj
     try:
         user = User.objects.filter(username=request.data['email'])[0]
         try:
