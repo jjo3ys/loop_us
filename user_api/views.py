@@ -44,7 +44,8 @@ from elasticsearch import Elasticsearch
 
 import jwt
 import json
-import time
+import redis
+import datetime
 import requests
 import platform
 
@@ -68,83 +69,113 @@ def delete_tag(tag_obj):
         else:
             tag.tag.save()
 
-
-def check_email(user, type):           
-    uidb4 = urlsafe_base64_encode(force_bytes(user.id))
+def send_msg(email):
+    client = redis.Redis()
+    client.set(email, 0, datetime.timedelta(seconds=180))
     if platform.system() == 'Linux':
-        token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
+        token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256').decode('utf-8')# ubuntu환경
     else:
-        token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
-    # html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://192.168.35.235:8000/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
-    # html_content = f'http://192.168.35.235:8000/user_api/activate/{uidb4}/{token}'
-    html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br><a href="http://3.35.253.151:8000/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br><h3>감사합니다.</h3>'
+        token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256')
+    html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br>\
+                     <a href="http://127.0.0.1:8000/user_api/test_activate/{token}">이메일 인증 링크</a><br><br>\
+                     <h3>감사합니다.</h3>'
+
     main_title = 'LOOP US 이메일 인증'
-    mail_to = user.email
+    mail_to = email
     msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
 
-    for i in range(90):
-        time.sleep(2)
-        if User.objects.filter(id=user.id)[0].is_active:
-            return True
-
-    if type == 'create':
-        user.delete()
-
-    elif type == 'find':
-        user.is_active = True
-        user.save()
-
-    return False
-
-@api_view(['POST', ])
+@api_view(['POST'])
 def create_user(request):
-    try:
-        user = User.objects.filter(username=request.data['email'])[0]
-        try:
-            Token.objects.filter(user_id=user.id)[0]
-            return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_BAD_REQUEST)
-
-        except IndexError:
-            user.delete()
-            
-    except IndexError:
-        pass
-    
-    except:
+    if User.objects.filter(username=request.data['email']).exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    try:    
-        user = User.objects.create_user(username = request.data['email'],
-                                        email = request.data['email'],
-                                        password = 'loopus',
-                                        is_active = False)
-
-    except IntegrityError:
-        return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_UNAUTHORIZED)        
-    valid = check_email(user, 'create')
-    if valid:
-        return Response(status=status.HTTP_200_OK)
-    else:
-        return Response(status=status.HTTP_408_REQUEST_TIMEOUT)
+    send_msg(request.data['email'])
+    return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
-def activate(request, uidb64, token):
+def activate(request, token):
+    client = redis.Redis()
     try:
-        uid = force_text(urlsafe_base64_decode(uidb64))
-        user = User.objects.filter(pk=uid)[0]
         user_dic = jwt.decode(token, algorithms='HS256')
-        if user.id == user_dic['id']:
-            user.is_active = True
-            user.save()
+        r =  client.get(user_dic['id'])
+        if int(r) == 0:
+            client.delete(user_dic['id'])
+            user = User.objects.filter(username=user_dic['id'])
+            if user.exists():
+                user[0].is_active = True
+                user[0].save()
+            else:
+                User.objects.create_user(username = user_dic['id'], email = user_dic['id'], password = 'loopus', is_active=True)
             
             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
-        else:
-            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
-
     except:
         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
+
+# @api_view(['POST', ])
+# def create_user(request):
+#     try:
+#         user = User.objects.filter(username=request.data['email'])[0]
+#         if user.is_active:
+#             if Token.objects.filter(user_id=user.id).exists():            
+#                 return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_BAD_REQUEST)
+#         else:
+#             user.delete()#유저 정보는 있지만 토큰이 없을 때
+            
+#     except IndexError:
+#         pass
+    
+#     except:
+#         return Response(status=status.HTTP_400_BAD_REQUEST)
+    
+#     user = User.objects.create_user(username = request.data['email'],
+#                                     email = request.data['email'],
+#                                     password = 'loopus',
+#                                     is_active = False)
+
+#     uidb4 = urlsafe_base64_encode(force_bytes(user.id))
+#     if platform.system() == 'Linux':
+#         token = jwt.encode({'id': user.id}, SECRET_KEY,algorithm='HS256').decode('utf-8')# ubuntu환경
+#     else:
+#         token = jwt.encode({'id': user.id}, SECRET_KEY, algorithm='HS256')
+
+#     html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br>\
+#                      <a href="http://3.35.253.151:8000/user_api/activate/{uidb4}/{token}">이메일 인증 링크</a><br><br>\
+#                      <h3>감사합니다.</h3>'
+
+#     main_title = 'LOOP US 이메일 인증'
+#     mail_to = user.email
+#     msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
+#     msg.attach_alternative(html_content, "text/html")
+#     msg.send()
+#     return Response(status=status.HTTP_200_OK)
+
+# @api_view(['GET', ])
+# def activate(request, uidb64, token):
+#     try:
+#         uid = force_text(urlsafe_base64_decode(uidb64))
+#         user = User.objects.filter(pk=uid)[0]
+#         user_dic = jwt.decode(token, algorithms='HS256')
+#         if user.id == user_dic['id']:
+#             user.is_active = True
+#             user.save()
+            
+#             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
+#         else:
+#             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
+
+#     except:
+#         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
+
+@api_view(['POST', 'GET'])
+def check_valid(request):    
+    if request.method == 'GET':
+        user = User.objects.filter(username=request.data['email'])
+        if user.exists() and user[0].is_active:
+            return Response(status=status.HTTP_200_OK)
+        
+        else:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST', ])
 def check_corp_num(request):
@@ -303,14 +334,11 @@ def password(request):
             user = User.objects.filter(email=request.data['email'])[0]
             user.is_active = False
             user.save()
+            send_msg(request.data['email'])
         except IndexError:
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        valid = check_email(user, 'find')
-        if valid:
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+        return Response(status=status.HTTP_200_OK)
     
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
