@@ -172,15 +172,14 @@ def activate(request, token):
 #     except:
 #         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
 
-@api_view(['POST', 'GET'])
+@api_view(['GET'])
 def check_valid(request):    
-    if request.method == 'GET':
-        user = User.objects.filter(username=request.data['email'])
-        if user.exists() and user[0].is_active:
-            return Response(status=status.HTTP_200_OK)
-        
-        else:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
+    user = User.objects.filter(username=request.GET['email'])
+    if user.exists() and user[0].is_active:
+        return Response(status=status.HTTP_200_OK)
+    
+    else:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST', ])
 def check_corp_num(request):
