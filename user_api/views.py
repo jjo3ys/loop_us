@@ -71,7 +71,11 @@ def delete_tag(tag_obj):
 
 def send_msg(email):
     client = redis.Redis()
-    client.set(email, 0, datetime.timedelta(seconds=180))
+    r = client.get(email)
+    if not r:
+        pass
+    else:
+        client.delete(email)
     if platform.system() == 'Linux':
         token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256').decode('utf-8')# ubuntu환경
     else:
@@ -85,6 +89,7 @@ def send_msg(email):
     msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
+    client.set(email, 0, datetime.timedelta(seconds=180))
 
 @api_view(['POST'])
 def create_user(request):
