@@ -102,10 +102,9 @@ def check_email(user, type):
 def create_user(request):
     
     email_obj = request.data['email']
-    password_obj = request.data['password']
     username_obj = email_obj
     try:
-        user = User.objects.filter(username=email_obj)[0]
+        user = User.objects.filter(username=request.data['email'])[0]
         try:
             Token.objects.filter(user_id=user.id)[0]
             return Response("이미 있는 아이디 입니다.", status=status.HTTP_401_BAD_REQUEST)
@@ -120,9 +119,9 @@ def create_user(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     try:    
-        user = User.objects.create_user(username = username_obj,
-                                        email = email_obj,
-                                        password = password_obj,
+        user = User.objects.create_user(username = request.data['email'],
+                                        email = request.data['email'],
+                                        password = 'loopus',
                                         is_active = False)
 
     except IntegrityError:
@@ -192,19 +191,22 @@ def signup(request):
 
     if user.is_active:
         token = Token.objects.create(user_id=user.id)
-
+        user.set_password(request.data['password'])
+        user.save()
         try:
             profile_obj = Profile.objects.create(user_id = user.id,
                                                 type = type,
                                                 real_name = request.data['real_name'],
                                                 profile_image = None,
-                                                department_id = request.data['department'])
+                                                department_id = request.data['department'],
+                                                school_id = request.data['school'],
+                                                admission = request.data['admission'])
             es = Elasticsearch()
             body = {
                 "user_id":user.id,
                 "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
             }
-            es.index(index='profile', doc='_doc', body=body)
+            es.index(index='profile', doc_type='_doc', body=body)
         except:
             token.delete()
             return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -317,10 +319,12 @@ def password(request):
 @permission_classes((IsAuthenticated,))
 def resign(request):   
     if check_password(request.data['password'], request.user.password):
+        es = Elasticsearch()
+        es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id}}}})
         user = request.user
-        profile_obj = Profile.objects.filter(user_id=user.id)[0]
+        profile_obj = Profile.objects.filter(user_id=user.id).select_related('department').select_related('school')[0]
         profile_obj.profile_image.delete(save=False)
-        message = EmailMessage('{}님 탈퇴 사유'.format(profile_obj.real_name), '학과:{} \n 사유:{}'.format(request.data['department'], request.data['reason']), to=['loopus@loopus.co.kr'])
+        message = EmailMessage('{}님 탈퇴 사유'.format(profile_obj.real_name), '{} {} \n 사유:{}'.format(profile_obj.school.school, profile_obj.department.department, request.data['reason']), to=['loopus@loopus.co.kr'])
         try:
             message.send()
         except:

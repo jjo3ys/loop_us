@@ -24,7 +24,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'loop_count', 'total_post_count', 'group', 'school']
+        fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'loop_count', 'total_post_count', 'group', 'school', 'admission']
     
     def get_loop_count(self, obj):
         return Loopship.objects.filter(friend_id=obj.user_id).count()
