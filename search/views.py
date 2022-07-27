@@ -152,3 +152,14 @@ def search_university(request):
             return Response(DepSerializer(obj, many=True).data, status=status.HTTP_200_OK)
         except:
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def recommend(request):
+    now = datetime.datetime.now()
+    post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).order_by('-like_count')
+    post_obj = Paginator(post_obj, 5)
+    if post_obj.num_pages < int(request.GET['page']):
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    return Response(MainloadSerializer(post_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
