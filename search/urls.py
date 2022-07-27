@@ -6,4 +6,5 @@ urlpatterns = [
     # path('connect_log', views.connection_log),
     path('search/<type>', views.search),
     path('search_uni', views.search_university),
+    path('recommend', views.recommend)
 ]

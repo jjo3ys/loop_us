@@ -192,37 +192,28 @@ def user_ranking(request):
 @permission_classes((IsAuthenticated,))
 def career_board_ranking(request):
     group_id = request.GET['id']
-    if group_id == '10':
-        now = datetime.now()
-        post_obj = Post.objects.filter(date__range=[now-timedelta(days=7), now]).order_by('-like_count')
-        post_obj = Paginator(post_obj, 5)
-        if post_obj.num_pages < int(request.GET['page']):
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        
-        return Response(MainloadSerializer(post_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
 
-    else:
-        if request.GET['type'] == 'main':
-            return_dict = {}
-            ranked_post_obj = PostingRanking.objects.filter(group=group_id).select_related('post')
-            post_list = []
-            for ranked_post in ranked_post_obj:
-                post_list.append(ranked_post.post)
+    if request.GET['type'] == 'main':
+        return_dict = {}
+        ranked_post_obj = PostingRanking.objects.filter(group=group_id).select_related('post')
+        post_list = []
+        for ranked_post in ranked_post_obj:
+            post_list.append(ranked_post.post)
 
-            profile = Profile.objects.filter(user_id=request.user.id)[0]
-            return_dict['posting'] = MainloadSerializer(post_list, many=True).data
-            obj = Profile.objects.filter(group=group_id)
-            
-            return_dict['group_ranking'] = RankProfileSerailizer(obj.exclude(rank=0).order_by('rank')[:3], many=True).data
-            return_dict['school_ranking'] = SchoolRankProfileSerailizer(obj.filter(school_id=profile.school_id).exclude(school_rank=0).order_by('school_rank')[:3], many=True).data
-            return_dict['tag'] = TagSerializer(Tag.objects.filter(group_id=group_id).order_by('-count')[:5], many=True).data
-            return Response(return_dict, status=status.HTTP_200_OK)
+        profile = Profile.objects.filter(user_id=request.user.id)[0]
+        return_dict['posting'] = MainloadSerializer(post_list, many=True).data
+        obj = Profile.objects.filter(group=group_id)
         
-        elif request.GET['type'] == 'school':
-            profile = Profile.objects.filter(user_id=request.user.id)[0]
-            profile_obj = Profile.objects.filter(school_id=profile.school_id, group=group_id).exclude(rank=0).order_by('school_rank')[:100]
-            return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
-        
-        elif request.GET['type'] == 'group':
-            profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:100]
-            return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
+        return_dict['group_ranking'] = RankProfileSerailizer(obj.exclude(rank=0).order_by('rank')[:3], many=True).data
+        return_dict['school_ranking'] = SchoolRankProfileSerailizer(obj.filter(school_id=profile.school_id).exclude(school_rank=0).order_by('school_rank')[:3], many=True).data
+        return_dict['tag'] = TagSerializer(Tag.objects.filter(group_id=group_id).order_by('-count')[:5], many=True).data
+        return Response(return_dict, status=status.HTTP_200_OK)
+    
+    elif request.GET['type'] == 'school':
+        profile = Profile.objects.filter(user_id=request.user.id)[0]
+        profile_obj = Profile.objects.filter(school_id=profile.school_id, group=group_id).exclude(rank=0).order_by('school_rank')[:100]
+        return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
+    
+    elif request.GET['type'] == 'group':
+        profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:100]
+        return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
