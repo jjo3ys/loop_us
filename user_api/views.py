@@ -580,7 +580,7 @@ def alarm(request):
             return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
 
         elif request.GET['type'] == 'read':
-            alarm_obj = Alarm.objects.filter(target_id=request.GET['id'], type=request.GET['type'])[0]
+            alarm_obj = Alarm.objects.filter(target_id=request.GET['id'], type=request.GET['type_id'])[0]
             alarm_obj.is_read = True
             alarm_obj.save()
 
