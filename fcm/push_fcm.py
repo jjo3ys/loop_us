@@ -11,7 +11,7 @@ def loop_fcm(token, req_from, id):
             body='{0}님이 회원님을 팔로우하기 시작했어요.'.format(req_from)
         ),
         data={
-            'type':'follow',
+            'type':'2',
             'real_name':req_from,
             'id':str(id)
         },
@@ -30,7 +30,7 @@ def tag_fcm(token, req_from, from_id, project, id):
             body='{0}님이 {1}활동에 회원님을 태그했어요.'.format(req_from, project)
         ),
         data={
-            'type':'tag',
+            'type':'3',
             'id':str(id)
         },
         token = token.token,
@@ -48,7 +48,7 @@ def like_fcm(token, req_from, id, from_id):
             body='{0}님이 회원님의 포스팅을 좋아합니다.'.format(req_from)
         ),
         data={
-            'type':'like',
+            'type':'4',
             'id':str(id)
         },
         token = token.token,
@@ -66,7 +66,25 @@ def comment_like_fcm(token, req_from, id, from_id):
             body='{0}님이 회원님의 댓글을 좋아합니다.'.format(req_from)
         ),
         data={
-            'type':'comment_like',
+            'type':'5',
+            'id':str(id)
+        },
+        token = token.token,
+        )
+        try:
+            messaging.send(message)
+        except UnregisteredError:
+            pass
+
+def cocomment_like_fcm(token, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=6, target_id=id, alarm_from_id=from_id)
+    if valid:
+        message = messaging.Message(notification=messaging.Notification(
+            title='루프어스',
+            body='{0}님이 회원님의 대댓글을 좋아합니다.'.format(req_from)
+        ),
+        data={
+            'type':'6',
             'id':str(id)
         },
         token = token.token,
