@@ -121,9 +121,9 @@ class AlarmSerializer(serializers.ModelSerializer):
                 return None
         elif int(obj.type) == 4:
             try:
-                return Post.objects.filter(id=obj.target_id)[0].title
+                return Post.objects.filter(id=obj.target_id)[0].contents
             except IndexError:
-                return
+                return None
     
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id)[0]).data
