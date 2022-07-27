@@ -552,15 +552,10 @@ def alarm(request):
     if request.method == 'GET':
         if request.GET['type'] == 'follow':
             if request.GET['last'] == '0':
-                alarm_obj = Alarm.objects.filter(user_id=request.user.id, type=2).order_by('-id')[:10]
-                
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id, type=2).order_by('-id')[:10]               
             else:
                 alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last'], type=2).order_by('-id')[:10]
             
-            for alarm in alarm_obj:
-                if not alarm.is_read:
-                    alarm.is_read = True
-                    alarm.save()
             alarm_obj = AlarmSerializer(alarm_obj, many=True).data
             for alarm in alarm_obj:
                 follow = Loopship.objects.filter(user_id=request.user.id, friend_id=alarm['target_id']).exists()
@@ -575,19 +570,21 @@ def alarm(request):
                     alarm.update({"looped":0})
 
             return Response(alarm_obj, status=status.HTTP_200_OK)
-        else:            
+
+        elif request.GET['type'] == 'else':            
             if request.GET['last'] == '0':
                 alarm_obj = Alarm.objects.filter(user_id=request.user.id).exclude(type=2).order_by('-id')[:10]
-
             else:
                 alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2).order_by('-id')[:10]
-
-            for alarm in alarm_obj:
-                if not alarm.is_read:
-                    alarm.is_read = True
-                    alarm.save()
                     
             return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
+
+        elif request.GET['type'] == 'read':
+            alarm_obj = Alarm.objects.filter(target_id=request.GET['id'], type=request.GET['type'])[0]
+            alarm_obj.is_read = True
+            alarm_obj.save()
+
+            return Response(status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
         alarm_obj = Alarm.objects.filter(id=request.GET['id'])[0]
