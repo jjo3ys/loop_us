@@ -582,7 +582,10 @@ def alarm(request):
             else:
                 alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2).order_by('-id')[:10]
 
-            alarm_obj.update(is_read=True)
+            for alarm in alarm_obj:
+                if not alarm.is_read:
+                    alarm.is_read = True
+                    alarm.save()
                     
             return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
 
