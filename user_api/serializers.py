@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
+
 from project_api.models import Project
 from .models import Alarm, Banlist, Profile, School, Department
 from loop.models import Loopship
-from post_api.models import Post
+from post_api.models import Post, Cocomment, Comment
 
 from rest_framework import serializers
 
@@ -124,6 +125,15 @@ class AlarmSerializer(serializers.ModelSerializer):
                 return Post.objects.filter(id=obj.target_id)[0].contents
             except IndexError:
                 return None
-    
+        elif int(obj.type) == 5:
+            try:
+                return Comment.objects.filter(id=obj.target_id)[0].content
+            except IndexError:
+                return None
+        elif int(obj.type) == 6:
+            try:
+                return Cocomment.objects.filter(id=obj.target_id)[0].content
+            except IndexError:
+                return None
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id)[0]).data
