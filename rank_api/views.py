@@ -220,7 +220,7 @@ def career_board_ranking(request):
         
         elif request.GET['type'] == 'school':
             profile = Profile.objects.filter(user_id=request.user.id)[0]
-            profile_obj = Profile.objects.filter(school_id=profile.school_id, group_id=group_id).exclude(rank=0).order_by('school_rank')[:100]
+            profile_obj = Profile.objects.filter(school_id=profile.school_id, group=group_id).exclude(rank=0).order_by('school_rank')[:100]
             return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
         
         elif request.GET['type'] == 'group':
