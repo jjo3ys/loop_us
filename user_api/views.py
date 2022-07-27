@@ -24,7 +24,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from fcm.push_fcm import logout_push, report_alarm
+from fcm.push_fcm import certify_fcm, logout_push, report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
@@ -69,7 +69,7 @@ def delete_tag(tag_obj):
         else:
             tag.tag.save()
 
-def send_msg(email):
+def send_msg(email, fcm):
     client = redis.Redis()
     r = client.get(email)
     if not r:
@@ -77,9 +77,9 @@ def send_msg(email):
     else:
         client.delete(email)
     if platform.system() == 'Linux':
-        token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256').decode('utf-8')# ubuntu환경
+        token = jwt.encode({'id': email, 'token':fcm}, SECRET_KEY, algorithm='HS256').decode('utf-8')# ubuntu환경
     else:
-        token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256')
+        token = jwt.encode({'id': email, 'token':fcm}, SECRET_KEY, algorithm='HS256')
     html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br>\
                      <a href="http://3.35.253.151:8000/user_api/activate/{token}">이메일 인증 링크</a><br><br>\
                      <h3>감사합니다.</h3>'
@@ -95,7 +95,7 @@ def send_msg(email):
 def create_user(request):
     if User.objects.filter(username=request.data['email']).exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    send_msg(request.data['email'])
+    send_msg(request.data['email'], request.data['token'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
@@ -112,7 +112,7 @@ def activate(request, token):
                 user[0].save()
             else:
                 User.objects.create_user(username = user_dic['id'], email = user_dic['id'], password = 'loopus', is_active=True)
-            
+            certify_fcm(user_dic['token'])
             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
     except:
         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
@@ -172,14 +172,14 @@ def activate(request, token):
 #     except:
 #         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
 
-@api_view(['GET'])
-def check_valid(request):    
-    user = User.objects.filter(username=request.GET['email'])
-    if user.exists() and user[0].is_active:
-        return Response(status=status.HTTP_200_OK)
+# @api_view(['GET'])
+# def check_valid(request):    
+#     user = User.objects.filter(username=request.GET['email'])
+#     if user.exists() and user[0].is_active:
+#         return Response(status=status.HTTP_200_OK)
     
-    else:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+#     else:
+#         return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST', ])
 def check_corp_num(request):

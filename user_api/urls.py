@@ -7,7 +7,7 @@ urlpatterns = [
     path('check_corp_num', views.check_corp_num),
     path('check_token', views.check_token),
     path('signup', views.signup),
-    path('valid', views.check_valid),
+    # path('valid', views.check_valid),
     path('login', views.login),
     path('logout', views.logout),
     path('resign', views.resign),
