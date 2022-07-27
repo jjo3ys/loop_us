@@ -93,6 +93,18 @@ def chat_fcm(token, req_from, msg, user_id):
     except UnregisteredError:
         pass
 
+def certify_fcm(token):
+    message = messaging.Message(
+    data={
+        "type":"certification",
+    },
+    token=token
+    )
+    try:
+        messaging.send(message)
+    except UnregisteredError:
+        pass
+
 def notification_fcm(token_list):
     text = input("메세지:")
     msg = messaging.MulticastMessage(notification=messaging.Notification(

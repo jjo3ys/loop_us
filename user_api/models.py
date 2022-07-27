@@ -1,9 +1,11 @@
+from email.policy import default
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 
 class School(models.Model):
     school = models.CharField(max_length=20)
+    logo = models.ImageField(null=True, default='', upload_to='logo/school/')
     email = models.CharField(max_length=20, default=None)
     class Meta:
         db_table = 'School'
