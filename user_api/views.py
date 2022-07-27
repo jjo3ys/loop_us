@@ -111,7 +111,7 @@ def activate(request, token):
                 user[0].is_active = True
                 user[0].save()
             else:
-                User.objects.create_user(username = user_dic['id'], email = user_dic['id'], password = 'loopus', is_active=True)
+                pass
             certify_fcm(user_dic['token'])
             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
     except:
@@ -216,44 +216,40 @@ def signup(request):
     type = request.data['type']
 
     if int(type) == 1:
-        user = User.objects.filter(username=request.data['username'])[0]
+        user = User.objects.create_user(username=request.data['username'], email=request.data['username'], password=request.data['password'], is_active=True)
     else:
-        user = User.objects.filter(username=request.data['email'])[0]
+        user = User.objects.create_user(username=request.data['email'], email=request.data['email'], password=request.data['password'], is_active=True)
     
+    token = Token.objects.create(user_id=user.id)
+    try:
+        profile_obj = Profile.objects.create(user_id = user.id,
+                                            type = type,
+                                            real_name = request.data['real_name'],
+                                            profile_image = None,
+                                            department_id = request.data['department'],
+                                            school_id = request.data['school'],
+                                            admission = request.data['admission'])
+        es = Elasticsearch()
+        body = {
+            "user_id":user.id,
+            "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
+        }
+        es.index(index='profile', doc_type='_doc', body=body)
+    except:
+        es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":user.id}}}})
+        token.delete()
+        user.delete()
+        return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
 
-    if user.is_active:
-        token = Token.objects.create(user_id=user.id)
-        user.set_password(request.data['password'])
-        user.save()
-        try:
-            profile_obj = Profile.objects.create(user_id = user.id,
-                                                type = type,
-                                                real_name = request.data['real_name'],
-                                                profile_image = None,
-                                                department_id = request.data['department'],
-                                                school_id = request.data['school'],
-                                                admission = request.data['admission'])
-            es = Elasticsearch()
-            body = {
-                "user_id":user.id,
-                "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
-            }
-            es.index(index='profile', doc_type='_doc', body=body)
-        except:
-            token.delete()
-            return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
-
-        if type == 1:
-            corp = Activation.objects.filter(user_id=user.id)[0]
-            Company_Inform.objects.create(profile_id = profile_obj.id,
-                                        corp_num = corp.corp_num,
-                                        corp_name = corp.corp_name)
-            corp.delete()
+    if type == 1:
+        corp = Activation.objects.filter(user_id=user.id)[0]
+        Company_Inform.objects.create(profile_id = profile_obj.id,
+                                    corp_num = corp.corp_num,
+                                    corp_name = corp.corp_name)
+        corp.delete()
             
-        InterestTag.objects.create(user_id=user.id, tag_list={})
-        return Response({'token':token.key, 'user_id':str(user.id)},status=status.HTTP_200_OK)
-    else:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    InterestTag.objects.create(user_id=user.id, tag_list={})
+    return Response({'token':token.key, 'user_id':str(user.id)},status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def login(request):
@@ -586,10 +582,7 @@ def alarm(request):
             else:
                 alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2).order_by('-id')[:10]
 
-            for alarm in alarm_obj:
-                if not alarm.is_read:
-                    alarm.is_read = True
-                    alarm.save()
+            alarm_obj.update(is_read=True)
                     
             return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
 
