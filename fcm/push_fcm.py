@@ -13,7 +13,8 @@ def loop_fcm(token, req_from, id):
         data={
             'type':'2',
             'real_name':req_from,
-            'id':str(id)
+            'id':str(id),
+            'sender_id':str(id)
         },
         token = token.token,
         )
@@ -31,7 +32,8 @@ def tag_fcm(token, req_from, from_id, project, id):
         ),
         data={
             'type':'3',
-            'id':str(id)
+            'id':str(id),
+            'sender_id':str(from_id)
         },
         token = token.token,
         )
@@ -49,7 +51,8 @@ def like_fcm(token, req_from, id, from_id):
         ),
         data={
             'type':'4',
-            'id':str(id)
+            'id':str(id),
+            'sender_id':str(from_id)
         },
         token = token.token,
         )
@@ -67,7 +70,8 @@ def comment_like_fcm(token, req_from, id, from_id):
         ),
         data={
             'type':'5',
-            'id':str(id)
+            'id':str(id),
+            'sender_id':str(from_id)
         },
         token = token.token,
         )
@@ -85,7 +89,8 @@ def cocomment_like_fcm(token, req_from, id, from_id):
         ),
         data={
             'type':'6',
-            'id':str(id)
+            'id':str(id),
+            'sender_id':str(from_id)
         },
         token = token.token,
         )
