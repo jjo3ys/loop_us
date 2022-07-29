@@ -13,7 +13,8 @@ SECRET_KEY = DJANGO_KEY
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
-
+# DEBUG = False
+# ALLOWED_HOSTS = ['3.35.253.151']
 
 
 SITE_URL = "http://3.35.253.151:8000/"
@@ -54,6 +55,12 @@ INSTALLED_APPS = [
 ]
 
 #elastic search settings
+ELASTICSEARCH_DSL = {
+    'default':{
+        'hosts':'localhost:8000',
+    }
+}
+
 REST_FRAMEWORK = {
 
     # Web Test 때문에 꺼놈
@@ -197,5 +204,3 @@ if platform.system() == 'Linux':
     CACHEOPS = {
         '*.*': {}, # 모든 앱에대해서 캐시적용
     }
-    # DEBUG = False
-    ALLOWED_HOSTS = ['3.35.253.151']
