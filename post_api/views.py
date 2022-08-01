@@ -326,7 +326,11 @@ def bookmark(request):
 def bookmark_list_load(request):
     user = request.user
     bookmark_list = BookMark.objects.filter(user_id=user.id).order_by('-id')
-    bookmark_list = Paginator(bookmark_list, 10).get_page(request.GET['page'])
+    bookmark_list = Paginator(bookmark_list, 10)
+    if bookmark_list.num_pages < int(request.GET['page']):
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+    bookmark_list = bookmark_list.get_page(request.GET['page'])
     post_obj = []
     for bookmark in bookmark_list:
         post_obj.append(bookmark.post)
