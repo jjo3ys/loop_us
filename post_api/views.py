@@ -6,7 +6,7 @@ from search.views import interest_tag
 
 from tag.models import Post_Tag, Tag
 # from fcm.models import FcmToken
-from fcm.push_fcm import comment_fcm, like_fcm, report_alarm, comment_like_fcm
+from fcm.push_fcm import cocomment_fcm, comment_fcm, like_fcm, report_alarm, comment_like_fcm
 from user_api.models import Banlist, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
@@ -189,7 +189,7 @@ def comment(request):
                 real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            comment_fcm(comment_obj.user_id, real_name, comment_obj.id, request.user.id)
+            cocomment_fcm(comment_obj.user_id, real_name, comment_obj.id, request.user.id)
 
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
@@ -329,7 +329,7 @@ def bookmark_list_load(request):
     bookmark_list = Paginator(bookmark_list, 10)
     if bookmark_list.num_pages < int(request.GET['page']):
         return Response(status=status.HTTP_204_NO_CONTENT)
-        
+
     bookmark_list = bookmark_list.get_page(request.GET['page'])
     post_obj = []
     for bookmark in bookmark_list:
