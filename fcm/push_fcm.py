@@ -1,10 +1,10 @@
 from firebase_admin import messaging
 from firebase_admin._messaging_utils import UnregisteredError
-from fcm.models import FcmToken
+# from fcm.models import FcmToken
 from user_api.models import Alarm
     
-def loop_fcm(token, req_from, id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=2, target_id=id, alarm_from_id=id)
+def loop_fcm(topic, req_from, id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=2, target_id=id, alarm_from_id=id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
             title='루프어스',
@@ -16,15 +16,15 @@ def loop_fcm(token, req_from, id):
             'id':str(id),
             'sender_id':str(id)
         },
-        token = token.token,
+        topic=str(topic)
         )
         try:
             messaging.send(message)
         except UnregisteredError:
             pass
 
-def tag_fcm(token, req_from, from_id, project, id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=3, target_id=id, alarm_from_id=from_id)
+def tag_fcm(topic, req_from, from_id, project, id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=3, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
             title='루프어스',
@@ -35,15 +35,15 @@ def tag_fcm(token, req_from, from_id, project, id):
             'id':str(id),
             'sender_id':str(from_id)
         },
-        token = token.token,
+        topic=str(topic),
         )
         try:
             messaging.send(message)
         except UnregisteredError:
             pass
 
-def like_fcm(token, req_from, id, from_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=4, target_id=id, alarm_from_id=from_id)
+def like_fcm(topic, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=4, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
             title='루프어스',
@@ -54,15 +54,15 @@ def like_fcm(token, req_from, id, from_id):
             'id':str(id),
             'sender_id':str(from_id)
         },
-        token = token.token,
+        topic=str(topic),
         )
         try:
             messaging.send(message)
         except UnregisteredError:
             pass
 
-def comment_like_fcm(token, req_from, id, from_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=5, target_id=id, alarm_from_id=from_id)
+def comment_like_fcm(topic, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=5, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
             title='루프어스',
@@ -73,15 +73,15 @@ def comment_like_fcm(token, req_from, id, from_id):
             'id':str(id),
             'sender_id':str(from_id)
         },
-        token = token.token,
+        topic=str(topic),
         )
         try:
             messaging.send(message)
         except UnregisteredError:
             pass
 
-def cocomment_like_fcm(token, req_from, id, from_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=6, target_id=id, alarm_from_id=from_id)
+def cocomment_like_fcm(topic, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=6, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
             title='루프어스',
@@ -92,15 +92,15 @@ def cocomment_like_fcm(token, req_from, id, from_id):
             'id':str(id),
             'sender_id':str(from_id)
         },
-        token = token.token,
+        topic=str(topic),
         )
         try:
             messaging.send(message)
         except UnregisteredError:
             pass
 
-def comment_fcm(token, req_from, id, from_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=7, target_id=id, alarm_from_id=from_id)
+def comment_fcm(topic, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=7, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
             title='루프어스',
@@ -111,15 +111,15 @@ def comment_fcm(token, req_from, id, from_id):
             'id':str(id),
             'sender_id':str(from_id)
         },
-        token = token.token,
+        topic=str(topic),
         )
         try:
             messaging.send(message)
         except UnregisteredError:
             pass
 
-def cocomment_fcm(token, req_from, id, from_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=8, target_id=id, alarm_from_id=from_id)
+def cocomment_fcm(topic, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=8, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
             title='루프어스',
@@ -130,14 +130,14 @@ def cocomment_fcm(token, req_from, id, from_id):
             'id':str(id),
             'sender_id':str(from_id)
         },
-        token = token.token,
+        topic=str(topic),
         )
         try:
             messaging.send(message)
         except UnregisteredError:
             pass
     
-def chat_fcm(token, req_from, msg, user_id):
+def chat_fcm(topic, req_from, msg, user_id):
     message = messaging.Message(notification=messaging.Notification(
         title='{0}님'.format(req_from),
         body=msg
@@ -147,19 +147,19 @@ def chat_fcm(token, req_from, msg, user_id):
         "real_name":req_from,
         "id":str(user_id)
     },
-    token=token
+    topic=str(topic)
     )
     try:
         messaging.send(message)
     except UnregisteredError:
         pass
 
-def certify_fcm(token):
+def certify_fcm(topic):
     message = messaging.Message(
     data={
         "type":"certification",
     },
-    token=token
+    topic=topic
     )
     try:
         messaging.send(message)
@@ -198,7 +198,7 @@ def report_alarm(count, type, id, reason):
         "type":report_type,
         "id":str(id)
     },
-    token=FcmToken.objects.get(user_id=24).token
+    topic='24'
     )
     try:
         messaging.send(message)
