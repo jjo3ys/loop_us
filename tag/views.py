@@ -45,14 +45,17 @@ def tagged_post(request):
         lastmonth = date.today().month
 
         tag_obj = Tag.objects.filter(id=request.GET['id'])[0]
+        monthly_count = {}
         for i in range(1, 7):
             if lastmonth - i <= 0:
                 month = str(12 + lastmonth - i )
             else:
                 month = str(lastmonth - i)
             if month not in tag_obj.monthly_count:
-                tag_obj.monthly_count[month] = 0
-                
+                monthly_count[month] = 0
+            else:
+                monthly_count[month] = tag_obj.monthly_count[month]
+
         post_list = []
         post_obj = Paginator(post_tag_obj.order_by('-id'), 5).get_page('1')
         for post in post_obj:
@@ -74,8 +77,8 @@ def tagged_post(request):
                 post.update({"is_liked":1})
             else:
                 post.update({"is_liked":0})
-
-        return Response({'monthly_count':tag_obj.monthly_count,
+        
+        return Response({'monthly_count':monthly_count,
                         'related_new':new_post_tag_obj,
                         'related_pop':pop_post_tag_obj}, status=status.HTTP_200_OK)
     else:

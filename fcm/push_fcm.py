@@ -99,6 +99,44 @@ def cocomment_like_fcm(token, req_from, id, from_id):
         except UnregisteredError:
             pass
 
+def comment_fcm(token, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=7, target_id=id, alarm_from_id=from_id)
+    if valid:
+        message = messaging.Message(notification=messaging.Notification(
+            title='루프어스',
+            body='{0}님이 회원님의 포스팅에 댓글을 남겼습니다.'.format(req_from)
+        ),
+        data={
+            'type':'7',
+            'id':str(id),
+            'sender_id':str(from_id)
+        },
+        token = token.token,
+        )
+        try:
+            messaging.send(message)
+        except UnregisteredError:
+            pass
+
+def cocomment_fcm(token, req_from, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=token.user_id, type=8, target_id=id, alarm_from_id=from_id)
+    if valid:
+        message = messaging.Message(notification=messaging.Notification(
+            title='루프어스',
+            body='{0}님이 회원님의 댓글에 답글을 남겼습니다.'.format(req_from)
+        ),
+        data={
+            'type':'8',
+            'id':str(id),
+            'sender_id':str(from_id)
+        },
+        token = token.token,
+        )
+        try:
+            messaging.send(message)
+        except UnregisteredError:
+            pass
+    
 def chat_fcm(token, req_from, msg, user_id):
     message = messaging.Message(notification=messaging.Notification(
         title='{0}님'.format(req_from),

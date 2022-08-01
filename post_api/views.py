@@ -6,7 +6,7 @@ from search.views import interest_tag
 
 from tag.models import Post_Tag, Tag
 from fcm.models import FcmToken
-from fcm.push_fcm import like_fcm, report_alarm, comment_like_fcm
+from fcm.push_fcm import comment_fcm, like_fcm, report_alarm, comment_like_fcm
 from user_api.models import Banlist, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
@@ -168,6 +168,13 @@ def comment(request):
             comment_obj = Comment.objects.create(user_id=request.user.id,
                                                  post_id=request.GET['id'],#포스트 id
                                                  content=request.data['content'])
+            try:
+                post_obj = Post.objects.filter(id=request.GET['id'])[0]
+                token = FcmToken.objects.filter(user_id=post_obj.user_id)[0]
+                real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            comment_fcm(token, real_name, post_obj.id, request.user.id)
 
             return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
 
@@ -176,7 +183,14 @@ def comment(request):
                                                      comment_id=request.GET['id'],#댓글 id
                                                      content=request.data['content'],
                                                      tagged_id=request.data['tagged_user'])
-        
+            try:
+                comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
+                token = FcmToken.objects.filter(user_id=comment_obj.user_id)[0]
+                real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
+            except:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            comment_fcm(token, real_name, comment_obj.id, request.user.id)
+
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
     elif request.method =='PUT':
