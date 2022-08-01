@@ -37,7 +37,7 @@ from project_api.models import Project
 from project_api.serializers import ProjectSerializer
 from post_api.models import BookMark, Like, PostImage, Post
 from loop.models import Loopship
-from fcm.models import FcmToken
+# from fcm.models import FcmToken
 from chat.models import Room, Msg
 
 from elasticsearch import Elasticsearch
@@ -262,20 +262,20 @@ def login(request):
         user.last_login = timezone.now()
         user.save()
         
-        try:
-            fcm_obj = FcmToken.objects.filter(user_id=user.id)[0]
-            if fcm_obj.token != request.data['fcm_token']:
-                try:
-                    logout_push(fcm_obj.token)
-                except:
-                    pass
+        # try:
+        #     fcm_obj = FcmToken.objects.filter(user_id=user.id)[0]
+        #     if fcm_obj.token != request.data['fcm_token']:
+        #         try:
+        #             logout_push(fcm_obj.token)
+        #         except:
+        #             pass
                 
-                fcm_obj.token = request.data['fcm_token']
-                fcm_obj.save()
+        #         fcm_obj.token = request.data['fcm_token']
+        #         fcm_obj.save()
 
-        except IndexError:
-            FcmToken.objects.create(user_id=user.id,
-                                    token=request.data['fcm_token'])
+        # except IndexError:
+        #     FcmToken.objects.create(user_id=user.id,
+        #                             token=request.data['fcm_token'])
 
         return Response({'token':token_obj.key,
                         'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
@@ -283,27 +283,27 @@ def login(request):
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
         
-@api_view(['POST'])
-@permission_classes((IsAuthenticated,))
-def logout(request):
-    user = request.user
-    try:
-        fcm_obj = FcmToken.objects.filter(user_id=user.id)[0]
-        fcm_obj.delete()
-    except:
-        pass
-    return Response("Successed log out", status=status.HTTP_200_OK)
+# @api_view(['POST'])
+# @permission_classes((IsAuthenticated,))
+# def logout(request):
+#     user = request.user
+#     try:
+#         fcm_obj = FcmToken.objects.filter(user_id=user.id)[0]
+#         fcm_obj.delete()
+#     except:
+#         pass
+#     return Response("Successed log out", status=status.HTTP_200_OK)
 
-@api_view(['POST'])
-@permission_classes((IsAuthenticated,))
-def check_token(request):
-    try:
-        if request.data['fcm_token'] != FcmToken.objects.filter(user_id=request.user.id)[0].token:
-            return Response(status=status.HTTP_401_UNAUTHORIZED)
-        else:
-            return Response(status=status.HTTP_200_OK)
-    except:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)
+# @api_view(['POST'])
+# @permission_classes((IsAuthenticated,))
+# def check_token(request):
+#     try:
+#         if request.data['fcm_token'] != FcmToken.objects.filter(user_id=request.user.id)[0].token:
+#             return Response(status=status.HTTP_401_UNAUTHORIZED)
+#         else:
+#             return Response(status=status.HTTP_200_OK)
+#     except:
+#         return Response(status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['PUT', 'POST'])
 def password(request):
