@@ -1,7 +1,7 @@
 from user_api.serializers import SimpleProfileSerializer
 from user_api.models import Banlist, Profile
 from fcm.push_fcm import chat_fcm
-from fcm.models import FcmToken
+# from fcm.models import FcmToken
 
 from .models import Msg, Room
 from .serializer import ChatSerializer
@@ -56,8 +56,7 @@ def chatting(request):
         
         try:
             send_profile = Profile.objects.filter(user_id=user.id)[0]
-            receiver_token = FcmToken.objects.get(user_id=request.GET['id'])    
-            chat_fcm(receiver_token.token, send_profile.real_name, request.data['message'], user.id) 
+            chat_fcm(request.GET['id'], send_profile.real_name, request.data['message'], user.id) 
         except:
             pass
 
@@ -112,10 +111,10 @@ def get_profile(request):
     
     return Response(return_list, status=status.HTTP_200_OK)
 
-@api_view(['GET'])
-@permission_classes((IsAuthenticated,))
-def get_token(request):
-    try:
-        return Response({'token':FcmToken.objects.filter(user_id=request.GET['id'])[0].token}, status=status.HTTP_200_OK)
-    except:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+# @api_view(['GET'])
+# @permission_classes((IsAuthenticated,))
+# def get_token(request):
+#     try:
+#         return Response({'token':FcmToken.objects.filter(user_id=request.GET['id'])[0].token}, status=status.HTTP_200_OK)
+#     except:
+#         return Response(status=status.HTTP_404_NOT_FOUND)

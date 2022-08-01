@@ -2,7 +2,7 @@ from .models import Loopship
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
 from fcm.push_fcm import loop_fcm
-from fcm.models import FcmToken
+# from fcm.models import FcmToken
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -47,11 +47,7 @@ from rest_framework.permissions import IsAuthenticated
 def loop(request, idx):
     user = request.user
     profile = Profile.objects.filter(user_id=user.id)[0]
-    try:
-        token = FcmToken.objects.get(user_id=idx)
-        loop_fcm(token, profile.real_name, user.id)
-    except FcmToken.DoesNotExist:
-        pass
+    loop_fcm(idx, profile.real_name, user.id)
 
     Loopship.objects.get_or_create(user_id=user.id, friend_id=idx)
  

@@ -3,7 +3,7 @@ from search.models import Get_log
 from .serializers import ProjectPostSerializer
 from .models import Project, TagLooper
 from user_api.models import Profile
-from fcm.models import FcmToken
+# from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
 from post_api.models import PostImage, Like, BookMark, Post
 
@@ -60,8 +60,8 @@ def project(request):
                 looper, created = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
                 if created:
                     try:
-                        token = FcmToken.objects.filter(user_id=looper.looper_id)[0]
-                        tag_fcm(token, profile_obj.real_name, request.user.id, project_obj.project_name, project_obj.id)
+                        # token = FcmToken.objects.filter(user_id=looper.looper_id)[0]
+                        tag_fcm(looper, profile_obj.real_name, request.user.id, project_obj.project_name, project_obj.id)
                     except:
                         pass
             
