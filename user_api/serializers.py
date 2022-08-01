@@ -125,12 +125,12 @@ class AlarmSerializer(serializers.ModelSerializer):
                 return Post.objects.filter(id=obj.target_id)[0].contents
             except IndexError:
                 return None
-        elif int(obj.type) == 5:
+        elif int(obj.type) == 5 or int(obj.type) == 7:
             try:
                 return Comment.objects.filter(id=obj.target_id)[0].content
             except IndexError:
                 return None
-        elif int(obj.type) == 6:
+        elif int(obj.type) == 6 or int(obj.type) == 8:
             try:
                 return Cocomment.objects.filter(id=obj.target_id)[0].content
             except IndexError:
