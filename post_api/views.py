@@ -5,7 +5,7 @@ from search.models import Get_log, InterestTag
 from search.views import interest_tag
 
 from tag.models import Post_Tag, Tag
-from fcm.models import FcmToken
+# from fcm.models import FcmToken
 from fcm.push_fcm import comment_fcm, like_fcm, report_alarm, comment_like_fcm
 from user_api.models import Banlist, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
@@ -170,11 +170,11 @@ def comment(request):
                                                  content=request.data['content'])
             try:
                 post_obj = Post.objects.filter(id=request.GET['id'])[0]
-                token = FcmToken.objects.filter(user_id=post_obj.user_id)[0]
+                # token = FcmToken.objects.filter(user_id=post_obj.user_id)[0]
                 real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            comment_fcm(token, real_name, post_obj.id, request.user.id)
+            comment_fcm(post_obj.user_id, real_name, post_obj.id, request.user.id)
 
             return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
 
@@ -185,11 +185,11 @@ def comment(request):
                                                      tagged_id=request.data['tagged_user'])
             try:
                 comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
-                token = FcmToken.objects.filter(user_id=comment_obj.user_id)[0]
+                # token = FcmToken.objects.filter(user_id=comment_obj.user_id)[0]
                 real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            comment_fcm(token, real_name, comment_obj.id, request.user.id)
+            comment_fcm(comment_obj.user_id, real_name, comment_obj.id, request.user.id)
 
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
@@ -247,9 +247,9 @@ def like(request):
             like_obj.post.save()
             if like_obj.post.user_id != request.user.id:
                 try:
-                    token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
+                    # token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
                     real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
-                    like_fcm(token, real_name, idx, request.user.id)
+                    like_fcm(like_obj.post.user_id, real_name, idx, request.user.id)
                 except:
                     pass
 
@@ -273,9 +273,9 @@ def like(request):
             like_obj.comment.save()
             if like_obj.comment.user_id != request.user.id:
                 try:
-                    token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
+                    # token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
                     real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
-                    comment_like_fcm(token, real_name, idx, request.user.id)
+                    comment_like_fcm(like_obj.comment.user_id, real_name, idx, request.user.id)
                 except:
                     pass
 
@@ -298,9 +298,9 @@ def like(request):
             like_obj.cocomment.save()
             if like_obj.cocomment.user_id != request.user.id:
                 try:
-                    token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
+                    # token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
                     real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
-                    comment_like_fcm(token, real_name, idx, request.user.id)
+                    comment_like_fcm(like_obj.cocomment.user_id, real_name, idx, request.user.id)
                 except:
                     pass
 

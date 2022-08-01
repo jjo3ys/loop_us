@@ -5,11 +5,11 @@ from . import views
 urlpatterns = [
     path('check_email', views.create_user),
     path('check_corp_num', views.check_corp_num),
-    path('check_token', views.check_token),
+    # path('check_token', views.check_token),
     path('signup', views.signup),
     # path('valid', views.check_valid),
     path('login', views.login),
-    path('logout', views.logout),
+    # path('logout', views.logout),
     path('resign', views.resign),
     path('activate/<token>',views.activate),
     path('profile', views.profile),
@@ -21,6 +21,5 @@ urlpatterns = [
     path('alarm', views.alarm),
     path('ask', views.ask),
     path('ban', views.ban),
-    path('check_token', views.check_token),
     path('indexing', views.profile_indexing),
 ]
