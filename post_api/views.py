@@ -444,7 +444,7 @@ def main_load(request):
     profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
         project_obj = Project.objects.filter(user_id=user_id).order_by('post_count').first()
-        project_obj = SimpleProjectserializer(news_obj).data
+        project_obj = SimpleProjectserializer(project_obj).data
         if profile.group == 10:
             news_obj = NewsSerializer(News.objects.all(), many=True).data
         else:
