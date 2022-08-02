@@ -15,7 +15,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
-from .serializers import CocommentSerializer, CommentSerializer, NewsSerializer, PostingSerializer, MainloadSerializer
+from .serializers import CocommentSerializer, CommentSerializer, NewsSerializer, PostingSerializer, MainloadSerializer, SimpleProjectserializer
 from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment, PostLink
 
 from loop.models import Loopship
@@ -26,19 +26,20 @@ import datetime
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
 def posting(request):
+    user_id = request.user.id
     if request.method == 'POST': 
-        post_obj = Post.objects.create(user_id=request.user.id, 
+        post_obj = Post.objects.create(user_id=user_id, 
                                         project_id=request.GET['id'],    
                                         contents=request.data['contents'])
-        project_obj = Project.objects.filter(id=request.GET['id'])[0]
-        project_obj.post_update_date = datetime.datetime.now()
-        project_obj.post_count += 1
+        post_obj.project.post_update_date = datetime.datetime.now()
+        post_obj.project.post_count += 1
+        post_obj.project.save()
 
         for image in request.FILES.getlist('image'):
             PostImage.objects.create(post_id=post_obj.id,
                                      image=image)
         
-        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+        interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
 
         for link in request.data.getlist('link'):
             PostLink.objects.create(post_id=post_obj.id, link=link)
@@ -63,7 +64,7 @@ def posting(request):
         origin_tag_list = origin_tag_obj.values_list('tag__tag', flat=True)
         tag_list = request.data.getlist('tag')
 
-        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+        interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         for tag in tag_list:
             if tag not in origin_tag_list:
                 tag_obj, created = Tag.objects.get_or_create(tag=tag)
@@ -103,32 +104,32 @@ def posting(request):
         post_obj = PostingSerializer(post_obj).data
 
 
-        if request.user.id == post_obj['user_id']:
+        if user_id == post_obj['user_id']:
             post_obj.update({"is_user":1})
         else:
-            # Get_log.objects.create(user_id=request.user.id, target_id=request.GET['id'], type=4)
+            # Get_log.objects.create(user_id=user_id, target_id=request.GET['id'], type=4)
             post_obj.update({"is_user":0})
 
-        exists = Like.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
+        exists = Like.objects.filter(user_id=user_id, post_id=request.GET['id']).exists()
         if exists:
             post_obj.update({"is_liked":1})
         else:
             post_obj.update({"is_liked":0})
         
         for comment in post_obj['comments']:
-            exists = CommentLike.objects.filter(user_id=request.user.id, comment_id=comment['id']).exists()
+            exists = CommentLike.objects.filter(user_id=user_id, comment_id=comment['id']).exists()
             if exists:
                 comment.update({'is_liked':1})
             else:
                 comment.update({'is_liked':0})
             for cocomment in comment['cocomments']:
-                exists = CocommentLike.objects.filter(user_id=request.user.id, cocomment_id=cocomment['id']).exists()
+                exists = CocommentLike.objects.filter(user_id=user_id, cocomment_id=cocomment['id']).exists()
                 if exists:
                     cocomment.update({'is_liked':1})
                 else:
                     cocomment.update({'is_liked':0})
 
-        exists = BookMark.objects.filter(user_id=request.user.id, post_id=request.GET['id']).exists()
+        exists = BookMark.objects.filter(user_id=user_id, post_id=request.GET['id']).exists()
         if exists:
             post_obj.update({"is_marked":1})
         else:
@@ -139,7 +140,7 @@ def posting(request):
     elif request.method == 'DELETE':
         post_obj = Post.objects.filter(id=request.GET['id']).select_related('project')[0]
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
-        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+        interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tag')
 
         for tag in tag_obj:
@@ -163,33 +164,34 @@ def posting(request):
 @api_view(['POST', 'DELETE', 'PUT'])
 @permission_classes((IsAuthenticated,))
 def comment(request):   
+    user_id = request.user.id
     if request.method =='POST':
         if request.GET['type'] == 'post':
-            comment_obj = Comment.objects.create(user_id=request.user.id,
+            comment_obj = Comment.objects.create(user_id=user_id,
                                                  post_id=request.GET['id'],#포스트 id
                                                  content=request.data['content'])
             try:
                 post_obj = Post.objects.filter(id=request.GET['id'])[0]
                 # token = FcmToken.objects.filter(user_id=post_obj.user_id)[0]
-                real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
+                real_name = Profile.objects.filter(user_id=user_id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            comment_fcm(post_obj.user_id, real_name, post_obj.id, request.user.id)
+            comment_fcm(post_obj.user_id, real_name, post_obj.id, user_id)
 
             return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
 
         elif request.GET['type'] == 'comment':
-            cocomment_obj = Cocomment.objects.create(user_id=request.user.id,
+            cocomment_obj = Cocomment.objects.create(user_id=user_id,
                                                      comment_id=request.GET['id'],#댓글 id
                                                      content=request.data['content'],
                                                      tagged_id=request.data['tagged_user'])
             try:
                 comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
                 # token = FcmToken.objects.filter(user_id=comment_obj.user_id)[0]
-                real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
+                real_name = Profile.objects.filter(user_id=user_id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            cocomment_fcm(comment_obj.user_id, real_name, comment_obj.id, request.user.id)
+            cocomment_fcm(comment_obj.user_id, real_name, comment_obj.id, user_id)
 
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
@@ -228,11 +230,12 @@ def comment(request):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def like(request):
+    user_id = request.user.id
     type = request.GET['type']
     idx = request.GET['id']
     if type =='post':
         try:
-            like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=request.user.id)
+            like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=user_id)
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -245,11 +248,11 @@ def like(request):
         else:
             like_obj.post.like_count += 1
             like_obj.post.save()
-            if like_obj.post.user_id != request.user.id:
+            if like_obj.post.user_id != user_id:
                 try:
                     # token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
-                    real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
-                    like_fcm(like_obj.post.user_id, real_name, idx, request.user.id)
+                    real_name = Profile.objects.filter(user_id=user_id)[0].real_name
+                    like_fcm(like_obj.post.user_id, real_name, idx, user_id)
                 except:
                     pass
 
@@ -257,7 +260,7 @@ def like(request):
 
     elif type =='comment':
         try:
-            like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=request.user.id)
+            like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=user_id)
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -271,11 +274,11 @@ def like(request):
         else:
             like_obj.comment.like_count += 1
             like_obj.comment.save()
-            if like_obj.comment.user_id != request.user.id:
+            if like_obj.comment.user_id != user_id:
                 try:
                     # token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
-                    real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
-                    comment_like_fcm(like_obj.comment.user_id, real_name, idx, request.user.id)
+                    real_name = Profile.objects.filter(user_id=user_id)[0].real_name
+                    comment_like_fcm(like_obj.comment.user_id, real_name, idx, user_id)
                 except:
                     pass
 
@@ -283,7 +286,7 @@ def like(request):
                  
     elif type =='cocomment':
         try:
-            like_obj, created = CocommentLike.objects.get_or_create(cocomment_id=idx, user_id=request.user.id)
+            like_obj, created = CocommentLike.objects.get_or_create(cocomment_id=idx, user_id=user_id)
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -296,11 +299,11 @@ def like(request):
         else:
             like_obj.cocomment.like_count += 1
             like_obj.cocomment.save()
-            if like_obj.cocomment.user_id != request.user.id:
+            if like_obj.cocomment.user_id != user_id:
                 try:
                     # token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
-                    real_name = Profile.objects.filter(user_id=request.user.id)[0].real_name
-                    comment_like_fcm(like_obj.cocomment.user_id, real_name, idx, request.user.id)
+                    real_name = Profile.objects.filter(user_id=user_id)[0].real_name
+                    comment_like_fcm(like_obj.cocomment.user_id, real_name, idx, user_id)
                 except:
                     pass
 
@@ -309,9 +312,10 @@ def like(request):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def bookmark(request):
+    user_id = request.user.id
     idx = request.GET['id']
     try:
-        book_obj, created = BookMark.objects.get_or_create(post_id=idx, user_id=request.user.id)
+        book_obj, created = BookMark.objects.get_or_create(post_id=idx, user_id=user_id)
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -324,8 +328,8 @@ def bookmark(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def bookmark_list_load(request):
-    user = request.user
-    bookmark_list = BookMark.objects.filter(user_id=user.id).order_by('-id')
+    user_id = request.user.id
+    bookmark_list = BookMark.objects.filter(user_id=user_id).order_by('-id')
     bookmark_list = Paginator(bookmark_list, 10)
     if bookmark_list.num_pages < int(request.GET['page']):
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -338,7 +342,7 @@ def bookmark_list_load(request):
     post_obj = MainloadSerializer(post_obj, many=True).data
 
     for p in post_obj:
-        if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
+        if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
             p.update({"is_liked":1})
         else:
             p.update({"is_liked":0})
@@ -351,14 +355,15 @@ def bookmark_list_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def recommend_load(request):
-    tags = InterestTag.objects.filter(user_id=request.user.id)[0].tag_list
+    user_id = request.user.id
+    tags = InterestTag.objects.filter(user_id=user_id)[0].tag_list
     try:
-        ban_list = Banlist.objects.filter(user_id=request.user.id)[0].banlist
+        ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
     except:
         ban_list = []
 
-    ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
-    loop_list = Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', flat=True)
+    ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
+    loop_list = Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True)
 
     tag_score = {}
     for post in Post_Tag.objects.filter(tag_id__in=tags):
@@ -382,19 +387,19 @@ def recommend_load(request):
     post_list = 0
 
     for p in post_obj:
-        if p['user_id'] == request.user.id:
+        if p['user_id'] == user_id:
             p.update({"is_user":1})
         else:
             p.update({"is_user":0})
 
         
-        if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
+        if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
             p.update({"is_liked":1})
         else:
             p.update({"is_liked":0})
 
         
-        if BookMark.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
+        if BookMark.objects.filter(user_id=user_id, post_id=p['id']).exists():
             p.update({"is_marked":1})
         else:
             p.update({"is_marked":0})
@@ -404,12 +409,13 @@ def recommend_load(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def main_load(request):
+    user_id = request.user.id
     try:
-        ban_list = Banlist.objects.filter(user_id=request.user.id)[0].banlist
+        ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
     except:
         ban_list = []
 
-    ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
+    ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
 
     if request.GET['last'] == '0':
         post_obj = Post.objects.select_related('project').select_related('user').all().exclude(user_id__in=ban_list).order_by('-id')[:5]
@@ -419,37 +425,40 @@ def main_load(request):
     post_obj = MainloadSerializer(post_obj, many=True).data
 
     for p in post_obj:
-        if p['user_id'] == request.user.id:
+        if p['user_id'] == user_id:
             p.update({"is_user":1})
         else:
             p.update({"is_user":0})
 
-        if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
+        if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
             p.update({"is_liked":1})
         else:
             p.update({"is_liked":0})
 
         
-        if BookMark.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
+        if BookMark.objects.filter(user_id=user_id, post_id=p['id']).exists():
             p.update({"is_marked":1})
         else:
             p.update({"is_marked":0})
     
-    profile = Profile.objects.filter(user_id=request.user.id)[0]
+    profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
+        project_obj = Project.objects.filter(user_id=user_id).order_by('post_count').first()
+        project_obj = SimpleProjectserializer(news_obj).data
         if profile.group == 10:
             news_obj = NewsSerializer(News.objects.all(), many=True).data
         else:
             news_obj = NewsSerializer(News.objects.filter(group_id=profile.group), many=True).data         
 
-        return Response({'posting':post_obj, 'news':news_obj}, status=status.HTTP_200_OK)
+        return Response({'posting':post_obj, 'news':news_obj, 'project':project_obj}, status=status.HTTP_200_OK)
 
     else: return Response({'posting':post_obj})
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def loop_load(request):
-    loop_list = Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', flat=True)
+    user_id = request.user.id
+    loop_list = Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True)
 
     now = datetime.datetime.now()
 
@@ -460,18 +469,18 @@ def loop_load(request):
 
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
-        if p['user_id'] == request.user.id:
+        if p['user_id'] == user_id:
             p.update({"is_user":1})
         else:
             p.update({"is_user":0})
 
-        if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
+        if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
             p.update({"is_liked":1})
         else:
             p.update({"is_liked":0})
 
         
-        if BookMark.objects.filter(user_id=request.user.id, post_id=p['id']).exists():
+        if BookMark.objects.filter(user_id=user_id, post_id=p['id']).exists():
             p.update({"is_marked":1})
         else:
             p.update({"is_marked":0})
@@ -504,7 +513,8 @@ def like_list_load(request):
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
 def report_posting(request):
-    Report.objects.create(user_id=request.user.id, type=1, target_id=request.data['id'], reason=request.data['reason'])
+    user_id = request.user.id
+    Report.objects.create(user_id=user_id, type=1, target_id=request.data['id'], reason=request.data['reason'])
     count = Report.objects.filter(type=1, target_id=request.data['id']).count()
     if count >= 3:
         report_alarm(count, 1, request.data['id'], request.data['reason'])
