@@ -16,7 +16,7 @@ from tag.models import Tag, Group
 if platform.system() == 'Linux':
     path = '/home/ubuntu/loopus/chromedriver'
 else:
-    path = 'C:\\project\\loop\\chromedriver'
+    path = 'chromedriver'
 
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
@@ -41,7 +41,8 @@ def news_crawling(request):
     # url = 'https://search.naver.com/search.naver?where=news&query='
     #Goggle
     url = 'https://www.google.com/search?tbm=nws&q='
-
+    selector_format1 = "#rso > div > div:nth-child({}) > div > a"
+    selector_format2 = "#rso > div:nth-child({}) > div > a"
     for group in group_id:
         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]
         link_dict = {}
@@ -60,16 +61,23 @@ def news_crawling(request):
                 #         link = driver.find_element_by_css_selector('#sp_nws{} > div > div > a'.format(i+news_count)).get_attribute('href')
                 #     except:
                 #         pass
+
                 #Goggle
                 try:
-                    link = driver.find_element_by_css_selector("#rso > div:nth-child({}) > div > a".format(i+news_count)).get_attribute('href')
+                    link = driver.find_element_by_css_selector(selector_format1.format(i+news_count)).get_attribute('href')
+                    formal = selector_format1
+                except: pass
+                
+                try:
+                    link = driver.find_element_by_css_selector(selector_format2.format(i+news_count)).get_attribute('href')
+                    formal = selector_format2
                 except:
                     while True:
                         news_count += 1
                         if news_count + i > 10:
                             break
                         try:
-                            link = driver.find_element_by_css_selector("#rso > div:nth-child({}) > div > a".format(i+news_count)).get_attribute('href')
+                            link = driver.find_element_by_css_selector(formal.format(i+news_count)).get_attribute('href')
                             break
                         except:
                             pass
@@ -79,6 +87,9 @@ def news_crawling(request):
                         link_dict[link] = True
                 except:
                     continue
-    News.objects.filter(id__lte=last.id).delete()
-    driver.close()
+    try:
+        News.objects.filter(id__lte=last.id).delete()
+        driver.close()
+    except AttributeError:
+        pass
     return Response(status=status.HTTP_200_OK)
