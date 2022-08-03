@@ -122,7 +122,7 @@ def posting(request):
                 comment.update({'is_liked':1})
             else:
                 comment.update({'is_liked':0})
-            for cocomment in comment['cocomments']:
+            for cocomment in comment['cocomments']['cocomment']:                
                 exists = CocommentLike.objects.filter(user_id=user_id, cocomment_id=cocomment['id']).exists()
                 if exists:
                     cocomment.update({'is_liked':1})
@@ -161,7 +161,7 @@ def posting(request):
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 
-@api_view(['POST', 'DELETE', 'PUT'])
+@api_view(['POST', 'DELETE', 'PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
 def comment(request):   
     user_id = request.user.id
@@ -188,10 +188,10 @@ def comment(request):
             try:
                 comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
                 # token = FcmToken.objects.filter(user_id=comment_obj.user_id)[0]
-                real_name = Profile.objects.filter(user_id=user_id)[0].real_name
+                real_name = Profile.objects.filter(user_id=comment_obj.user_id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            cocomment_fcm(comment_obj.user_id, real_name, comment_obj.id, user_id, comment_obj.post_id)
+            cocomment_fcm(request.data['tagged_user'], real_name, comment_obj.id, user_id, comment_obj.post_id)
 
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
@@ -227,6 +227,14 @@ def comment(request):
         
         return Response(status=status.HTTP_200_OK)
 
+    elif request.method == 'GET':
+        if request.GET['type'] == 'comment':
+            comment_obj = Comment.objects.filter(post_id=request.GET['id'], id__lt = request.GET['last']).order_by('-id')
+            return Response(CommentSerializer(comment_obj[:3], many=True).data, status=status.HTTP_200_OK)
+        elif request.GET['type'] == 'cocomment':
+            cocomment_obj = Cocomment.objects.filter(comment_id=request.GET['id'], id__lt = request.GET['last']).order_by('-id')
+            return Response(CocommentSerializer(cocomment_obj[:3], many=True).data, status=status.HTTP_200_OK)
+            
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def like(request):
