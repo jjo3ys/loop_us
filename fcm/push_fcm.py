@@ -61,7 +61,7 @@ def like_fcm(topic, req_from, id, from_id):
         except UnregisteredError:
             pass
 
-def comment_like_fcm(topic, req_from, id, from_id):
+def comment_like_fcm(topic, req_from, id, from_id, post_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=5, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
@@ -71,6 +71,7 @@ def comment_like_fcm(topic, req_from, id, from_id):
         data={
             'type':'5',
             'id':str(id),
+            'post_id':str(post_id),
             'sender_id':str(from_id)
         },
         topic=str(topic),
@@ -80,7 +81,7 @@ def comment_like_fcm(topic, req_from, id, from_id):
         except UnregisteredError:
             pass
 
-def cocomment_like_fcm(topic, req_from, id, from_id):
+def cocomment_like_fcm(topic, req_from, id, from_id, post_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=6, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
@@ -90,6 +91,7 @@ def cocomment_like_fcm(topic, req_from, id, from_id):
         data={
             'type':'6',
             'id':str(id),
+            'post_id':str(post_id),
             'sender_id':str(from_id)
         },
         topic=str(topic),
@@ -118,7 +120,7 @@ def comment_fcm(topic, req_from, id, from_id):
         except UnregisteredError:
             pass
 
-def cocomment_fcm(topic, req_from, id, from_id):
+def cocomment_fcm(topic, req_from, id, from_id, post_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=8, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(notification=messaging.Notification(
@@ -128,6 +130,7 @@ def cocomment_fcm(topic, req_from, id, from_id):
         data={
             'type':'8',
             'id':str(id),
+            'post_id':str(post_id),
             'sender_id':str(from_id)
         },
         topic=str(topic),
