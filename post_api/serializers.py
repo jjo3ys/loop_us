@@ -67,12 +67,13 @@ class CocommentSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
-    cocomment_count = serializers.SerializerMethodField()
-    cocomments = CocommentSerializer(many=True, read_only=True)
+    # cocomment_count = serializers.SerializerMethodField()
+    cocomments = serializers.SerializerMethodField()
+    # cocomments = CocommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['profile', 'id', 'content', 'cocomment_count', 'date', 'cocomments', 'like_count']
+        fields = ['profile', 'id', 'content', 'date', 'cocomments', 'like_count']
     
     def get_profile(self, obj):
         try:
@@ -80,8 +81,15 @@ class CommentSerializer(serializers.ModelSerializer):
         except:
             return None
 
-    def get_cocomment_count(self, obj):
-        return Cocomment.objects.filter(comment_id=obj.id).count()
+    def get_cocomments(self, obj):
+        try:
+            cocomment_obj = Cocomment.objects.filter(comment_id=obj.id).order_by('-id')
+            return {'cocomment':CocommentSerializer(cocomment_obj[:3], many=True).data, 'count':cocomment_obj.count()}
+        except:
+            return None
+
+    # def get_cocomment_count(self, obj):
+    #     return Cocomment.objects.filter(comment_id=obj.id).count()
 
 class MainCommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
@@ -130,7 +138,7 @@ class PostingSerializer(serializers.ModelSerializer):
     project = serializers.SerializerMethodField()
     post_tag = PostTagSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
-    comments = CommentSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
     contents_link = PostingLinkeSerializer(many=True, read_only=True)
 
     class Meta:
@@ -145,3 +153,7 @@ class PostingSerializer(serializers.ModelSerializer):
     
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data
+    
+    def get_comments(self, obj):
+        comments_obj = Comment.objects.filter(post_id=obj.id).order_by('-id')[:10]
+        return CommentSerializer(comments_obj, many=True).data
