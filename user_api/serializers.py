@@ -127,12 +127,14 @@ class AlarmSerializer(serializers.ModelSerializer):
                 return None
         elif int(obj.type) == 5 or int(obj.type) == 7:
             try:
-                return Comment.objects.filter(id=obj.target_id)[0].content
+                comment_obj = Comment.objects.filter(id=obj.target_id)[0]
+                return {'content':comment_obj.content, 'post_id':comment_obj.post_id}
             except IndexError:
                 return None
         elif int(obj.type) == 6 or int(obj.type) == 8:
             try:
-                return Cocomment.objects.filter(id=obj.target_id)[0].content
+                cocomment_obj = Cocomment.objects.filter(id=obj.target_id).select_related('comment')[0]
+                return {'content':cocomment_obj.content, 'post_id':cocomment_obj.comment.post_id}
             except IndexError:
                 return None
     def get_profile(self, obj):
