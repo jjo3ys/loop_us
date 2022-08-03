@@ -230,11 +230,11 @@ def comment(request):
     elif request.method == 'GET':
         if request.GET['type'] == 'comment':
             comment_obj = Comment.objects.filter(post_id=request.GET['id'], id__lt = request.GET['last']).order_by('-id')
-            return Response(CommentSerializer(comment_obj[:3], many=True).data, status=status.HTTP_200_OK)
+            return Response(CommentSerializer(comment_obj[:10], many=True).data, status=status.HTTP_200_OK)
         elif request.GET['type'] == 'cocomment':
-            cocomment_obj = Cocomment.objects.filter(comment_id=request.GET['id'], id__lt = request.GET['last']).order_by('-id')
-            return Response(CocommentSerializer(cocomment_obj[:3], many=True).data, status=status.HTTP_200_OK)
-            
+            cocomment_obj = Cocomment.objects.filter(comment_id=request.GET['id'], id__gt = request.GET['last'])
+            return Response(CocommentSerializer(cocomment_obj[:10], many=True).data, status=status.HTTP_200_OK)
+
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def like(request):

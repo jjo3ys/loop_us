@@ -83,7 +83,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_cocomments(self, obj):
         try:
-            cocomment_obj = Cocomment.objects.filter(comment_id=obj.id).order_by('-id')
+            cocomment_obj = Cocomment.objects.filter(comment_id=obj.id)
             return {'cocomment':CocommentSerializer(cocomment_obj[:3], many=True).data, 'count':cocomment_obj.count()}
         except:
             return None
