@@ -166,7 +166,7 @@ def posting(request):
 def comment(request):   
     user_id = request.user.id
     if request.method =='POST':
-        if request.GET['type'] == 'post':
+        if request.GET['type'] == 'comment':
             comment_obj = Comment.objects.create(user_id=user_id,
                                                  post_id=request.GET['id'],#포스트 id
                                                  content=request.data['content'])
@@ -180,7 +180,7 @@ def comment(request):
 
             return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
 
-        elif request.GET['type'] == 'comment':
+        elif request.GET['type'] == 'cocomment':
             cocomment_obj = Cocomment.objects.create(user_id=user_id,
                                                      comment_id=request.GET['id'],#댓글 id
                                                      content=request.data['content'],
@@ -196,14 +196,14 @@ def comment(request):
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
     elif request.method =='PUT':
-        if request.GET['type'] == 'post':
+        if request.GET['type'] == 'comment':
             comment_obj = Comment.objects.filter(id=request.data['id'])[0]#댓글 id
             comment_obj.content=request.data['content']
             comment_obj.save()
 
             return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
 
-        elif request.GET['type'] == 'comment':
+        elif request.GET['type'] == 'cocomment':
             cocomment_obj = Cocomment.objects.filter(id=request.data['id'])[0]#대댓글 id
             cocomment_obj.content=request.data['content']
             cocomment_obj.save()
@@ -211,14 +211,14 @@ def comment(request):
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
     elif request.method == 'DELETE':
-        if request.GET['type'] == 'post':
+        if request.GET['type'] == 'comment':
             try:
                 comment = Cocomment.objects.filter(id=request.GET['id'])[0]#댓글 id
                 comment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-        elif request.GET['type'] == 'comment':
+        elif request.GET['type'] == 'cocomment':
             try:
                 cocomment = Cocomment.objects.filter(id=request.data['id'])[0]#대댓글 id
                 cocomment.delete()
