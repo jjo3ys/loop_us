@@ -213,14 +213,14 @@ def comment(request):
     elif request.method == 'DELETE':
         if request.GET['type'] == 'comment':
             try:
-                comment = Cocomment.objects.filter(id=request.GET['id'])[0]#댓글 id
+                comment = Comment.objects.filter(id=request.GET['id'])[0]#댓글 id
                 comment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
         elif request.GET['type'] == 'cocomment':
             try:
-                cocomment = Cocomment.objects.filter(id=request.data['id'])[0]#대댓글 id
+                cocomment = Cocomment.objects.filter(id=request.GET['id'])[0]#대댓글 id
                 cocomment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
@@ -231,6 +231,7 @@ def comment(request):
         if request.GET['type'] == 'comment':
             comment_obj = Comment.objects.filter(post_id=request.GET['id'], id__lt = request.GET['last']).order_by('-id')
             return Response(CommentSerializer(comment_obj[:10], many=True).data, status=status.HTTP_200_OK)
+            
         elif request.GET['type'] == 'cocomment':
             cocomment_obj = Cocomment.objects.filter(comment_id=request.GET['id'], id__gt = request.GET['last'])
             return Response(CocommentSerializer(cocomment_obj[:10], many=True).data, status=status.HTTP_200_OK)
