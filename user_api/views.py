@@ -334,7 +334,7 @@ def password(request):
             user = User.objects.filter(email=request.data['email'])[0]
             user.is_active = False
             user.save()
-            send_msg(request.data['email'])
+            send_msg(request.data['email'], request.data['token'])
         except IndexError:
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
 
