@@ -521,10 +521,32 @@ def like_list_load(request):
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
-def report_posting(request):
+def report(request):
     user_id = request.user.id
+<<<<<<< HEAD
     Report.objects.create(user_id=user_id, type=1, target_id=request.data['id'], reason=request.data['reason'])
     count = Report.objects.filter(type=1, target_id=request.data['id']).count()
     if count >= 3:
         report_alarm(count, 1, request.data['id'], request.data['reason'])
     return Response(status=status.HTTP_200_OK)
+=======
+    if request.GET['type'] == 'post':
+        Report.objects.create(user_id=user_id, type=1, target_id=request.data['id'], reason=request.data['reason'])
+        count = Report.objects.filter(type=1, target_id=request.data['id']).count()
+        if count >= 3:
+            report_alarm(count, 1, request.data['id'], request.data['reason'])
+
+    elif request.GET['type'] == 'comment':
+        Report.objects.create(user_id=user_id, type=2, target_id=request.data['id'], reason=request.data['reason'])
+        count = Report.objects.filter(type=2, target_id=request.data['id']).count()
+        if count >= 3:
+            report_alarm(count, 2, request.data['id'], request.data['reason'])
+
+    elif request.GET['type'] == 'cocomment':
+        Report.objects.create(user_id=user_id, type=3, target_id=request.data['id'], reason=request.data['reason'])
+        count = Report.objects.filter(type=3, target_id=request.data['id']).count()
+        if count >= 3:
+            report_alarm(count, 3, request.data['id'], request.data['reason'])
+            
+    return Response(status=status.HTTP_200_OK)
+>>>>>>> 5ec05c081fa0cfc3f15c092669e222ac0e69b133
