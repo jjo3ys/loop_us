@@ -79,16 +79,16 @@ class SchoolRankProfileSerailizer(serializers.ModelSerializer):
 
 class SimpleProfileSerializer(serializers.ModelSerializer):
     department = serializers.SerializerMethodField()
-    school = serializers.SerializerMethodField()
+    school_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'profile_image', 'department', 'school']
+        fields = ['user_id', 'real_name', 'profile_image', 'department', 'school_name']
     
     def get_department(self, obj):
         return obj.department.department
 
-    def get_school(self, obj):
+    def get_school_name(self, obj):
         return obj.school.school
 
 class BanlistSerializer(serializers.ModelSerializer):
