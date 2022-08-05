@@ -61,11 +61,11 @@ class RankProfileSerailizer(serializers.ModelSerializer):
 class SchoolRankProfileSerailizer(serializers.ModelSerializer):
     recent_post_count = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
-    school = serializers.SerializerMethodField()
+    school_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'school_rank', 'school_last_rank', 'profile_image', 'department', 'recent_post_count', 'school']
+        fields = ['user_id', 'real_name', 'school_rank', 'school_last_rank', 'profile_image', 'department', 'recent_post_count', 'school_name']
     
     def get_recent_post_count(self, obj):
         now = datetime.now()
@@ -74,7 +74,7 @@ class SchoolRankProfileSerailizer(serializers.ModelSerializer):
     def get_department(self, obj):
         return obj.department.department
     
-    def get_school(self, obj):
+    def get_school_name(self, obj):
         return obj.school.school
 
 class SimpleProfileSerializer(serializers.ModelSerializer):
