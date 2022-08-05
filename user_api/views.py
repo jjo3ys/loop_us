@@ -108,8 +108,10 @@ def activate(request, token):
             client.delete(user_dic['id'])
             user = User.objects.filter(username=user_dic['id'])
             if user.exists():
-                user[0].is_active = True
-                user[0].save()
+                user = user[0]
+                user.is_active = True
+                user.save()
+                print(user.is_active)
             else:
                 pass
             certify_fcm(user_dic['token'])
