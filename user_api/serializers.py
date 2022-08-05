@@ -10,7 +10,7 @@ from rest_framework import serializers
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
-        fields = ['id', 'school_name', 'email']
+        fields = ['id', 'school', 'email']
 
 class DepSerializer(serializers.ModelSerializer):
     class Meta:
