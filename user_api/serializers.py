@@ -6,10 +6,6 @@ from loop.models import Loopship
 from post_api.models import Post, Cocomment, Comment
 
 from rest_framework import serializers
-class SchoolLogoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = School
-        fields = ['school', 'logo']
 
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,7 +21,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     loop_count = serializers.SerializerMethodField()
     total_post_count = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
-    school = SchoolLogoSerializer()
+    school = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -39,6 +35,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     
     def get_department(self, obj):
         return obj.department.department
+
+    def get_school(self, obj):
+        return {'school_name':obj.school.school, 'logo':obj.school.logo.url}
 
 class RankProfileSerailizer(serializers.ModelSerializer):
     recent_post_count = serializers.SerializerMethodField()
