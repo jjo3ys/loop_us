@@ -111,7 +111,6 @@ def activate(request, token):
                 user = user[0]
                 user.is_active = True
                 user.save()
-                print(user.is_active)
             else:
                 pass
             certify_fcm(user_dic['token'])
