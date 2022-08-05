@@ -37,7 +37,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         return obj.department.department
 
     def get_school(self, obj):
-        return obj.school.school
+        return {'school_name':obj.school.school, 'logo':obj.school.logo}
 
 class RankProfileSerailizer(serializers.ModelSerializer):
     recent_post_count = serializers.SerializerMethodField()
