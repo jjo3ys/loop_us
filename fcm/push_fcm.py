@@ -157,12 +157,12 @@ def chat_fcm(topic, req_from, msg, user_id):
     except UnregisteredError:
         pass
 
-def certify_fcm(topic):
+def certify_fcm(token):
     message = messaging.Message(
     data={
         "type":"certification",
     },
-    topic=topic
+    token=token
     )
     try:
         messaging.send(message)

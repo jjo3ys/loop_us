@@ -108,8 +108,9 @@ def activate(request, token):
             client.delete(user_dic['id'])
             user = User.objects.filter(username=user_dic['id'])
             if user.exists():
-                user[0].is_active = True
-                user[0].save()
+                user = user[0]
+                user.is_active = True
+                user.save()
             else:
                 pass
             certify_fcm(user_dic['token'])
@@ -334,7 +335,7 @@ def password(request):
             user = User.objects.filter(email=request.data['email'])[0]
             user.is_active = False
             user.save()
-            send_msg(request.data['email'])
+            send_msg(request.data['email'], request.data['token'])
         except IndexError:
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -378,12 +379,11 @@ def resign(request):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def ask(request):
-    message = EmailMessage('{}님 문의'.format(request.data['real_name']), '이메일:{} \n 문의내용:{} \n 기기:{} \n OS버젼:{} \n 빌드번호:{} \n 학과:{} \n 유저id:{}'.format(request.data['email'],
+    message = EmailMessage('{}님 문의'.format(request.data['real_name']), '이메일:{} \n 문의내용:{} \n 기기:{} \n OS버젼:{} \n 빌드번호:{} \n 유저id:{}'.format(request.data['email'],
                                                                                                                                                          request.data['content'],
                                                                                                                                                          request.data['device'],
                                                                                                                                                          request.data['os'],
                                                                                                                                                          request.data['app_ver'],
-                                                                                                                                                         request.data['department'],
                                                                                                                                                          request.data['id']), to=['loopus@loopus.co.kr'])
     try:
         message.send()
