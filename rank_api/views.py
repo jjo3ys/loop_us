@@ -170,10 +170,18 @@ def user_ranking(request):
     
     for group in score_list:
         sorted_list = sorted(score_list[group].items(), key=lambda x:-x[1])
+        score = 0
+        acc = 1
         for i, profile in enumerate(sorted_list):
             profile[0].score = profile[1]
             profile[0].last_rank = profile[0].rank
-            profile[0].rank = i+1
+
+            if profile[1] == score:
+                profile[0].rank = i+1 - acc
+                acc += 1
+            else:
+                profile[0].rank = i+1
+                acc = 1
             profile[0].save()
     
     school_obj = School.objects.all()
@@ -181,9 +189,18 @@ def user_ranking(request):
         profile_obj = Profile.objects.filter(school=school).order_by('-score')
         for group in group_list:
             group_school_profile_obj = profile_obj.filter(group=group)
+            score = 0
+            acc = 1
             for i , profile in enumerate(group_school_profile_obj):
+                score = profile.score
                 profile.school_last_rank = profile.school_rank
-                profile.school_rank = i+1
+
+                if profile.score == score:
+                    profile.school_rank = i+1-acc
+                    acc += 1
+                else:
+                    profile.school_rank = i+1
+                    acc = 1
                 profile.save()
     
     return Response(status=status.HTTP_200_OK)
