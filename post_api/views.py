@@ -176,7 +176,8 @@ def comment(request):
                 real_name = Profile.objects.filter(user_id=user_id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            comment_fcm(post_obj.user_id, real_name, post_obj.id, user_id)
+            if user_id != post_obj.user_id:
+                comment_fcm(post_obj.user_id, real_name, post_obj.id, user_id)
 
             return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
 
@@ -188,10 +189,11 @@ def comment(request):
             try:
                 comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
                 # token = FcmToken.objects.filter(user_id=comment_obj.user_id)[0]
-                real_name = Profile.objects.filter(user_id=comment_obj.user_id)[0].real_name
+                real_name = Profile.objects.filter(user_id=user_id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            cocomment_fcm(request.data['tagged_user'], real_name, comment_obj.id, user_id, comment_obj.post_id)
+            if user_id != post_obj.user_id:
+                cocomment_fcm(request.data['tagged_user'], real_name, comment_obj.id, user_id, comment_obj.post_id)
 
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
