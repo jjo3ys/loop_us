@@ -107,6 +107,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASE_ROUTERS = ['config.router.Router']
 
 DATABASES = DB_SETTING
+DATABASES['default']['OPTIONS'] = {'charset':'utf8mb4'}
 DATABASES['OPTIONS'] = {'init_command':'SET sql_mode=STRICT_TRANS_TABLES'}
 
 # Password validation
