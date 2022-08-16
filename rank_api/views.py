@@ -161,29 +161,44 @@ def user_ranking(request):
     for g in group_list:
         score_list[g] = {}
     now = datetime.now()
-
+    post = Post.objects.filter(date__range = [now-timedelta(days=30), now])
     for profile in profile_obj:
-        post_obj = Post.objects.filter(user_id=profile.user_id)
-        recent_post_count = post_obj.filter(date__range = [now-timedelta(days=30), now]).count()
-        score = sum(post_obj.values_list('like_count', flat=True)) + 0.5 * sum(post_obj.values_list('view_count', flat=True)) + 2 * recent_post_count
-        score_list[profile.group][profile] = score
+        post_obj = post.filter(user_id=profile.user_id)
+        score = sum(post_obj.values_list('like_count', flat=True)) + 0.5 * sum(post_obj.values_list('view_count', flat=True)) + 2 * post_obj.count()
+        score_list[profile.group][profile.user_id] = score
     
     for group in score_list:
         sorted_list = sorted(score_list[group].items(), key=lambda x:-x[1])
-        for i, profile in enumerate(sorted_list):
-            profile[0].score = profile[1]
-            profile[0].last_rank = profile[0].rank
-            profile[0].rank = i+1
-            profile[0].save()
-    
+        score = 0
+        acc = 0
+        for i, p in enumerate(sorted_list):
+            profile = profile_obj.filter(user_id=p[0])[0]
+            profile.score = p[1]
+            profile.last_rank = profile.rank
+
+            if p[1] == score:
+                profile.rank = i+1 - acc
+                acc += 1
+            else:
+                profile.rank = i+1
+                acc = 0
+            profile.save()
+
     school_obj = School.objects.all()
     for school in school_obj:
-        profile_obj = Profile.objects.filter(school=school).order_by('-score')
+        school_proifle = profile_obj.filter(school_id=school.id)
         for group in group_list:
-            group_school_profile_obj = profile_obj.filter(group=group)
+            group_school_profile_obj = school_proifle.filter(group=group).order_by('-score')
+            score = 0
+            acc = 0
             for i , profile in enumerate(group_school_profile_obj):
                 profile.school_last_rank = profile.school_rank
-                profile.school_rank = i+1
+                if profile.score == score:
+                    profile.school_rank = i+1-acc
+                    acc += 1
+                else:
+                    profile.school_rank = i+1
+                    acc = 0
                 profile.save()
     
     return Response(status=status.HTTP_200_OK)
