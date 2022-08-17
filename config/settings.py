@@ -198,5 +198,5 @@ if platform.system() == 'Linux':
     CACHEOPS = {
         '*.*': {}, # 모든 앱에대해서 캐시적용
     }
-    DEBUG = False
+    DEBUG = True
     ALLOWED_HOSTS = ['3.35.253.151']
