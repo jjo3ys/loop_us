@@ -26,14 +26,14 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'follower_count', 'total_post_count', 'group', 'school', 'admission']
+        fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'follower_count', 'following_count', 'total_post_count', 'group', 'school', 'admission']
     
     def get_follower_count(self, obj):
         return Loopship.objects.filter(friend_id=obj.user_id).count()
 
     def get_following_count(self, obj):
         return Loopship.objects.filter(user_id=obj.user_id).count()
-        
+
     def get_total_post_count(self, obj):
         return Post.objects.filter(user_id=obj.user_id).count()
     
