@@ -20,7 +20,6 @@ from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark,
 
 from loop.models import Loopship
 
-import random
 import datetime
 # Create your views here.
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
@@ -52,8 +51,6 @@ def posting(request):
                 tag_obj.count += 1
                 tag_obj.save()
 
-            elif created: continue
-
         interest_list.save()
         return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
     
@@ -70,18 +67,15 @@ def posting(request):
                 tag_obj, created = Tag.objects.get_or_create(tag=tag)
                 Post_Tag.objects.create(tag=tag_obj, post_id=post_obj.id)
                 interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 10)
-                group_id = str(tag_obj.group.id)
                 
                 if not created:
                     tag_obj.count += 1
                     tag_obj.save()
-                elif created: continue
 
         for tag in origin_tag_obj:
             if tag.tag.tag not in tag_list:
                 interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
                 tag.tag.count -=1
-                group_id = str(tag.tag.group.id)
 
                 tag.delete()
                 if tag.tag.count == 0:
