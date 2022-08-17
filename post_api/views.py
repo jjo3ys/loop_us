@@ -192,7 +192,7 @@ def comment(request):
                 real_name = Profile.objects.filter(user_id=user_id)[0].real_name
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-            if user_id != post_obj.user_id:
+            if user_id != comment_obj.user_id:
                 cocomment_fcm(request.data['tagged_user'], real_name, comment_obj.id, user_id, comment_obj.post_id)
 
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
