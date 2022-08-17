@@ -133,13 +133,13 @@ class AlarmSerializer(serializers.ModelSerializer):
             try:
                 comment_obj = Comment.objects.filter(post_id=obj.target_id).last()
                 return {'content':comment_obj.content, 'post_id':comment_obj.post_id}
-            except IndexError:
+            except AttributeError:
                 return None
         elif int(obj.type) == 6 or int(obj.type) == 8:
             try:
                 cocomment_obj = Cocomment.objects.filter(comment_id=obj.target_id).select_related('comment').last()
                 return {'content':cocomment_obj.content, 'post_id':cocomment_obj.comment.post_id}
-            except IndexError:
+            except AttributeError:
                 return None
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id)[0]).data
