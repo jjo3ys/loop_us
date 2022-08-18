@@ -423,9 +423,9 @@ def main_load(request):
     ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
 
     if request.GET['last'] == '0':
-        post_obj = Post.objects.select_related('project').select_related('user').all().exclude(user_id__in=ban_list).order_by('-id')[:5]
+        post_obj = Post.objects.select_related('project').select_related('user').all().exclude(user_id__in=ban_list).order_by('-id')[:20]
     else:
-        post_obj = Post.objects.select_related('project').select_related('user').filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).order_by('-id')[:5]
+        post_obj = Post.objects.select_related('project').select_related('user').filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).order_by('-id')[:20]
 
     post_obj = MainloadSerializer(post_obj, many=True).data
 
@@ -468,9 +468,9 @@ def loop_load(request):
     now = datetime.datetime.now()
 
     if request.GET['last'] == '0':
-        post_obj = Post.objects.select_related('project').select_related('user').filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).order_by('-id')[:5]
+        post_obj = Post.objects.select_related('project').select_related('user').filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).order_by('-id')[:20]
     else:
-        post_obj = Post.objects.select_related('project').select_related('user').filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).order_by('-id')[:5]
+        post_obj = Post.objects.select_related('project').select_related('user').filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).order_by('-id')[:20]
 
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
