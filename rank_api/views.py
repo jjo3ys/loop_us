@@ -45,17 +45,29 @@ def posting_with_group(request):
         return Response(status=status.HTTP_200_OK)
 
     elif request.method == 'GET':
+        monthly_count = {}
+        user_posting_count = {}
+        
         lastmonth = date.today().month
+        lastmonth_date = date.today()-timedelta(days=date.today().day)
         group_obj = Group.objects.filter(id=request.GET['id'])[0]
+        post_obj = Post.objects.filter(user_id=request.user.id)
         for i in range(1, 7):
             if lastmonth - i <= 0:
                 month = str(12 + lastmonth - i)
             else:
                 month = str(lastmonth - i)
+
+            post_count = post_obj.filter(date__range=[lastmonth_date-timedelta(days=lastmonth_date.day-1), lastmonth_date]).count()
+            user_posting_count[month] = post_count
+            lastmonth_date -= timedelta(days=lastmonth_date.day)
+
             if month not in group_obj.monthly_count:
-                group_obj.monthly_count[month] = 0
-        
-        return Response({'monthly_count':group_obj.monthly_count}, status=status.HTTP_200_OK)
+                monthly_count[month] = 0
+            else:
+                monthly_count[month] = group_obj.monthly_count[month]
+              
+        return Response({'monthly_count':monthly_count}, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
