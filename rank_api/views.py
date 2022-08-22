@@ -67,7 +67,7 @@ def posting_with_group(request):
             else:
                 monthly_count[month] = group_obj.monthly_count[month]
               
-        return Response({'monthly_count':monthly_count}, status=status.HTTP_200_OK)
+        return Response({'monthly_count':monthly_count, 'user_posting_count':user_posting_count}, status=status.HTTP_200_OK)
     else:
         return Response(status=status.HTTP_403_FORBIDDEN)
 
