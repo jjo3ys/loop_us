@@ -65,7 +65,7 @@ def crawling(request):
             results = youtube.search().list(q=tag.tag, order='rating', part='snippet', maxResults=10).execute()
             for result in results['items']:
                 if 'videoId' in result['id']:
-                    link = 'https://www.youtube.com/watch?v=' + tag.tag
+                    link = 'https://www.youtube.com/watch?v=' + result['id']['videoID']
                     Youtube.objects.create(urls=link, group=group)
     try:
         News.objects.filter(id__lte=last_news.id).delete()
