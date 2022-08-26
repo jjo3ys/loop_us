@@ -19,14 +19,30 @@ from .serializers import CocommentSerializer, CommentSerializer, NewsSerializer,
 from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment, PostLink
 
 from loop.models import Loopship
-
+#from sentence_transformers import SentenceTransformer, util
 import datetime
 # Create your views here.
+#emb = SentenceTransformer("jhgan/ko-sroberta-multitask")
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
 def posting(request):
     user_id = request.user.id
     if request.method == 'POST': 
+        tags = request.data.getlist('tag')
+        '''
+        q = Post.objects.filter(project_id=request.GET['id'])
+        if q.count() == 0:
+            q = Post.objects.filter(user_id=user_id)
+            if q.count() == 0:
+                user_profile = Profile.object.filter(user_id=user_id)[0]
+                
+             
+        
+        compare = q.last().contents
+        compare = emb.encode(comapare, convert_to_tensor=True)
+        query = emb.encode(request.data['contents'], convert_to_tensor=True)
+        scores = util.pytorch_cos_sim(query, compare).reshape(2)
+        '''
         post_obj = Post.objects.create(user_id=user_id, 
                                         project_id=request.GET['id'],    
                                         contents=request.data['contents'])
@@ -43,7 +59,7 @@ def posting(request):
         for link in request.data.getlist('link'):
             PostLink.objects.create(post_id=post_obj.id, link=link)
 
-        for tag in request.data.getlist('tag'):
+        for tag in tags:
             tag_obj, created = Tag.objects.get_or_create(tag=tag)
             Post_Tag.objects.create(post=post_obj, tag=tag_obj)
             interest_tag(interest_list, 'plus', tag_obj.id, 10)

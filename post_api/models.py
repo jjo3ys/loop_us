@@ -12,6 +12,7 @@ class Post(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     like_count = models.SmallIntegerField(default=0)
     view_count = models.PositiveBigIntegerField(default=0)
+    group = models.SmallIntegerField(default=10)
 
     class Meta:
         db_table = "Posting"

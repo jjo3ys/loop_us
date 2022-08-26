@@ -16,6 +16,14 @@ class Department(models.Model):
     class Meta:
         db_table = 'Department'
 
+class Company(models.Model):
+    logo = models.ImageField(null=True, upload_to = 'logo/company/')
+    company_name = models.TextField()
+    count = models.PositiveBigIntegerField(default=0)
+
+    class Meta:
+        db_table = "Company"
+
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     real_name = models.CharField(max_length=10)
@@ -31,8 +39,10 @@ class Profile(models.Model):
     school_rank = models.PositiveBigIntegerField(default=0)
     view_count = models.PositiveBigIntegerField(default=0)
     admission = models.CharField(max_length=10)
+    company = models.ForeignKey(Company, null=True, default=None, on_delete=models.DO_NOTHING)
     class Meta:
         db_table = "Profile"
+
 
 class Company_Inform(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='company_inform')
