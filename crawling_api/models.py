@@ -20,6 +20,6 @@ class Youtube(models.Model):
     urls = models.TextField()
     group = models.ForeignKey(Group, related_name='group_youtube', on_delete=models.DO_NOTHING)
 
-    class Meata:
+    class Meta:
         db_table = "Youtube"
 # Create your models here.
