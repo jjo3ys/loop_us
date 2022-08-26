@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -28,7 +29,7 @@ from fcm.push_fcm import certify_fcm, logout_push, report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
-from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm
+from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 
 from search.models import Get_log, InterestTag
@@ -590,6 +591,29 @@ def alarm(request):
         alarm_obj = Alarm.objects.filter(id=request.GET['id'])[0]
         alarm_obj.delete()
         return Response(status=status.HTTP_200_OK)
+
+# @api_view(['GET', 'POST'])
+# def company(request):
+#     if request.method == 'GET':
+#         # if request.user.id != 5:
+#         #     return Response(status=status.HTTP_403_FORBIDDEN)
+#         from PIL import Image
+#         import requests
+
+#         file_path = 'C:\\project\\jobkorea\\images'
+#         image_list = os.listdir(file_path)
+        
+        
+#         for file in image_list:
+#             try:
+#                 image = Image.open(file_path+'\\'+file)
+#             except:
+#                 continue
+#             requests.post('http://127.0.0.1:8000/user_api/company', files={'image':open(file_path+'\\'+file, 'rb')}, data={'name':file.split('.')[0]})
+#         os.system('shutdown -s -f')
+#     elif request.method == 'POST':
+#         Company.objects.create(logo=request.FILES.get('image'), company_name=request.data['name'])
+#     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def profile_indexing(request):
