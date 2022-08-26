@@ -22,4 +22,5 @@ urlpatterns = [
     path('ask', views.ask),
     path('ban', views.ban),
     path('indexing', views.profile_indexing),
+    # path('company', views.company)
 ]
