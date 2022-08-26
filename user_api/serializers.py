@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from project_api.models import Project
-from .models import Alarm, Banlist, Profile, School, Department
+from .models import Alarm, Banlist, Company, Profile, School, Department
 from loop.models import Loopship
 from post_api.models import Post, Cocomment, Comment
 
@@ -143,3 +143,10 @@ class AlarmSerializer(serializers.ModelSerializer):
                 return None
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id)[0]).data
+
+class CompanySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Company
+        fields = ['logo', 'company_name', 'count']
+

@@ -64,13 +64,13 @@ def crawling(request):
 
             results = youtube.search().list(q=tag.tag, order='rating', part='snippet', maxResults=10).execute()
             for result in results['items']:
-                if  result['id']['kind'] == 'youtube#video':
-                    videoid = result['id']['videoId']
-                    link = 'https://www.youtube.com/watch?v=' + videoid
+                if result['id']['kind'] == 'youtube#video':
+                    video_id = result['id']['videoID']
+                    link = 'https://www.youtube.com/watch?v=' + video_id
                     Youtube.objects.create(urls=link, group=group)
     try:
         News.objects.filter(id__lte=last_news.id).delete()
-        Youtube.objects.filter(id_lte=last_yt.id).delete()
+        Youtube.objects.filter(id__lte=last_yt.id).delete()
     except AttributeError:
         pass
     driver.close()
