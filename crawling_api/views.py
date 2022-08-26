@@ -62,7 +62,7 @@ def crawling(request):
                 if news_count == 3:
                     break
 
-            results = youtube.search().list(q=tag.tag, order='relavance', part='snippet', maxResults=10).execute()
+            results = youtube.search().list(q=tag.tag, order='relevance', part='snippet', maxResults=10).execute()
             for result in results['items']:
                 count = 1
                 if result['id']['kind'] == 'youtube#video':
