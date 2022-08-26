@@ -62,12 +62,16 @@ def crawling(request):
                 if news_count == 3:
                     break
 
-            results = youtube.search().list(q=tag.tag, order='rating', part='snippet', maxResults=10).execute()
+            results = youtube.search().list(q=tag.tag, order='relavance', part='snippet', maxResults=10).execute()
             for result in results['items']:
+                count = 1
                 if result['id']['kind'] == 'youtube#video':
                     video_id = result['id']['videoID']
                     link = 'https://www.youtube.com/watch?v=' + video_id
                     Youtube.objects.create(urls=link, group=group)
+                    count += 1
+                if count == 3:
+                    break
     try:
         News.objects.filter(id__lte=last_news.id).delete()
         Youtube.objects.filter(id__lte=last_yt.id).delete()
