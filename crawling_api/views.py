@@ -6,10 +6,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from selenium import webdriver
+from googleapiclient.discovery import build
 
 from .models import News, Insta, Youtube
 
 from tag.models import Tag, Group
+from config.my_settings import YOUTUBEKEY
 
 if platform.system() == 'Linux':
     path = '/home/ubuntu/loopus/chromedriver'
@@ -28,13 +30,16 @@ def feed_crawling(type):
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
-def news_crawling(request):
+def crawling(request):
     if request.user.id !=5:
         return Response(status=status.HTTP_403_FORBIDDEN)
+
     driver = webdriver.Chrome(path, chrome_options=chrome_options)
-    
+    youtube = build('youtube', 'v3', developerKey=YOUTUBEKEY)
+
     group_id = Group.objects.all()
-    last = News.objects.last()
+    last_news = News.objects.last()
+    last_yt = Youtube.objects.last()
     #Naver
     # url = 'https://search.naver.com/search.naver?where=news&query='
     #Goggle
@@ -57,8 +62,14 @@ def news_crawling(request):
                 if news_count == 3:
                     break
 
+            results = youtube.search().list(q=tag.tag, order='rating', part='snippet', maxResults=10).execute()
+            for result in results['items']:
+                if 'videoId' in result['id']:
+                    link = 'https://www.youtube.com/watch?v=' + tag.tag
+                    Youtube.objects.create(urls=link, group=group)
     try:
-        News.objects.filter(id__lte=last.id).delete()
+        News.objects.filter(id__lte=last_news.id).delete()
+        Youtube.objects.filter(id_lte=last_yt.id).delete()
     except AttributeError:
         pass
     driver.close()
