@@ -56,7 +56,7 @@ def crawling(request):
                 if a.get_attribute('jsname') == 'YKoRaf':
                     link = a.get_attribute('href')
                     if link not in link_dict:
-                        News.objects.create(urls=link, group=group)
+                       # News.objects.create(urls=link, group=group)
                         link_dict[link] = True
                         news_count += 1
                 if news_count == 3:
@@ -64,8 +64,9 @@ def crawling(request):
 
             results = youtube.search().list(q=tag.tag, order='rating', part='snippet', maxResults=10).execute()
             for result in results['items']:
-                if 'videoId' in result['id']:
-                    link = 'https://www.youtube.com/watch?v=' + result['id'].get('videoID')
+                if  result['id']['kind'] == 'youtube#video':
+                    videoid = result['id']['videoId']
+                    link = 'https://www.youtube.com/watch?v=' + videoid
                     Youtube.objects.create(urls=link, group=group)
     try:
         News.objects.filter(id__lte=last_news.id).delete()
