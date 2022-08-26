@@ -66,7 +66,10 @@ def crawling(request):
             for result in results['items']:
                 count = 1
                 if result['id']['kind'] == 'youtube#video':
-                    video_id = result['id']['videoID']
+                    try:
+                        video_id = result['id']['videoId']
+                    except AttributeError:
+                        continue
                     link = 'https://www.youtube.com/watch?v=' + video_id
                     Youtube.objects.create(urls=link, group=group)
                     count += 1
