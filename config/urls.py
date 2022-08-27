@@ -20,5 +20,6 @@ urlpatterns = [
     path('chat/', include('chat.urls')),
     path('rank/', include('rank_api.urls')),
     path('get_data/', include('crawling_api.urls')),
+    path('scout_api/', include('scout_api.urls')), 
     # path('search/', include('haystack.urls'))
 ]+ staticfiles_urlpatterns()
