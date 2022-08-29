@@ -249,7 +249,13 @@ def signup(request):
                                     corp_num = corp.corp_num,
                                     corp_name = corp.corp_name)
         corp.delete()
-            
+    else:
+        loop_list = []
+        dep_loop = Profile.objects.filter(department_id=request.data['department']).exclude(user_id=user.id)
+        for looper in dep_loop:
+            loop_list.append(Loopship(user_id=user.id, friend_id=looper.user_id))
+            loop_list.append(Loopship(user_id=looper.user_id, friend_id=user.id))
+        Loopship.objects.bulk_create(loop_list)
     InterestTag.objects.create(user_id=user.id, tag_list={})
     return Response({'token':token.key, 'user_id':str(user.id)},status=status.HTTP_200_OK)
 
