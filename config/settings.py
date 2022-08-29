@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'search.apps.SearchConfig',
     'crawling_api.apps.CrawlingApiConfig',
     'chat',
+    'scout_api.apps.ScoutApiConfig',
     
     'rest_framework',
     'rest_framework.authtoken',
