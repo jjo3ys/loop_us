@@ -3,13 +3,23 @@ from user_api.serializers import SimpleProfileSerializer
 from tag.models import Post_Tag
 from .models import CommentLike, Post, PostImage, Like, Cocomment, Comment, PostLink
 from project_api.models import Project
-from crawling_api.models import News
+from crawling_api.models import News, Brunch, Youtube
 
 from rest_framework import serializers
 
 class NewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
+        fields = ['id', 'urls']
+
+class BrSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Brunch
+        fields = ['id', 'urls']
+
+class YtSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Youtube
         fields = ['id', 'urls']
 
 class PostTagSerializer(serializers.ModelSerializer):
