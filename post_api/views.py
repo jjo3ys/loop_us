@@ -21,6 +21,7 @@ from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark,
 from loop.models import Loopship
 #from sentence_transformers import SentenceTransformer, util
 import datetime
+import random
 # Create your views here.
 #emb = SentenceTransformer("jhgan/ko-sroberta-multitask")
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
@@ -467,15 +468,16 @@ def main_load(request):
         project_obj = Project.objects.filter(user_id=user_id).order_by('post_count').first()
         project_obj = SimpleProjectserializer(project_obj).data
         if profile.group == 10:
-            news_obj = NewsSerializer(News.objects.all(), many=True).data
-            br_obj = BrSerializer(Brunch.objects.all(), many=True).data
-            yt_obj = YtSerializer(Youtube.objects.all(), many=True).data
+            news_obj = list(News.objects.all().values_list('urls', flat=True))
+            br_obj = list(Brunch.objects.all().values_list('urls', flat=True))
+            yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
         else:
-            news_obj = NewsSerializer(News.objects.filter(group_id=profile.group), many=True).data         
-            br_obj = BrSerializer(Brunch.objects.filter(group_id=profile.group), many=True).data
-            yt_obj = YtSerializer(Youtube.objects.filter(group_id=profile.group), many=True).data
-
-        return Response({'posting':post_obj, 'news':news_obj, 'brunch':br_obj, 'youtube':yt_obj, 'project':project_obj}, status=status.HTTP_200_OK)
+            news_obj = list(News.objects.filter(group_id=profile.group).values_list('urls', flat=True))
+            br_obj = list(Brunch.objects.filter(group_id=profile.group).values_list('urls', flat=True))
+            yt_obj = list(Youtube.objects.filter(group_id=profile.group).values_list('urls', flat=True))
+        obj = news_obj+br_obj+yt_obj
+        random.shuffle(obj)
+        return Response({'posting':post_obj, 'issue':obj, 'project':project_obj}, status=status.HTTP_200_OK)
 
     else: return Response({'posting':post_obj})
 
