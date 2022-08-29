@@ -52,35 +52,6 @@ def crawling(request):
         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]
         link_dict = {}
         for tag in tag_list:
-<<<<<<< HEAD
-            news_url = url+tag.tag
-            driver.get(news_url)
-            news_count = 0
-            a_tag = driver.find_elements_by_tag_name('a')
-            for a in a_tag:
-                if a.get_attribute('jsname') == 'YKoRaf':
-                    link = a.get_attribute('href')
-                    if link not in link_dict:
-                        News.objects.create(urls=link, group=group)
-                        link_dict[link] = True
-                        news_count += 1
-                if news_count == 3:
-                    break
-
-            results = youtube.search().list(q=tag.tag, order='relevance', part='snippet', maxResults=10).execute()
-            for result in results['items']:
-                count = 0
-                if result['id']['kind'] == 'youtube#video':
-                    try:
-                        video_id = result['id']['videoId']
-                    except AttributeError:
-                        continue
-                    link = 'https://www.youtube.com/watch?v=' + video_id
-                    Youtube.objects.create(urls=link, group=group)
-                    count += 1
-                if count == 3:
-                    break
-=======
             try:
                 news_url = url+tag.tag
                 driver.get(news_url)
@@ -123,7 +94,6 @@ def crawling(request):
                         break
             except:
                 pass
->>>>>>> 348fa6215d2ceaebf9a2197f4f32d32c2250fd1c
     try:
         News.objects.filter(id__lte=last_news.id).delete()
         Youtube.objects.filter(id__lte=last_yt.id).delete()
