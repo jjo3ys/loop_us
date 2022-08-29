@@ -22,7 +22,7 @@ def rank_api():
         pass
 
 def news_crawling():
-    requests.get('http://3.35.253.151:8000/get_data/news', headers=header)
+    requests.get('http://3.35.253.151:8000/get_data/crawling', headers=header)
 
 def set_monthly_tag_count():
     requests.get('http://3.35.253.151:8000/rank/tag_count', headers=header)
