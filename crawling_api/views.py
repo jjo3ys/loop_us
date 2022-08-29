@@ -51,6 +51,7 @@ def crawling(request):
     for group in group_id:
         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]
         link_dict = {}
+        
         for tag in tag_list:
             try:
                 news_url = url+tag.tag
@@ -70,18 +71,21 @@ def crawling(request):
             try:
                 driver.get('https://brunch.co.kr/search')
                 driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
-                
+                time.sleep(2)
                 count = 0
                 results = driver.find_elements_by_class_name('link_post')
                 for result in results:
                     link = result.get_attribute('href')
+                    count +=1
                     Brunch.objects.create(urls=link, group=group)
-                       
+                    if count == 3:
+                        break   
             except:pass
             try:
                 results = youtube.search().list(q=tag.tag, order='relevance', part='snippet', maxResults=10).execute()
+                count = 0
                 for result in results['items']:
-                    count = 0
+                    
                     if result['id']['kind'] == 'youtube#video':
                         try:
                             video_id = result['id']['videoId']
