@@ -8,13 +8,12 @@ class News(models.Model):
     class Meta:
         db_table = "News"
 
-class Insta(models.Model):
-    content = models.TextField()
-    date = models.DateTimeField()
-    group = models.ForeignKey(Group, related_name='group_insta', on_delete=models.DO_NOTHING)
+class Brunch(models.Model):
+    urls = models.TextField()
+    group = models.ForeignKey(Group, related_name='group_brunch', on_delete=models.DO_NOTHING)
 
     class Meta:
-        db_table = "InstaFeed"
+        db_table = "Brunch"
 
 class Youtube(models.Model):
     urls = models.TextField()
