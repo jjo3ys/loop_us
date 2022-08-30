@@ -11,7 +11,7 @@ from scout_api.serializers import ContactSerializers
 from user_api.models import Profile
 
 # Create your views here.
-@api_view(['POST', 'GET'])
+@api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def scout_contact(request):
 
@@ -19,9 +19,13 @@ def scout_contact(request):
 
     try:
         if type == 'all':
-            contact_obj = Contact.objects.all().order_by('date')
+            contact_obj = Contact.objects.all().order_by('-id')
+        
+        elif type == 'search':
+            contact_obj = Contact.objects.filter(company_name__icontains=request.GET['query']).order_by('-id')
+            
         else:
-            contact_obj = Contact.objects.filter(group_id = type).order_by('date')
+            contact_obj = Contact.objects.filter(group_id = type).order_by('-id')
     
         contact_obj = Paginator(contact_obj, 10)
 

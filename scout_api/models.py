@@ -9,6 +9,7 @@ from tag.models import Group
 class Contact(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name = 'scout_company')
+    company_name = models.TextField(null = True)        #검색 시 활용
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
     
