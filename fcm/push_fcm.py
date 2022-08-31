@@ -8,6 +8,7 @@ def loop_fcm(topic, req_from, id):
     if valid:
         message = messaging.Message(
             android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
                 body='{0}님이 회원님을 팔로우하기 시작했어요.'.format(req_from)
@@ -30,6 +31,7 @@ def tag_fcm(topic, req_from, from_id, project, id):
     if valid:
         message = messaging.Message(
             android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
                 body='{0}님이 {1}활동에 회원님을 태그했어요.'.format(req_from, project)
@@ -51,6 +53,7 @@ def like_fcm(topic, req_from, id, from_id):
     if valid:
         message = messaging.Message(
             android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
                 body='{0}님이 회원님의 포스팅을 좋아합니다.'.format(req_from)
@@ -72,6 +75,7 @@ def comment_like_fcm(topic, req_from, id, from_id, post_id):
     if valid:
         message = messaging.Message(
             android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
                 notification=messaging.Notification(
                 title='루프어스',
                 body='{0}님이 회원님의 댓글을 좋아합니다.'.format(req_from)
@@ -94,6 +98,7 @@ def cocomment_like_fcm(topic, req_from, id, from_id, post_id):
     if valid:
         message = messaging.Message(
             android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
                 body='{0}님이 회원님의 대댓글을 좋아합니다.'.format(req_from)
@@ -116,6 +121,7 @@ def comment_fcm(topic, req_from, id, from_id):
     # if valid:
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         notification=messaging.Notification(
             title='루프어스',
             body='{0}님이 회원님의 포스팅에 댓글을 남겼습니다.'.format(req_from)
@@ -137,6 +143,7 @@ def cocomment_fcm(topic, req_from, id, from_id, post_id):
     # if valid:
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         notification=messaging.Notification(
             title='루프어스',
             body='{0}님이 회원님의 댓글에 답글을 남겼습니다.'.format(req_from)
@@ -157,6 +164,7 @@ def cocomment_fcm(topic, req_from, id, from_id, post_id):
 def chat_fcm(topic, req_from, msg, user_id):
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
             title='{0}님'.format(req_from),
             body=msg
@@ -188,7 +196,9 @@ def certify_fcm(token):
 
 def notification_fcm(token_list):
     text = input("메세지:")
-    msg = messaging.MulticastMessage(notification=messaging.Notification(
+    msg = messaging.MulticastMessage(
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+        notification=messaging.Notification(
         title='공지',
         body=text
     ),
@@ -212,6 +222,7 @@ def report_alarm(count, type, id, reason):
 
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         notification=messaging.Notification(
             title=text,
             body='사유:{0}'.format(reason)
