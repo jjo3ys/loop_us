@@ -25,7 +25,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from fcm.push_fcm import certify_fcm, logout_push, report_alarm
+from fcm.push_fcm import certify_fcm, report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
