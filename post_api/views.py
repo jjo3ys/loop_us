@@ -99,8 +99,7 @@ def posting(request):
                     tag.tag.delete()
                 else:
                     tag.tag.save()
-        post_obj.project.post_update_date = datetime.datetime.now()
-        post_obj.project.save()
+        
         interest_list.save()
         post_obj.save()
         return Response(status=status.HTTP_200_OK)
