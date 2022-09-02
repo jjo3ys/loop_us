@@ -78,14 +78,14 @@ def monthly_tag_count(request):
         return Response(status=status.HTTP_403_FORBIDDEN)
     today = date.today()
     post_tags = Post_Tag.objects.select_related('post').filter(post__date__range=[today-timedelta(days=183), today])
-    for tag in post_tags:
+
+    for tag in enumerate(post_tags):
         month = str(tag.post.date.month)
         if month not in tag.tag.monthly_count:
             tag.tag.monthly_count[month] = 1
         else:
             tag.tag.monthly_count[month] += 1
-        tag.tag.save()
-
+    Post_Tag.objects.bulk_update(post_tags, ['monthly_count'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])   
@@ -94,16 +94,15 @@ def posting_ranking(request):
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     group_list = Group.objects.all().values_list('id', flat=True)
-    group_list = {i:[] for i in group_list}
+    group_list = {i:0 for i in group_list}
     posting_list = []
     now = datetime.now()
-    post_obj = Post.objects.filter(date__range=[now-timedelta(days=7), now]).prefetch_related('post_tag').order_by('-like_count', '-id')
+    post_obj = Post.objects.filter(date__range=[now-timedelta(days=7), now]).select_related('project').order_by('-like_count', '-id')
+
     for post in post_obj:
-        for tag in post.post_tag.filter(post_id=post.id).select_related('tag'):
-            if  post.id not in group_list[tag.tag.group_id] and len(group_list[tag.tag.group_id]) < 10:
-                group_list[tag.tag.group_id].append(post.id)
-                posting_list.append(PostingRanking(post_id=post.id, group=tag.tag.group_id, score=post.like_count))
-    
+        if group_list[post.project.group] < 10:
+            posting_list.append(PostingRanking(post_id=post.id, group=post.project.group, score=post.like_count))
+        
     last = PostingRanking.objects.last()
     PostingRanking.objects.bulk_create(posting_list)
     try:
@@ -131,7 +130,7 @@ def project_group(request):
         if len(group) == 0:
             continue        
         project.group = max(group.items(), key=lambda x: x[1])[0]
-        project.save()
+    Project.objects.bulk_update(project_obj, ['group'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])   
@@ -158,8 +157,7 @@ def profile_group(request):
         if max(project_group, key=project_group.get) != profile.group:
             profile.last_rank=0
         profile.group = max(project_group, key=project_group.get)
-        profile.save()
-
+    Profile.objects.bulk_update(profile_obj, ['group', 'last_rank'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -194,7 +192,7 @@ def user_ranking(request):
             else:
                 profile.rank = i+1
                 acc = 0
-            profile.save()
+    Profile.objects.bulk_update(profile_obj, ['rank', 'score', 'last_rank'])
 
     school_obj = School.objects.all()
     for school in school_obj:
@@ -211,8 +209,7 @@ def user_ranking(request):
                 else:
                     profile.school_rank = i+1
                     acc = 0
-                profile.save()
-    
+        Profile.objects.bulk_update(school_proifle, ['school_rank', 'school_last_rank'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
