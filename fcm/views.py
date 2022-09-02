@@ -24,12 +24,13 @@ def test(requset):
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', icon='',  color='#f45342', sound='default')),
         notification= messaging.Notification(title='hi', body='ihi'),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
     data={
        'room_id': '16', 
        'sender': '297', 
        'type': 'msg',
     },
-    topic=str(143),
+    topic=str(137),
     )
 
     messaging.send(message)
