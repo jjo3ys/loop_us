@@ -181,13 +181,13 @@ def chat_fcm(topic, req_from, msg, user_id):
     except UnregisteredError:
         pass
 
-def certify_fcm(token):
+def certify_fcm(topic):
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
         data={
             "type":"certification",
         },
-        token=token
+        topic=topic
         )
     try:
         messaging.send(message)

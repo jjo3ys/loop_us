@@ -70,7 +70,7 @@ def delete_tag(tag_obj):
         else:
             tag.tag.save()
 
-def send_msg(email, fcm):
+def send_msg(email):
     client = redis.Redis()
     r = client.get(email)
     if not r:
@@ -78,9 +78,9 @@ def send_msg(email, fcm):
     else:
         client.delete(email)
     if platform.system() == 'Linux':
-        token = jwt.encode({'id': email, 'token':fcm}, SECRET_KEY, algorithm='HS256').decode('utf-8')# ubuntu환경
+        token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256').decode('utf-8')# ubuntu환경
     else:
-        token = jwt.encode({'id': email, 'token':fcm}, SECRET_KEY, algorithm='HS256')
+        token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256')
     html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br>\
                      <a href="http://3.35.253.151:8000/user_api/activate/{token}">이메일 인증 링크</a><br><br>\
                      <h3>감사합니다.</h3>'
@@ -96,7 +96,7 @@ def send_msg(email, fcm):
 def create_user(request):
     if User.objects.filter(username=request.data['email']).exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    send_msg(request.data['email'], request.data['token'])
+    send_msg(request.data['email'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
@@ -114,7 +114,7 @@ def activate(request, token):
                 user.save()
             else:
                 pass
-            certify_fcm(user_dic['token'])
+            certify_fcm(user_dic['id'])
             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
     except:
         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
@@ -342,7 +342,7 @@ def password(request):
             user = User.objects.filter(email=request.data['email'])[0]
             user.is_active = False
             user.save()
-            send_msg(request.data['email'], request.data['token'])
+            send_msg(request.data['email'])
         except IndexError:
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
 
