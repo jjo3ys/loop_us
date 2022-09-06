@@ -1,6 +1,6 @@
 from .models import Project, TagLooper
 from rest_framework import serializers
-from post_api.models import Post, Like
+from post_api.models import Post, Like, PostImage
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
 from post_api.serializers import PostingSerializer
@@ -19,9 +19,18 @@ class ProjectLooperSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
+    post_image = serializers.SerializerMethodField()
     class Meta:
         model = Project
-        fields = ['id', 'user_id', 'project_name', 'start_date', 'end_date', 'post_count', 'looper', 'group', 'post_update_date']
+        fields = ['id', 'type', 'user_id', 'project_name', 'start_date', 'end_date', 'post_count', 'looper', 'group', 'post_update_date', 'post_image']
+    
+    def get_post_image(self, obj):
+    
+        try:
+            return PostImage.objects.filter(post = Post.objects.filter(project = obj).last()).last().image.url
+        except AttributeError:
+            return None
+
 
 class ProjectPostSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)

@@ -489,7 +489,12 @@ def project(request):
 @permission_classes((IsAuthenticated,))
 def posting(request):
     idx = int(request.GET['id'])
-    post_obj = Post.objects.filter(project_id=int(idx)).order_by('-id')
+    
+    if request.GET['view_type'] == 'my':
+        post_obj = Post.objects.filter(project_id=int(idx), user = request.user).order_by('-id')
+    else:
+        post_obj = Post.objects.filter(project_id=int(idx)).order_by('-id')
+
     post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
     post_obj = MainloadSerializer(post_obj, many=True, read_only=True).data
     for post in post_obj:

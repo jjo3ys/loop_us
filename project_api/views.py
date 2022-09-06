@@ -25,7 +25,8 @@ def project(request):
         if request.data['end_date'] == '':
             end_date = None
 
-        project_obj = Project.objects.create(user=user, 
+        project_obj = Project.objects.create(user=user,
+                                             type = request.data['type'], 
                                              project_name = request.data['project_name'],                             
                                              start_date = start_date,
                                              end_date = end_date)
