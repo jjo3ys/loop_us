@@ -59,6 +59,9 @@ headers = {
 params = (
     ('serviceKey', 'frbSEAcXD+a6UEOUq1lkWcWmFoDku20SZvLeO++pP9e5yQo5GIqTkbVbctqafewScJuzLLcTW/l4d/Lw/wjOig=='),
 )
+
+client = redis.Redis()
+
 def delete_tag(tag_obj):
     for tag in tag_obj:
         tag.tag.count = tag.tag.count-1
@@ -71,7 +74,6 @@ def delete_tag(tag_obj):
             tag.tag.save()
 
 def send_msg(email):
-    client = redis.Redis()
     r = client.get(email)
     if not r:
         pass
@@ -90,7 +92,7 @@ def send_msg(email):
     msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
-    client.set(email, 0, datetime.timedelta(seconds=180))
+    client.set(email.replace('@', ''), 0, datetime.timedelta(seconds=180))
 
 @api_view(['POST'])
 def create_user(request):
@@ -101,12 +103,13 @@ def create_user(request):
 
 @api_view(['GET', ])
 def activate(request, token):
-    client = redis.Redis()
     try:
         user_dic = jwt.decode(token, algorithms='HS256')
-        r =  client.get(user_dic['id'])
+        email = user_dic['id']
+        email = email.replace('@', '')
+        r =  client.get(email)
         if int(r) == 0:
-            client.delete(user_dic['id'])
+            client.delete(email)
             user = User.objects.filter(username=user_dic['id'])
             if user.exists():
                 user = user[0]
@@ -114,7 +117,7 @@ def activate(request, token):
                 user.save()
             else:
                 pass
-            certify_fcm(user_dic['id'])
+            certify_fcm(email)
             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
     except:
         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
