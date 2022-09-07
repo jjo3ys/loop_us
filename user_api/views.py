@@ -470,7 +470,7 @@ def profile(request):
         last_group_ratio = round(profile_obj.last_rank/group_count, 2)
 
         school_ratio = round(profile_obj.school_rank/school_count, 2)
-        school_last_ratio = round(profile_obj.school_last_rank, 2)
+        school_last_ratio = round(profile_obj.school_last_rank/school_count, 2)
 
         profile.update({"group_ratio":group_ratio, "group_rank_variance":last_group_ratio-group_ratio,
                         "school_ratio":school_ratio, "school_rank_variance":school_last_ratio-school_ratio})
