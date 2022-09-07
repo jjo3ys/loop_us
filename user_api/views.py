@@ -463,8 +463,18 @@ def profile(request):
         else:
             profile.update({'looped':0})
 
-        profile.update({"group_ratio":round(profile_obj.rank/Profile.objects.filter(group=profile_obj.group).count(), 2)})
-        profile.update({"school_ratio":round(profile_obj.school_rank/Profile.objects.filter(school=profile_obj.school).count(), 2)})
+        group_count = Profile.objects.filter(group=profile_obj.group).count()
+        school_count = Profile.objects.filter(school=profile_obj.school, group=profile_obj.group).count()
+
+        group_ratio = round(profile_obj.rank/group_count, 2)
+        last_group_ratio = round(profile_obj.last_rank/group_count, 2)
+
+        school_ratio = round(profile_obj.school_rank/school_count, 2)
+        school_last_ratio = round(profile_obj.school_last_rank, 2)
+
+        profile.update({"group_ratio":group_ratio, "group_rank_variance":last_group_ratio-group_ratio,
+                        "school_ratio":school_ratio, "school_rank_variance":school_last_ratio-school_ratio})
+        
         return Response(profile, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
