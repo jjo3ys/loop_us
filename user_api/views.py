@@ -492,9 +492,16 @@ def project(request):
 @permission_classes((IsAuthenticated,))
 def posting(request):
     idx = int(request.GET['id'])
-    post_obj = Post.objects.filter(project_id=int(idx)).order_by('-id')
-    post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
-    post_obj = MainloadSerializer(post_obj, many=True, read_only=True).data
+    if request.GET['type'] == 'career':
+        post_obj = Post.objects.filter(project_id=idx).order_by('-id')
+    elif request.GET['type'] == 'all':
+        post_obj = Post.objects.filter(user_id=idx).order_by('-id')
+
+    post_obj = Paginator(post_obj, 20)
+    if post_obj.num_pages < int(request.GET['page']):
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    post_obj = MainloadSerializer(post_obj.get_page(request.GET['page']), many=True, read_only=True).data
     for post in post_obj:
         exists = Like.objects.filter(post_id=post['id'], user_id=request.user.id).exists()
         if exists:
