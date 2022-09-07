@@ -5,8 +5,6 @@ from django.conf import settings
 class Project(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     project_name = models.CharField(max_length=50)
-    start_date = models.DateField()
-    end_date = models.DateField(blank=True, null=True)
     post_update_date = models.DateTimeField(null=True, default=None)
     post_count = models.PositiveSmallIntegerField(default=0)
     group = models.PositiveSmallIntegerField(default=10)
