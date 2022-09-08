@@ -463,8 +463,18 @@ def profile(request):
         else:
             profile.update({'looped':0})
 
-        profile.update({"group_ratio":round(profile_obj.rank/Profile.objects.filter(group=profile_obj.group).count(), 2)})
-        profile.update({"school_ratio":round(profile_obj.school_rank/Profile.objects.filter(school=profile_obj.school).count(), 2)})
+        group_count = Profile.objects.filter(group=profile_obj.group).count()
+        school_count = Profile.objects.filter(school=profile_obj.school, group=profile_obj.group).count()
+
+        group_ratio = round(profile_obj.rank/group_count, 2)
+        last_group_ratio = round(profile_obj.last_rank/group_count, 2)
+
+        school_ratio = round(profile_obj.school_rank/school_count, 2)
+        school_last_ratio = round(profile_obj.school_last_rank/school_count, 2)
+
+        profile.update({"group_ratio":group_ratio, "group_rank_variance":last_group_ratio-group_ratio,
+                        "school_ratio":school_ratio, "school_rank_variance":school_last_ratio-school_ratio})
+        
         return Response(profile, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
@@ -492,14 +502,16 @@ def project(request):
 @permission_classes((IsAuthenticated,))
 def posting(request):
     idx = int(request.GET['id'])
-    
-    if request.GET['view_type'] == 'my':
-        post_obj = Post.objects.filter(project_id=int(idx), user = request.user).order_by('-id')
-    else:
-        post_obj = Post.objects.filter(project_id=int(idx)).order_by('-id')
+    if request.GET['type'] == 'career':
+        post_obj = Post.objects.filter(project_id=idx).order_by('-id')
+    elif request.GET['type'] == 'all':
+        post_obj = Post.objects.filter(user_id=idx).order_by('-id')
 
-    post_obj = Paginator(post_obj, 3).get_page(request.GET['page'])
-    post_obj = MainloadSerializer(post_obj, many=True, read_only=True).data
+    post_obj = Paginator(post_obj, 20)
+    if post_obj.num_pages < int(request.GET['page']):
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    post_obj = MainloadSerializer(post_obj.get_page(request.GET['page']), many=True, read_only=True).data
     for post in post_obj:
         exists = Like.objects.filter(post_id=post['id'], user_id=request.user.id).exists()
         if exists:

@@ -18,18 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 def project(request):
     if request.method == 'POST':
         user = request.user
-
-        start_date = request.data['start_date']
-        end_date = request.data['end_date']
-
-        if request.data['end_date'] == '':
-            end_date = None
-
-        project_obj = Project.objects.create(user=user,
-                                             type = request.data['type'], 
-                                             project_name = request.data['project_name'],                             
-                                             start_date = start_date,
-                                             end_date = end_date)
+        project_obj = Project.objects.create(user=user, project_name = request.data['project_name'])
 
         return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_201_CREATED)
 
@@ -38,15 +27,6 @@ def project(request):
         project_obj = Project.objects.filter(id=request.GET['id'])[0]
         if type == 'project_name':
             project_obj.project_name = request.data['project_name']
-
-        elif type == 'date':
-            start_date = request.data['start_date']
-            end_date = request.data['end_date']
-            if request.data['end_date'] == '':
-                end_date = None
-
-            project_obj.start_date = start_date
-            project_obj.end_date = end_date
 
         elif type == 'looper':
             profile_obj = Profile.objects.filter(user_id=request.user.id)[0]

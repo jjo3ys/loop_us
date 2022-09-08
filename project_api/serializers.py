@@ -19,18 +19,21 @@ class ProjectLooperSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
-    post_image = serializers.SerializerMethodField()
+    thumbnail = serializers.SerializerMethodField()
     class Meta:
         model = Project
-        fields = ['id', 'type', 'user_id', 'project_name', 'start_date', 'end_date', 'post_count', 'looper', 'group', 'post_update_date', 'post_image']
-    
-    def get_post_image(self, obj):
-    
-        try:
-            return PostImage.objects.filter(post = Post.objects.filter(project = obj).last()).last().image.url
-        except AttributeError:
-            return None
+        fields = ['id', 'user_id', 'project_name', 'post_count', 'looper', 'group', 'thumbnail', 'post_update_date']
 
+    def get_thumbnail(self, obj):
+        post = Post.objects.filter(project_id=obj.id)
+        if post.count() == 0:
+            return None
+        else:
+            img_obj = PostImage.objects.filter(post_id__in=post.values_list('id', flat=True))
+            if img_obj.count() == 0:
+                return None
+            else:
+                return PostImage.objects.filter(post_id=img_obj.last().post_id).first().image.url
 
 class ProjectPostSerializer(serializers.ModelSerializer):
     looper = ProjectLooperSerializer(many=True, read_only=True)
@@ -40,7 +43,7 @@ class ProjectPostSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Project
-        fields = ['id', 'profile', 'project_name', 'start_date', 'end_date', 'looper', 'count', 'post']
+        fields = ['id', 'profile', 'project_name', 'looper', 'count', 'post']
     
     def get_count(self, obj):
         post = Post.objects.filter(project_id=obj.id)
