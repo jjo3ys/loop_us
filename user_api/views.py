@@ -34,8 +34,8 @@ from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 
 from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
-from project_api.models import Project
-from project_api.serializers import ProjectSerializer
+from project_api.models import Project, ProjectUser
+from project_api.serializers import ProjectUserSerializer
 from post_api.models import BookMark, Like, PostImage, Post
 from loop.models import Loopship
 # from fcm.models import FcmToken
@@ -482,10 +482,10 @@ def profile(request):
 def project(request):
     idx = request.GET['id']
     try:
-        project_obj = Project.objects.filter(user_id=idx)
+        project_obj = ProjectUser.objects.filter(user_id=idx).select_related('project')
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    project_obj = ProjectSerializer(project_obj, many=True).data
+    project_obj = ProjectUserSerializer(project_obj, many=True).data
 
     sum_post = Post.objects.filter(user_id=idx).count()
 

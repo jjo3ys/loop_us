@@ -1,7 +1,7 @@
 from search.models import Get_log
 
 from .serializers import ProjectPostSerializer
-from .models import Project, TagLooper
+from .models import Project, ProjectUser
 from user_api.models import Profile
 # from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
@@ -32,13 +32,13 @@ def project(request):
             profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
             looper_list = eval(request.data['looper'])
 
-            old_looper = TagLooper.objects.filter(project_id=project_obj.id)
+            old_looper = ProjectUser.objects.filter(project_id=project_obj.id)
             for looper in old_looper:
                 if looper.looper.id not in looper_list:
                     looper.delete()
 
             for looper in looper_list:
-                looper, created = TagLooper.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
+                looper, created = ProjectUser.objects.get_or_create(project_id=project_obj.id, looper_id=looper)
                 if created:
                     try:
                         # token = FcmToken.objects.filter(user_id=looper.looper_id)[0]
