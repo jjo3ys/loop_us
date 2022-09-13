@@ -111,7 +111,7 @@ def posting(request):
     
     elif request.method == 'GET':
         try:
-            post_obj = Post.objects.select_related('project').filter(id=request.GET['id'])[0]
+            post_obj = Post.objects.filter(id=request.GET['id']).select_related('project')[0]
         except IndexError:
             return Response(status=status.HTTP_404_NOT_FOUND)
         post_obj.view_count += 1
