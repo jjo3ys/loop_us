@@ -32,10 +32,10 @@ from post_api.serializers import MainloadSerializer
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 
-from search.models import Get_log, InterestTag
+# from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
-from project_api.models import Project
-from project_api.serializers import ProjectSerializer
+from project_api.models import Project, ProjectUser
+from project_api.serializers import ProjectUserSerializer
 from post_api.models import BookMark, Like, PostImage, Post
 from loop.models import Loopship
 # from fcm.models import FcmToken
@@ -259,7 +259,7 @@ def signup(request):
             loop_list.append(Loopship(user_id=user.id, friend_id=looper.user_id))
             loop_list.append(Loopship(user_id=looper.user_id, friend_id=user.id))
         Loopship.objects.bulk_create(loop_list)
-    InterestTag.objects.create(user_id=user.id, tag_list={})
+    # InterestTag.objects.create(user_id=user.id, tag_list={})
     return Response({'token':token.key, 'user_id':str(user.id)},status=status.HTTP_200_OK)
 
 @api_view(['POST'])
@@ -364,11 +364,11 @@ def resign(request):
         except:
             return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        try:
-            intereset_list = InterestTag.objects.filter(user_id=user.id)[0]
-            intereset_list.delete()
-        except:
-            pass
+        # try:
+        #     intereset_list = InterestTag.objects.filter(user_id=user.id)[0]
+        #     intereset_list.delete()
+        # except:
+        #     pass
 
         for project in Project.objects.filter(user_id=user.id):
             for post in Post.objects.filter(project_id=project.id):
@@ -482,10 +482,10 @@ def profile(request):
 def project(request):
     idx = request.GET['id']
     try:
-        project_obj = Project.objects.filter(user_id=idx)
+        project_obj = ProjectUser.objects.filter(user_id=idx).select_related('project')
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    project_obj = ProjectSerializer(project_obj, many=True).data
+    project_obj = ProjectUserSerializer(project_obj, many=True).data
 
     sum_post = Post.objects.filter(user_id=idx).count()
 
