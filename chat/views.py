@@ -95,7 +95,7 @@ def get_profile(request):
     user_id = int(request.user.id)
 
     member = eval(request.GET['members'])
-    profile_obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=member).select_related('school', 'department')).data
+    profile_obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=member).select_related('school', 'department'), many=True).data
     for profile in profile_obj:
         if Banlist.objects.filter(user_id=profile['user_id'], banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
             profile['is_banned'] = 2
