@@ -93,24 +93,17 @@ def get_list(request):
 def get_profile(request):
 
     user_id = int(request.user.id)
-    return_list = []
 
-    for member in eval(request.GET['members']):
-        try:
-            data = SimpleProfileSerializer(Profile.objects.get(user_id = int(member))).data
-        
-        except Profile.DoesNotExist:
-            return_list.append({"user_id":member})
-            continue
-
-        if Banlist.objects.filter(user_id=member, banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
-            data['is_banned'] = 2
+    member = eval(request.GET['members'])
+    profile_obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=member).select_related('school', 'department')).data
+    for profile in profile_obj:
+        if Banlist.objects.filter(user_id=profile['user_id'], banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
+            profile['is_banned'] = 2
         else:       
-            data['is_banned'] = 0
-
-        return_list.append(data)
+            profile['is_banned'] = 0
+        member.remove(profile['user_id'])
     
-    return Response(return_list, status=status.HTTP_200_OK)
+    return Response({'profile':profile_obj, 'none':member}, status=status.HTTP_200_OK)
 
 # @api_view(['GET'])
 # @permission_classes((IsAuthenticated,))
