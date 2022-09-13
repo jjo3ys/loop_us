@@ -78,7 +78,7 @@ def search(request, type):
     ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
 
     if type == 'post':
-        obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).order_by('-id')
+        obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).select_related('project').order_by('-id')
         obj = Paginator(obj, 5)
         if obj.num_pages < int(page):
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -108,7 +108,7 @@ def search(request, type):
         obj = SimpleProfileSerializer(results, many=True).data
 
     elif type == 'tag_post':
-        obj = Post_Tag.objects.filter(tag_id=int(query)).select_for_update('post_tag').order_by('-id')
+        obj = Post_Tag.objects.filter(tag_id=int(query)).select_related('post_tag', 'post__project').order_by('-id')
         obj = Paginator(obj, 5)
         if obj.num_pages < int(page):
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -157,7 +157,7 @@ def search_university(request):
 @permission_classes((IsAuthenticated,))
 def recommend(request):
     now = datetime.datetime.now()
-    post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).order_by('-like_count')
+    post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).select_related('project').order_by('-like_count')
     post_obj = Paginator(post_obj, 5)
     if post_obj.num_pages < int(request.GET['page']):
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -111,7 +111,7 @@ def posting(request):
     
     elif request.method == 'GET':
         try:
-            post_obj = Post.objects.select_related('project').select_related('user').filter(id=request.GET['id'])[0]
+            post_obj = Post.objects.select_related('project').filter(id=request.GET['id'])[0]
         except IndexError:
             return Response(status=status.HTTP_404_NOT_FOUND)
         post_obj.view_count += 1
@@ -368,7 +368,7 @@ def bookmark(request):
 @permission_classes((IsAuthenticated,))
 def bookmark_list_load(request):
     user_id = request.user.id
-    bookmark_list = BookMark.objects.filter(user_id=user_id).order_by('-id')
+    bookmark_list = BookMark.objects.filter(user_id=user_id).select_related('post__project').order_by('-id')
     bookmark_list = Paginator(bookmark_list, 10)
     if bookmark_list.num_pages < int(request.GET['page']):
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -457,9 +457,9 @@ def main_load(request):
     ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
 
     if request.GET['last'] == '0':
-        post_obj = Post.objects.select_related('project').select_related('user').all().exclude(user_id__in=ban_list).order_by('-id')[:20]
+        post_obj = Post.objects.all().exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
     else:
-        post_obj = Post.objects.select_related('project').select_related('user').filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).order_by('-id')[:20]
+        post_obj = Post.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
 
     post_obj = MainloadSerializer(post_obj, many=True).data
 
@@ -507,9 +507,9 @@ def loop_load(request):
     now = datetime.datetime.now()
 
     if request.GET['last'] == '0':
-        post_obj = Post.objects.select_related('project').select_related('user').filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).order_by('-id')[:20]
+        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).select_related('project').order_by('-id')[:20]
     else:
-        post_obj = Post.objects.select_related('project').select_related('user').filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).order_by('-id')[:20]
+        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).select_related('project').order_by('-id')[:20]
 
     post_obj = MainloadSerializer(post_obj, many=True).data
     for p in post_obj:
