@@ -32,7 +32,7 @@ from post_api.serializers import MainloadSerializer
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 
-from search.models import Get_log, InterestTag
+# from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
 from project_api.models import Project, ProjectUser
 from project_api.serializers import ProjectUserSerializer
@@ -364,11 +364,11 @@ def resign(request):
         except:
             return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        try:
-            intereset_list = InterestTag.objects.filter(user_id=user.id)[0]
-            intereset_list.delete()
-        except:
-            pass
+        # try:
+        #     intereset_list = InterestTag.objects.filter(user_id=user.id)[0]
+        #     intereset_list.delete()
+        # except:
+        #     pass
 
         for project in Project.objects.filter(user_id=user.id):
             for post in Post.objects.filter(project_id=project.id):

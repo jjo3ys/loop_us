@@ -10,7 +10,7 @@ from rest_framework import status
 # from user_api.builk import ProfileDocument
 
 
-from .models import Log, InterestTag#, Connect_log
+# from .models import Log, InterestTag#, Connect_log
 # from .builk import ProfileDocument
 
 from post_api.models import Post, Like, BookMark
@@ -123,11 +123,11 @@ def search(request, type):
     elif type == 'notice':
         return Response("unrealized", status=status.HTTP_204_NO_CONTENT)
     
-    if page == '1':
-        if 'tag' in type:
-            interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-            interest_list = interest_tag(interest_list, 'plus', int(query), 1)
-            interest_list.save()
+    # if page == '1':
+        # if 'tag' in type:
+        #     interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+        #     interest_list = interest_tag(interest_list, 'plus', int(query), 1)
+        #     interest_list.save()
         # else:         
         #     Log.objects.create(user_id=request.user.id, query=query, type=type_int[type])
 
