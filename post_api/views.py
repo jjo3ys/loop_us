@@ -515,17 +515,24 @@ def loop_load(request):
             p.update({"is_marked":1})
         else:
             p.update({"is_marked":0})
-
+            
+    profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
-        try:
-            news_obj = NewsSerializer(News.objects.filter(group_id=request.GET['group_id']), many=True).data
-        except:
-            news_obj = NewsSerializer(News.objects.all(), many=True).data
+        project_obj = ProjectUser.objects.filter(user_id=user_id).select_related('project').order_by('post_count').first()
+        project_obj = SimpleProjectserializer(project_obj.project).data
+        if profile.group == 10:
+            news_obj = list(News.objects.all().values_list('urls', flat=True))
+            br_obj = list(Brunch.objects.all().values_list('urls', flat=True))
+            yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
+        else:
+            news_obj = list(News.objects.filter(group_id=profile.group).values_list('urls', flat=True))
+            br_obj = list(Brunch.objects.filter(group_id=profile.group).values_list('urls', flat=True))
+            yt_obj = list(Youtube.objects.filter(group_id=profile.group).values_list('urls', flat=True))
+        obj = news_obj+br_obj+yt_obj
+        random.shuffle(obj)
+        return Response({'posting':post_obj, 'issue':obj, 'project':project_obj}, status=status.HTTP_200_OK)
 
-        return Response({'posting':post_obj, 'news':news_obj}, status=status.HTTP_200_OK)
-        
     else: return Response({'posting':post_obj})
-
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def like_list_load(request):

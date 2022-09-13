@@ -259,7 +259,7 @@ def signup(request):
             loop_list.append(Loopship(user_id=user.id, friend_id=looper.user_id))
             loop_list.append(Loopship(user_id=looper.user_id, friend_id=user.id))
         Loopship.objects.bulk_create(loop_list)
-    InterestTag.objects.create(user_id=user.id, tag_list={})
+    # InterestTag.objects.create(user_id=user.id, tag_list={})
     return Response({'token':token.key, 'user_id':str(user.id)},status=status.HTTP_200_OK)
 
 @api_view(['POST'])
