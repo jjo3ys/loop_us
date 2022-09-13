@@ -168,11 +168,21 @@ def posting(request):
             else: 
                 tag.tag.save()
 
+        thumbnail_id = post_obj.project.thumbnail
         if contents_image_obj.count() != 0:
             for image in contents_image_obj:
                 image.image.delete(save=False)
+                if image.id == thumbnail_id:
+                    post = Post.objects.filter(project_id=post_obj.project_id)
+                    if post.count() == 0:
+                        post_obj.project.thumbnail = 0
+                    img_obj = PostImage.objects.filter(post_id__in=post.values_list('id', flat=True))
+                    if img_obj.count() == 0:
+                        post_obj.project.thumbnail = 0
+                    else:
+                        post_obj.project.thumbnail = PostImage.objects.filter(post_id=img_obj.last().post_id).first().id
+                    post_obj.project.save()
         
-        post_obj.project.post_update_date = datetime.datetime.now()
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 
@@ -515,7 +525,7 @@ def loop_load(request):
             p.update({"is_marked":1})
         else:
             p.update({"is_marked":0})
-            
+
     profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
         project_obj = ProjectUser.objects.filter(user_id=user_id).select_related('project').order_by('post_count').first()
