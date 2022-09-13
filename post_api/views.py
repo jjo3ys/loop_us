@@ -1,8 +1,8 @@
 from django.core.paginator import Paginator
 from crawling_api.models import News, Youtube, Brunch
 from project_api.models import Project, ProjectUser
-from search.models import Get_log, InterestTag
-from search.views import interest_tag
+# from search.models import Get_log, InterestTag
+# from search.views import interest_tag
 
 from tag.models import Post_Tag, Tag
 # from fcm.models import FcmToken
@@ -53,7 +53,7 @@ def posting(request):
             if id == 0:
                 post_obj.project.thumbnail=image_obj.id
         
-        interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
+        # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
 
         for link in request.data.getlist('link'):
             PostLink.objects.create(post_id=post_obj.id, link=link)
@@ -61,12 +61,12 @@ def posting(request):
         for tag in tags:
             tag_obj, created = Tag.objects.get_or_create(tag=tag)
             Post_Tag.objects.create(post=post_obj, tag=tag_obj)
-            interest_tag(interest_list, 'plus', tag_obj.id, 10)
+            # interest_tag(interest_list, 'plus', tag_obj.id, 10)
             if not created:
                 tag_obj.count += 1
                 tag_obj.save()
 
-        interest_list.save()
+        # interest_list.save()
         post_obj.project.post_update_date = datetime.datetime.now()
         post_obj.project.save()
 
@@ -83,12 +83,12 @@ def posting(request):
         origin_tag_list = origin_tag_obj.values_list('tag__tag', flat=True)
         tag_list = request.data.getlist('tag')
 
-        interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
+        # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         for tag in tag_list:
             if tag not in origin_tag_list:
                 tag_obj, created = Tag.objects.get_or_create(tag=tag)
                 Post_Tag.objects.create(tag=tag_obj, post_id=post_obj.id)
-                interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 10)
+                # interest_list = interest_tag(interest_list, 'plus', tag_obj.id, 10)
                 
                 if not created:
                     tag_obj.count += 1
@@ -96,7 +96,7 @@ def posting(request):
 
         for tag in origin_tag_obj:
             if tag.tag.tag not in tag_list:
-                interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
+                # interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
                 tag.tag.count -=1
 
                 tag.delete()
@@ -105,7 +105,7 @@ def posting(request):
                 else:
                     tag.tag.save()
         
-        interest_list.save()
+        # interest_list.save()
         post_obj.save()
         return Response(status=status.HTTP_200_OK)
     
@@ -155,11 +155,11 @@ def posting(request):
     elif request.method == 'DELETE':
         post_obj = Post.objects.filter(id=request.GET['id']).select_related('project')[0]
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
-        interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
+        # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tag')
 
         for tag in tag_obj:
-            interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
+            # interest_list = interest_tag(interest_list, 'minus', tag.tag_id, 10)
             tag.tag.count = tag.tag.count-1
                 
             tag.delete()
@@ -388,59 +388,59 @@ def bookmark_list_load(request):
 
     return Response(post_obj, status=status.HTTP_200_OK)
 
-@api_view(['GET', ])
-@permission_classes((IsAuthenticated,))
-def recommend_load(request):
-    user_id = request.user.id
-    tags = InterestTag.objects.filter(user_id=user_id)[0].tag_list
-    try:
-        ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
-    except:
-        ban_list = []
+# @api_view(['GET', ])
+# @permission_classes((IsAuthenticated,))
+# def recommend_load(request):
+#     user_id = request.user.id
+#     tags = InterestTag.objects.filter(user_id=user_id)[0].tag_list
+#     try:
+#         ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
+#     except:
+#         ban_list = []
 
-    ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
-    loop_list = Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True)
+#     ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
+#     loop_list = Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True)
 
-    tag_score = {}
-    for post in Post_Tag.objects.filter(tag_id__in=tags):
-        try:
-            tag_score[post.post_id] += tags[str(post.tag_id)]['count']
-        except KeyError:
-            tag_score[post.post_id] = tags[str(post.tag_id)]['count']
+#     tag_score = {}
+#     for post in Post_Tag.objects.filter(tag_id__in=tags):
+#         try:
+#             tag_score[post.post_id] += tags[str(post.tag_id)]['count']
+#         except KeyError:
+#             tag_score[post.post_id] = tags[str(post.tag_id)]['count']
 
-    now = datetime.datetime.now()
+#     now = datetime.datetime.now()
 
-    post_list = []
-    for post in Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).exclude(user_id__in=ban_list).exclude(user_id__in=loop_list):
-        try:
-            post_list.append([post, tag_score[post.id]])
-        except KeyError:
-            pass
+#     post_list = []
+#     for post in Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).exclude(user_id__in=ban_list).exclude(user_id__in=loop_list):
+#         try:
+#             post_list.append([post, tag_score[post.id]])
+#         except KeyError:
+#             pass
 
-    post_list.sort(key=lambda x: (-x[1]))
-    page = int(request.GET['page'])
-    post_obj = MainloadSerializer([x[0] for x in post_list[5*(page-1):5*page]], many=True).data
-    post_list = 0
+#     post_list.sort(key=lambda x: (-x[1]))
+#     page = int(request.GET['page'])
+#     post_obj = MainloadSerializer([x[0] for x in post_list[5*(page-1):5*page]], many=True).data
+#     post_list = 0
 
-    for p in post_obj:
-        if p['user_id'] == user_id:
-            p.update({"is_user":1})
-        else:
-            p.update({"is_user":0})
-
-        
-        if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
-            p.update({"is_liked":1})
-        else:
-            p.update({"is_liked":0})
+#     for p in post_obj:
+#         if p['user_id'] == user_id:
+#             p.update({"is_user":1})
+#         else:
+#             p.update({"is_user":0})
 
         
-        if BookMark.objects.filter(user_id=user_id, post_id=p['id']).exists():
-            p.update({"is_marked":1})
-        else:
-            p.update({"is_marked":0})
+#         if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
+#             p.update({"is_liked":1})
+#         else:
+#             p.update({"is_liked":0})
 
-    return Response(post_obj, status=status.HTTP_200_OK)
+        
+#         if BookMark.objects.filter(user_id=user_id, post_id=p['id']).exists():
+#             p.update({"is_marked":1})
+#         else:
+#             p.update({"is_marked":0})
+
+#     return Response(post_obj, status=status.HTTP_200_OK)
     
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))

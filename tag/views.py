@@ -8,8 +8,8 @@ from post_api.serializers import MainloadSerializer
 from .models import Tag, Post_Tag
 from .serializer import TagSerializer
 
-from search.models import InterestTag
-from search.views import interest_tag
+# from search.models import InterestTag
+# from search.views import interest_tag
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -125,9 +125,9 @@ def search_tag(request):
     try:
         tag = Tag.objects.filter(tag=request.GET['query'])[0]
         result_list = [tag]
-        interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-        interest_list = interest_tag(interest_list, 'plus', tag.id, 20)
-        interest_list.save()
+        # interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+        # interest_list = interest_tag(interest_list, 'plus', tag.id, 20)
+        # interest_list.save()
     except:
         result_list = []
 
