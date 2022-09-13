@@ -182,7 +182,10 @@ def posting(request):
                     else:
                         post_obj.project.thumbnail = PostImage.objects.filter(post_id=img_obj.last().post_id).first().id
                     post_obj.project.save()
-        
+
+        project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id)[0]
+        project_obj.post_count -= 1
+        project_obj.save()
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 
