@@ -469,8 +469,8 @@ def main_load(request):
     
     profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
-        project_obj = Project.objects.filter(user_id=user_id).order_by('post_count').first()
-        project_obj = SimpleProjectserializer(project_obj).data
+        project_obj = ProjectUser.objects.filter(user_id=user_id).select_related('project').order_by('post_count').first()
+        project_obj = SimpleProjectserializer(project_obj.project).data
         if profile.group == 10:
             news_obj = list(News.objects.all().values_list('urls', flat=True))
             br_obj = list(Brunch.objects.all().values_list('urls', flat=True))
