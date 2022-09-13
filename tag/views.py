@@ -39,7 +39,7 @@ def tag(request):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
 def tagged_post(request):
-    post_tag_obj = Post_Tag.objects.filter(tag_id=request.GET['id']).select_related('post')
+    post_tag_obj = Post_Tag.objects.filter(tag_id=request.GET['id']).select_related('post__project')
     
     if request.GET['page'] == '1':
         lastmonth = date.today().month

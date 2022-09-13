@@ -356,7 +356,7 @@ def password(request):
 def resign(request):   
     if check_password(request.data['password'], request.user.password):
         user = request.user
-        profile_obj = Profile.objects.filter(user_id=user.id).select_related('department').select_related('school')[0]
+        profile_obj = Profile.objects.filter(user_id=user.id).select_related('department', 'school')[0]
         profile_obj.profile_image.delete(save=False)
         message = EmailMessage('{}님 탈퇴 사유'.format(profile_obj.real_name), '{} {} \n 사유:{}'.format(profile_obj.school.school, profile_obj.department.department, request.data['reason']), to=['loopus@loopus.co.kr'])
         try:
@@ -503,9 +503,9 @@ def project(request):
 def posting(request):
     idx = int(request.GET['id'])
     if request.GET['type'] == 'career':
-        post_obj = Post.objects.filter(project_id=idx).order_by('-id')
+        post_obj = Post.objects.filter(project_id=idx).select_related('project').order_by('-id')
     elif request.GET['type'] == 'all':
-        post_obj = Post.objects.filter(user_id=idx).order_by('-id')
+        post_obj = Post.objects.filter(user_id=idx).select_related('project').order_by('-id')
 
     post_obj = Paginator(post_obj, 20)
     if post_obj.num_pages < int(request.GET['page']):
@@ -681,7 +681,7 @@ def profile_indexing(request):
         }
     }
     es.indices.create(index=index, body=body)
-    profile_obj = Profile.objects.all().select_related('school').select_related('department')
+    profile_obj = Profile.objects.all().select_related('school', 'department')
     for profile in profile_obj:
         doc = {
             "user_id":profile.user_id,

@@ -79,7 +79,7 @@ def monthly_tag_count(request):
     today = date.today()
     post_tags = Post_Tag.objects.select_related('post').filter(post__date__range=[today-timedelta(days=183), today])
 
-    for tag in enumerate(post_tags):
+    for id, tag in enumerate(post_tags):
         month = str(tag.post.date.month)
         if month not in tag.tag.monthly_count:
             tag.tag.monthly_count[month] = 1
@@ -219,7 +219,7 @@ def career_board_ranking(request):
 
     if request.GET['type'] == 'main':
         return_dict = {}
-        ranked_post_obj = PostingRanking.objects.filter(group=group_id).select_related('post')
+        ranked_post_obj = PostingRanking.objects.filter(group=group_id).select_related('post__project')
         post_list = []
         for ranked_post in ranked_post_obj:
             post_list.append(ranked_post.post)
