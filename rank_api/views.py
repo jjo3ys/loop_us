@@ -77,7 +77,7 @@ def monthly_tag_count(request):
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     today = date.today()
-    post_tags = Post_Tag.objects.select_related('post').filter(post__date__range=[today-timedelta(days=183), today])
+    post_tags = Post_Tag.objects.select_related('post', 'tag').filter(post__date__range=[today-timedelta(days=183), today])
 
     for id, tag in enumerate(post_tags):
         month = str(tag.post.date.month)
