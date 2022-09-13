@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator
 from crawling_api.models import News, Youtube, Brunch
-from project_api.models import Project
+from project_api.models import Project, ProjectUser
 from search.models import Get_log, InterestTag
 from search.views import interest_tag
 
@@ -41,19 +41,17 @@ def posting(request):
         
         compare = q.last().contents
         compare = emb.encode(comapare, convert_to_tensor=True)
-        query = emb.encode(request.data['contents'], convert_to_tensor=True)
+        query = emb.encode(request.data['contents'], convert_to_tensor=True)   
         scores = util.pytorch_cos_sim(query, compare).reshape(2)
         '''
         post_obj = Post.objects.create(user_id=user_id, 
                                         project_id=request.GET['id'],    
                                         contents=request.data['contents'])
-        post_obj.project.post_update_date = datetime.datetime.now()
-        post_obj.project.post_count += 1
-        post_obj.project.save()
 
-        for image in request.FILES.getlist('image'):
-            PostImage.objects.create(post_id=post_obj.id,
-                                     image=image)
+        for id, image in enumerate(request.FILES.getlist('image')):
+            image_obj = PostImage.objects.create(post_id=post_obj.id, image=image)
+            if id == 0:
+                post_obj.project.thumbnail=image_obj.id
         
         interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
 
@@ -69,6 +67,13 @@ def posting(request):
                 tag_obj.save()
 
         interest_list.save()
+        post_obj.project.post_update_date = datetime.datetime.now()
+        post_obj.project.save()
+
+        project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id'])[0]
+        project_obj.post_count += 1
+        project_obj.save()
+
         return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
