@@ -100,6 +100,7 @@ def get_profile(request):
             data = SimpleProfileSerializer(Profile.objects.get(user_id = int(member))).data
         
         except Profile.DoesNotExist:
+            return_list.append({"user_id":member})
             continue
 
         if Banlist.objects.filter(user_id=member, banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
