@@ -14,9 +14,9 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         if obj.thumbnail == 0: return None
-        img_obj = PostImage.objects.filter(id=obj.thumbnail)[0]
+        img_obj = PostImage.objects.filter(id=obj.thumbnail)
         if img_obj:
-            return img_obj.image.url
+            return img_obj[0].image.url
         return None
 
 class ProjectUserSerializer(serializers.ModelSerializer):
