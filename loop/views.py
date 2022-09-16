@@ -81,13 +81,13 @@ def get_list(request, type, idx):
                 follow = user_follow.filter(friend_id=l['user_id']).exists()
                 following = user_following.filter(user_id=l['user_id']).exists()
                 if follow and following:
-                    profile_sz.update({"looped":3})
+                    l.update({"looped":3})
                 elif follow:
-                    profile_sz.update({"looped":2})
+                    l.update({"looped":2})
                 elif following:
-                    profile_sz.update({"looped":1})
+                    l.update({"looped":1})
                 else:
-                    profile_sz.update({"looped":0})
+                    l.update({"looped":0})
                 l.update({"is_user":0})
         return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
 
@@ -101,13 +101,13 @@ def get_list(request, type, idx):
                 follow = user_follow.filter(friend_id=l['user_id']).exists()
                 following = user_following.filter(user_id=l['user_id']).exists()
                 if follow and following:
-                    profile_sz.update({"looped":3})
+                    l.update({"looped":3})
                 elif follow:
-                    profile_sz.update({"looped":2})
+                    l.update({"looped":2})
                 elif following:
-                    profile_sz.update({"looped":1})
+                    l.update({"looped":1})
                 else:
-                    profile_sz.update({"looped":0})
+                    l.update({"looped":0})
                 l.update({"is_user":0})
         
         return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
