@@ -46,12 +46,15 @@ from rest_framework.permissions import IsAuthenticated
 @permission_classes((IsAuthenticated,))
 def loop(request, idx):
     user = request.user
-    profile = Profile.objects.filter(user_id=user.id)[0]
-    loop_fcm(idx, profile.real_name, user.id)
+    try:
+        profile = Profile.objects.filter(user_id=user.id)[0]
+        loop_fcm(idx, profile.real_name, user.id)
 
-    Loopship.objects.get_or_create(user_id=user.id, friend_id=idx)
- 
-    return Response("ok", status=status.HTTP_200_OK)
+        Loopship.objects.get_or_create(user_id=user.id, friend_id=idx)
+    
+        return Response("ok", status=status.HTTP_200_OK)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['DELETE'])
 @permission_classes((IsAuthenticated,))
@@ -67,9 +70,8 @@ def unloop(request, idx):
 @permission_classes((IsAuthenticated,))
 def get_list(request, type, idx):
     if type == 'following':
-        loop_obj = Loopship.objects.filter(user=idx)
-        loop_list = loop_obj.values_list('freind_id', flat=True)
-        profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list), many=True).data
+        loop_list = Loopship.objects.filter(user=idx).values_list('friend_id', flat=True)
+        profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list).select_related('department', 'school'), many=True).data
         for l in profile_sz:
             if l['user_id'] == request.user.id:
                 profile_sz.update({"is_user":1})
@@ -85,13 +87,11 @@ def get_list(request, type, idx):
                 # else:
                 #     profile_sz.update({"looped":0})
                 l.update({"is_user":0})
-
         return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
 
     elif type == 'follower':
-        loop_obj = Loopship.objects.filter(friend_id = idx)
-        loop_list = loop_obj.values_list('user_id', flat=True)
-        profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list), many=True).data
+        loop_list = Loopship.objects.filter(friend_id = idx).values_list('user_id', flat=True)
+        profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list).select_related('department', 'school'), many=True).data
         for l in profile_sz:
             if l['user_id'] == request.user.id:
                 l.update({"is_user":1})
