@@ -69,6 +69,8 @@ def unloop(request, idx):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def get_list(request, type, idx):
+    user_follow = Loopship.objects.filter(user_id=request.user.id)
+    user_following = Loopship.objects.filter(friend_id=request.user.id)
     if type == 'following':
         loop_list = Loopship.objects.filter(user=idx).values_list('friend_id', flat=True)
         profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list).select_related('department', 'school'), many=True).data
@@ -76,16 +78,16 @@ def get_list(request, type, idx):
             if l['user_id'] == request.user.id:
                 l.update({"is_user":1})
             else:
-                # follow = Loopship.objects.filter(user_id=request.user.id, friend_id=l.friend_id).exists()
-                # following = Loopship.objects.filter(user_id=l.friend_id, friend_id=request.user.id).exists()
-                # if follow and following:
-                #     profile_sz.update({"looped":3})
-                # elif follow:
-                #     profile_sz.update({"looped":2})
-                # elif following:
-                #     profile_sz.update({"looped":1})
-                # else:
-                #     profile_sz.update({"looped":0})
+                follow = user_follow.filter(friend_id=l['user_id']).exists()
+                following = user_following.filter(user_id=l['user_id']).exists()
+                if follow and following:
+                    profile_sz.update({"looped":3})
+                elif follow:
+                    profile_sz.update({"looped":2})
+                elif following:
+                    profile_sz.update({"looped":1})
+                else:
+                    profile_sz.update({"looped":0})
                 l.update({"is_user":0})
         return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
 
@@ -96,6 +98,16 @@ def get_list(request, type, idx):
             if l['user_id'] == request.user.id:
                 l.update({"is_user":1})
             else:
+                follow = user_follow.filter(friend_id=l['user_id']).exists()
+                following = user_following.filter(user_id=l['user_id']).exists()
+                if follow and following:
+                    profile_sz.update({"looped":3})
+                elif follow:
+                    profile_sz.update({"looped":2})
+                elif following:
+                    profile_sz.update({"looped":1})
+                else:
+                    profile_sz.update({"looped":0})
                 l.update({"is_user":0})
         
         return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
