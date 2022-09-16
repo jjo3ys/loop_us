@@ -66,7 +66,7 @@ class CocommentSerializer(serializers.ModelSerializer):
     
     def get_profile(self, obj):
         try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
         except:
             return None
     
@@ -87,7 +87,7 @@ class CommentSerializer(serializers.ModelSerializer):
     
     def get_profile(self, obj):
         try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
         except:
             return None
 
@@ -129,7 +129,7 @@ class MainloadSerializer(serializers.ModelSerializer):
 
     def get_profile(self, obj):
         try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
         except:
             return None
     
@@ -157,7 +157,7 @@ class PostingSerializer(serializers.ModelSerializer):
         
     def get_profile(self, obj):
         try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
         except:
             return None
     

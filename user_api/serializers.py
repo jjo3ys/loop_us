@@ -104,7 +104,7 @@ class BanlistSerializer(serializers.ModelSerializer):
     def get_banlist(self, obj):
         ban_list = []
         for ban in obj.banlist:
-            ban_list.append(SimpleProfileSerializer(Profile.objects.filter(user_id=ban)[0]).data)
+            ban_list.append(SimpleProfileSerializer(Profile.objects.filter(user_id=ban).select_related('school', 'department')[0]).data)
         
         return ban_list
 
@@ -142,7 +142,7 @@ class AlarmSerializer(serializers.ModelSerializer):
             except AttributeError:
                 return None
     def get_profile(self, obj):
-        return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id)[0]).data
+        return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id).select_related('school', 'department')[0]).data
 
 class CompanySerializer(serializers.ModelSerializer):
 
