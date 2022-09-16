@@ -99,29 +99,3 @@ def get_list(request, type, idx):
                 l.update({"is_user":0})
         
         return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
-
-    elif type =='all':
-        looper_list = []
-        looper = []
-
-        following = Loopship.objects.filter(user_id=idx)
-        for follow in following:
-            looper_list.append(follow.friend_id)
-
-        follower = Loopship.objects.filter(friend_id=idx)
-        for follow in follower:
-            if follow.user_id not in looper_list:
-                looper_list.append(follow.user_id)
-
-        for follow in looper_list:
-            try:
-                profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id=follow)[0]).data
-            except:
-                continue
-            if follow == request.user.id:
-                profile_sz.update({"is_user":1})
-            else:
-                profile_sz.update({"is_user":0})
-            looper.append(profile_sz)
-        
-        return Response({"looper":looper}, status=status.HTTP_200_OK)
