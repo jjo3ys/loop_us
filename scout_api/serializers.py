@@ -17,7 +17,7 @@ class ContactSerializers(serializers.ModelSerializer):
         return CompanySerializer(obj.company).data
     
     def get_student_info(self, obj):
-        return SimpleProfileSerializer(Profile.objects.filter(user_id = obj.student)[0]).data
+        return SimpleProfileSerializer(Profile.objects.filter(user_id = obj.student).select_related('school', 'department')[0]).data
 
     def get_group_name(self, obj):
         return obj.group.group_name
