@@ -74,7 +74,7 @@ def get_list(request, type, idx):
         profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list).select_related('department', 'school'), many=True).data
         for l in profile_sz:
             if l['user_id'] == request.user.id:
-                profile_sz.update({"is_user":1})
+                l.update({"is_user":1})
             else:
                 # follow = Loopship.objects.filter(user_id=request.user.id, friend_id=l.friend_id).exists()
                 # following = Loopship.objects.filter(user_id=l.friend_id, friend_id=request.user.id).exists()
