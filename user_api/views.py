@@ -484,7 +484,7 @@ def project(request):
         project_obj = ProjectUser.objects.filter(user_id=request.user.id)
         for project in project_obj:
             try:
-                project.order = request.data[str(project.project_id)]
+                project.order = request.data[project.project_id]
             except: continue
         ProjectUser.objects.bulk_update(project_obj, ['order'])
         
