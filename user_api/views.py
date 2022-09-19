@@ -477,14 +477,14 @@ def profile(request):
         
         return Response(profile, status=status.HTTP_200_OK)
 
-@api_view(['GET', 'POST'])
+@api_view(['POST', 'GET'])
 @permission_classes((IsAuthenticated,))
 def project(request):
     if request.method == 'POST':
         project_obj = ProjectUser.objects.filter(user_id=request.user.id)
         for project in project_obj:
             try:
-                project.order = request.data[project.project_id]
+                project.order = request.data[str(project.project_id)]
             except: continue
         ProjectUser.objects.bulk_update(project_obj, ['order'])
         
@@ -493,7 +493,7 @@ def project(request):
     elif request.method == 'GET':
         idx = request.GET['id']
         try:
-            project_obj = ProjectUser.objects.filter(user_id=idx).select_related('project')
+            project_obj = ProjectUser.objects.filter(user_id=idx).select_related('project').order_by('order')
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
         project_obj = ProjectUserSerializer(project_obj, many=True).data
