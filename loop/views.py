@@ -69,8 +69,8 @@ def unloop(request, idx):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
 def get_list(request, type, idx):
-    user_follow = Loopship.objects.filter(user_id=request.user.id)
-    user_following = Loopship.objects.filter(friend_id=request.user.id)
+    user_follow = dict(Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', 'user_id'))
+    user_following = dict(Loopship.objects.filter(friend_id=request.user.id).values_list('user_id', 'friend_id'))
     if type == 'following':
         loop_list = Loopship.objects.filter(user=idx).values_list('friend_id', flat=True)
         profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list).select_related('department', 'school'), many=True).data
@@ -78,8 +78,8 @@ def get_list(request, type, idx):
             if l['user_id'] == request.user.id:
                 l.update({"is_user":1})
             else:
-                follow = user_follow.filter(friend_id=l['user_id']).exists()
-                following = user_following.filter(user_id=l['user_id']).exists()
+                follow = l['user_id'] in user_follow
+                following = l['user_id'] in user_following
                 if follow and following:
                     l.update({"looped":3})
                 elif follow:
@@ -98,8 +98,8 @@ def get_list(request, type, idx):
             if l['user_id'] == request.user.id:
                 l.update({"is_user":1})
             else:
-                follow = user_follow.filter(friend_id=l['user_id']).exists()
-                following = user_following.filter(user_id=l['user_id']).exists()
+                follow = l['user_id'] in user_follow
+                following = l['user_id'] in user_following
                 if follow and following:
                     l.update({"looped":3})
                 elif follow:

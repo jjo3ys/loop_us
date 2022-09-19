@@ -501,29 +501,35 @@ def project(request):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def posting(request):
+    user_id = request.user.id
+    page = int(request.GET['page'])
     idx = int(request.GET['id'])
     if request.GET['type'] == 'career':
         post_obj = Post.objects.filter(project_id=idx).select_related('project').order_by('-id')
     elif request.GET['type'] == 'all':
         post_obj = Post.objects.filter(user_id=idx).select_related('project').order_by('-id')
 
-    post_obj = Paginator(post_obj, 20)
-    if post_obj.num_pages < int(request.GET['page']):
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    post_obj = post_obj[(page-1)*20:page*20]
+    post_list = list(post_obj.values_list('id', flat=True))
+    like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
+    book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
+    post_obj = MainloadSerializer(post_obj, many=True, read_only=True).data
 
-    post_obj = MainloadSerializer(post_obj.get_page(request.GET['page']), many=True, read_only=True).data
-    for post in post_obj:
-        exists = Like.objects.filter(post_id=post['id'], user_id=request.user.id).exists()
-        if exists:
-            post.update({"is_liked":1})
+    for p in post_obj:
+        if p['user_id'] == user_id:
+            p.update({"is_user":1})
         else:
-            post.update({"is_liked":0})
+            p.update({"is_user":0})
         
-        exists = BookMark.objects.filter(user_id=request.user.id, post_id=post['id']).exists()
-        if exists:
-            post.update({"is_marked":1})
+        if p['id'] in like_list:
+            p.update({'is_liked':1})
         else:
-            post.update({"is_marked":0})
+            p.update({'is_liked':0})
+
+        if p['id'] in book_list:
+            p.update({'is_marked':1})
+        else:
+            p.update({'is_marked':0})
 
     return Response(post_obj, status=status.HTTP_200_OK)
 

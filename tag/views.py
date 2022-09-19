@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from django.core.paginator import Paginator
-from post_api.models import Like
+from post_api.models import BookMark, Like
 
 from post_api.serializers import MainloadSerializer
 
@@ -39,6 +39,7 @@ def tag(request):
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
 def tagged_post(request):
+    user_id = request.user.id
     post_tag_obj = Post_Tag.objects.filter(tag_id=request.GET['id']).select_related('post__project')
     
     if request.GET['page'] == '1':
@@ -60,23 +61,52 @@ def tagged_post(request):
         post_obj = Paginator(post_tag_obj.order_by('-id'), 5).get_page('1')
         for post in post_obj:
             post_list.append(post.post)
+
+        like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_list).values_list('post_id', 'user_id'))
+        book_list = dict(BookMark.objects.filter(user_id=user_id, post__in=post_list).values_list('user_id', 'post_id'))
+        post_list = MainloadSerializer(post_list, many=True).data
+
         new_post_tag_obj = MainloadSerializer(post_list, many=True).data
         for post in new_post_tag_obj:
-            if Like.objects.filter(user_id=request.user.id, post_id=post['id']).exists():
-                post.update({"is_liked":1})
+            if post['user_id'] == user_id:
+                post.update({"is_user":1})
             else:
-                post.update({"is_liked":0})
+                post.update({"is_user":0})
+            
+            if post['id'] in like_list:
+                post.update({'is_liked':1})
+            else:
+                post.update({'is_liked':0})
+
+            if post['id'] in book_list:
+                post.update({'is_marked':1})
+            else:
+                post.update({'is_marked':0})
 
         post_list = []
         post_obj = Paginator(post_tag_obj.order_by('-post__like_count'), 5).get_page('1')
         for post in post_obj:
             post_list.append(post.post)
+        
+        like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_list).values_list('post_id', 'user_id'))
+        book_list = dict(BookMark.objects.filter(user_id=user_id, post__in=post_list).values_list('user_id', 'post_id'))
+        post_list = MainloadSerializer(post_list, many=True).data
         pop_post_tag_obj = MainloadSerializer(post_list, many=True).data
         for post in pop_post_tag_obj:
-            if Like.objects.filter(user_id=request.user.id, post_id=post['id']).exists():
-                post.update({"is_liked":1})
+            if post['user_id'] == user_id:
+                post.update({"is_user":1})
             else:
-                post.update({"is_liked":0})
+                post.update({"is_user":0})
+            
+            if post['id'] in like_list:
+                post.update({'is_liked':1})
+            else:
+                post.update({'is_liked':0})
+
+            if post['id'] in book_list:
+                post.update({'is_marked':1})
+            else:
+                post.update({'is_marked':0})
         
         return Response({'monthly_count':monthly_count,
                         'related_new':new_post_tag_obj,
@@ -92,13 +122,24 @@ def tagged_post(request):
             for post in post_obj.get_page(request.GET['page']):
                 post_list.append(post.post)
 
+            like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_list).values_list('post_id', 'user_id'))
+            book_list = dict(BookMark.objects.filter(user_id=user_id, post__in=post_list).values_list('user_id', 'post_id'))
             post_tag_obj = MainloadSerializer(post_list, many=True).data
             for post in post_tag_obj:
-                if Like.objects.filter(user_id=request.user.id, post_id=post['id']).exists():
-                    post.update({"is_liked":1})
+                if post['user_id'] == user_id:
+                    post.update({"is_user":1})
                 else:
-                    post.update({"is_liked":0})
+                    post.update({"is_user":0})
+                
+                if post['id'] in like_list:
+                    post.update({'is_liked':1})
+                else:
+                    post.update({'is_liked':0})
 
+                if post['id'] in book_list:
+                    post.update({'is_marked':1})
+                else:
+                    post.update({'is_marked':0})
             return Response({'related_new':post_tag_obj}, status=status.HTTP_200_OK)
         
         elif request.GET['type'] == 'pop':
@@ -109,12 +150,24 @@ def tagged_post(request):
             for post in post_obj.get_page(request.GET['page']):
                 post_list.append(post.post)
 
+            like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_list).values_list('post_id', 'user_id'))
+            book_list = dict(BookMark.objects.filter(user_id=user_id, post__in=post_list).values_list('user_id', 'post_id'))
             post_tag_obj = MainloadSerializer(post_list, many=True).data
             for post in post_tag_obj:
-                if Like.objects.filter(user_id=request.user.id, post_id=post['id']).exists():
-                    post.update({"is_liked":1})
+                if post['user_id'] == user_id:
+                    post.update({"is_user":1})
                 else:
-                    post.update({"is_liked":0})
+                    post.update({"is_user":0})
+                
+                if post['id'] in like_list:
+                    post.update({'is_liked':1})
+                else:
+                    post.update({'is_liked':0})
+
+                if post['id'] in book_list:
+                    post.update({'is_marked':1})
+                else:
+                    post.update({'is_marked':0})
 
             return Response({'related_pop':post_tag_obj}, status=status.HTTP_200_OK)
 

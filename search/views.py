@@ -68,14 +68,16 @@ def interest_tag(interest_list, type, tag, score):
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
 def search(request, type):
+    user_id = request.user.id
     query = request.GET['query']
     page = request.GET['page']
+
     try:
-        ban_list = Banlist.objects.filter(user_id=request.user.id)[0].banlist
+        ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
     except:
         ban_list = []
 
-    ban_list += Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True)
+    ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
 
     if type == 'post':
         obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).select_related('project').order_by('-id')
@@ -83,22 +85,26 @@ def search(request, type):
         if obj.num_pages < int(page):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        obj = MainloadSerializer(obj.get_page(page), many=True).data
+        post_list = list(obj.values_list('id', flat=True))
+        like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
+        book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
+        obj = MainloadSerializer(obj, many=True).data
+
         for p in obj:
-            if request.user.id == p['user_id']:
+            if p['user_id'] == user_id:
                 p.update({"is_user":1})
             else:
                 p.update({"is_user":0})
-                
-            if Like.objects.filter(user_id=request.user.id, post_id=p['id']).exists():          
-                p.update({"is_liked":1})
+            
+            if p['id'] in like_list:
+                p.update({'is_liked':1})
             else:
-                p.update({"is_liked":0})
+                p.update({'is_liked':0})
 
-            if BookMark.objects.filter(user_id=request.user.id, post_id=p['id']).exists():              
-                p.update({"is_marked":1})
+            if p['id'] in book_list:
+                p.update({'is_marked':1})
             else:
-                p.update({"is_marked":0})
+                p.update({'is_marked':0})
 
     elif type == 'profile':
         page= int(page)
@@ -115,7 +121,7 @@ def search(request, type):
 
         obj = MainloadSerializer(obj.get_page(page), many=True).data
         for p in obj:
-            if request.user.id == p['user_id']:
+            if user_id == p['user_id']:
                 p.update({"is_user":1})
             else:
                 p.update({"is_user":0})
