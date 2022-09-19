@@ -131,15 +131,16 @@ def posting(request):
         else:
             post_obj.update({"is_liked":0})
         
+        commentlike = dict(CommentLike.objects.select_related('comment').filter(user_id=user_id, comment__post_id=request.GET['id']).values_list('comment_id', 'user_id'))
+        cocomment_like = dict(CocommentLike.objects.select_related('cocomment__comment').filter(user_id=user_id, cocomment__comment__post_id=request.GET['id']).values_list('cocomment_id', 'user_id'))
         for comment in post_obj['comments']:
-            exists = CommentLike.objects.filter(user_id=user_id, comment_id=comment['id']).exists()
-            if exists:
+            if comment['id'] in commentlike:
                 comment.update({'is_liked':1})
             else:
                 comment.update({'is_liked':0})
+    
             for cocomment in comment['cocomments']['cocomment']:                
-                exists = CocommentLike.objects.filter(user_id=user_id, cocomment_id=cocomment['id']).exists()
-                if exists:
+                if cocomment['id'] in cocomment_like:
                     cocomment.update({'is_liked':1})
                 else:
                     cocomment.update({'is_liked':0})
@@ -174,9 +175,10 @@ def posting(request):
                 image.image.delete(save=False)
                 if image.id == thumbnail_id:
                     post = Post.objects.filter(project_id=post_obj.project_id)
+                    post_list = list(post.values_list('id', flat=True))
                     if post.count() == 0:
                         post_obj.project.thumbnail = 0
-                    img_obj = PostImage.objects.filter(post_id__in=post.values_list('id', flat=True))
+                    img_obj = PostImage.objects.filter(post_id__in=post_list)
                     if img_obj.count() == 0:
                         post_obj.project.thumbnail = 0
                     else:
@@ -378,10 +380,10 @@ def bookmark_list_load(request):
     for bookmark in bookmark_list:
         post_obj.append(bookmark.post)
 
+    like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_obj).values_list('post_id', 'user_id'))
     post_obj = MainloadSerializer(post_obj, many=True).data
-
     for p in post_obj:
-        if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
+        if p['id'] in like_list:
             p.update({"is_liked":1})
         else:
             p.update({"is_liked":0})
@@ -460,7 +462,9 @@ def main_load(request):
         post_obj = Post.objects.all().exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
     else:
         post_obj = Post.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
-
+    post_list = list(post_obj.values_list('id', flat=True))
+    like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
+    book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
     post_obj = MainloadSerializer(post_obj, many=True).data
 
     for p in post_obj:
@@ -468,17 +472,16 @@ def main_load(request):
             p.update({"is_user":1})
         else:
             p.update({"is_user":0})
-
-        if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
-            p.update({"is_liked":1})
-        else:
-            p.update({"is_liked":0})
-
         
-        if BookMark.objects.filter(user_id=user_id, post_id=p['id']).exists():
-            p.update({"is_marked":1})
+        if p['id'] in like_list:
+            p.update({'is_liked':1})
         else:
-            p.update({"is_marked":0})
+            p.update({'is_liked':0})
+
+        if p['id'] in book_list:
+            p.update({'is_marked':1})
+        else:
+            p.update({'is_marked':0})
     
     profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
@@ -503,7 +506,6 @@ def main_load(request):
 def loop_load(request):
     user_id = request.user.id
     loop_list = Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True)
-
     now = datetime.datetime.now()
 
     if request.GET['last'] == '0':
@@ -511,23 +513,26 @@ def loop_load(request):
     else:
         post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).select_related('project').order_by('-id')[:20]
 
+    post_list = list(post_obj.values_list('id', flat=True))
+    like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
+    book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
     post_obj = MainloadSerializer(post_obj, many=True).data
+
     for p in post_obj:
         if p['user_id'] == user_id:
             p.update({"is_user":1})
         else:
             p.update({"is_user":0})
-
-        if Like.objects.filter(user_id=user_id, post_id=p['id']).exists():
-            p.update({"is_liked":1})
-        else:
-            p.update({"is_liked":0})
-
         
-        if BookMark.objects.filter(user_id=user_id, post_id=p['id']).exists():
-            p.update({"is_marked":1})
+        if p['id'] in like_list:
+            p.update({'is_liked':1})
         else:
-            p.update({"is_marked":0})
+            p.update({'is_liked':0})
+
+        if p['id'] in book_list:
+            p.update({'is_marked':1})
+        else:
+            p.update({'is_marked':0})
 
     profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
