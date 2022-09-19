@@ -18,7 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 def project(request):
     if request.method == 'POST':
         user = request.user
-        project_obj = Project.objects.create(user=user, project_name = request.data['project_name'])
+        project_obj = Project.objects.create(user=user, project_name=request.data['project_name'], is_public=request.data['is_public'])
 
         return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_201_CREATED)
 
@@ -32,10 +32,10 @@ def project(request):
             profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
             looper_list = eval(request.data['looper'])
 
-            old_looper = ProjectUser.objects.filter(project_id=project_obj.id)
-            for looper in old_looper:
-                if looper.looper.id not in looper_list:
-                    looper.delete()
+            # old_looper = ProjectUser.objects.filter(project_id=project_obj.id)
+            # for looper in old_looper:
+            #     if looper.looper.id not in looper_list:
+            #         looper.delete()
 
             for looper in looper_list:
                 looper, created = ProjectUser.objects.get_or_create(project_id=project_obj.id, looper_id=looper)

@@ -477,26 +477,37 @@ def profile(request):
         
         return Response(profile, status=status.HTTP_200_OK)
 
-@api_view(['GET', ])
+@api_view(['GET', 'POST'])
 @permission_classes((IsAuthenticated,))
 def project(request):
-    idx = request.GET['id']
-    try:
-        project_obj = ProjectUser.objects.filter(user_id=idx).select_related('project')
-    except:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    project_obj = ProjectUserSerializer(project_obj, many=True).data
-
-    sum_post = Post.objects.filter(user_id=idx).count()
-
-    if sum_post != 0:
+    if request.method == 'POST':
+        project_obj = ProjectUser.objects.filter(user_id=request.user.id)
         for project in project_obj:
-            project.update({'ratio':round(project['post_count']/sum_post, 2)})
-    else:
-        for project in project_obj:
-            project.update({'ratio':0})
+            try:
+                project.order = request.GET[str(project.id)]
+            except: continue
+        ProjectUser.objects.bulk_update(project_obj, ['order'])
+        
+        return Response(status=status.HTTP_200_OK)
+        
+    elif request.method == 'GET':
+        idx = request.GET['id']
+        try:
+            project_obj = ProjectUser.objects.filter(user_id=idx).select_related('project')
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        project_obj = ProjectUserSerializer(project_obj, many=True).data
 
-    return Response(project_obj, status=status.HTTP_200_OK)
+        sum_post = Post.objects.filter(user_id=idx).count()
+
+        if sum_post != 0:
+            for project in project_obj:
+                project.update({'ratio':round(project['post_count']/sum_post, 2)})
+        else:
+            for project in project_obj:
+                project.update({'ratio':0})
+
+        return Response(project_obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 @permission_classes((IsAuthenticated,))
