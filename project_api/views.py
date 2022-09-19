@@ -18,7 +18,8 @@ from rest_framework.permissions import IsAuthenticated
 def project(request):
     if request.method == 'POST':
         user = request.user
-        project_obj = Project.objects.create(user=user, project_name=request.data['project_name'], is_public=request.data['is_public'])
+        project_obj = Project.objects.create(project_name=request.data['project_name'], is_public=request.data['is_public'])
+        ProjectUser.objects.create(user_id=user.id, project_id=project_obj.id)
 
         return Response(ProjectPostSerializer(project_obj).data, status=status.HTTP_201_CREATED)
 
