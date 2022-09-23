@@ -64,8 +64,6 @@ def tagged_post(request):
 
         like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_list).values_list('post_id', 'user_id'))
         book_list = dict(BookMark.objects.filter(user_id=user_id, post__in=post_list).values_list('user_id', 'post_id'))
-        post_list = MainloadSerializer(post_list, many=True).data
-
         new_post_tag_obj = MainloadSerializer(post_list, many=True).data
         for post in new_post_tag_obj:
             if post['user_id'] == user_id:
@@ -90,7 +88,6 @@ def tagged_post(request):
         
         like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_list).values_list('post_id', 'user_id'))
         book_list = dict(BookMark.objects.filter(user_id=user_id, post__in=post_list).values_list('user_id', 'post_id'))
-        post_list = MainloadSerializer(post_list, many=True).data
         pop_post_tag_obj = MainloadSerializer(post_list, many=True).data
         for post in pop_post_tag_obj:
             if post['user_id'] == user_id:
