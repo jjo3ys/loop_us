@@ -45,9 +45,11 @@ class Profile(models.Model):
 
 
 class Company_Inform(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='company_inform')
-    corp_num = models.CharField(max_length=10)
+    logo = models.ImageField(null=True, upload_to = 'logo/company_profile/')
     corp_name = models.TextField()
+    location = models.TextField(null = True)
+    information = models.TextField(null=True)
+    email = models.TextField(null=True)
 
     class Meta:
         db_table = "Corp_inform"
