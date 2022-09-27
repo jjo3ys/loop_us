@@ -22,16 +22,23 @@ class ProjectSerializer(serializers.ModelSerializer):
         return None
 
 class ProjectUserSerializer(serializers.ModelSerializer):
-    profile = serializers.SerializerMethodField()
+    manager = serializers.SerializerMethodField()
+    member = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
     class Meta:
         model = ProjectUser
-        fields = ['user_id', 'project', 'post_count', 'order', 'profile', 'is_manager']
+        fields = ['user_id', 'project', 'post_count', 'order', 'member', 'manager']
+        
+    def get_manager(self, obj):
+        if obj.is_manager:
+            return obj.user_id
+        return ProjectUser.objects.filter(project_id=obj.project_id, is_manager=True)[0].user_id
     
-    def get_profile(self, obj):
-        try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
-        except:
+    def get_member(self, obj):
+        if obj.project.is_public: 
+            user_list = list(ProjectUser.objects.filter(project_id=obj.project_id).values_list('user_id', flat=True))
+            return SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+        else:
             return None
     
     def get_project(self, obj):
