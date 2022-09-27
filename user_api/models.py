@@ -42,6 +42,10 @@ class Profile(models.Model):
     class Meta:
         db_table = "Profile"
 
+class UserSNS(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    url = models.TextField()
+    type = models.SmallIntegerField()
 
 class Company_Inform(models.Model):
     company = models.ForeignKey(Company, on_delete=models.DO_NOTHING)

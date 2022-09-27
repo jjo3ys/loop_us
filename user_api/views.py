@@ -29,7 +29,7 @@ from fcm.push_fcm import certify_fcm, report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
-from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company
+from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company, UserSNS
 from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 
 # from search.models import Get_log, InterestTag
@@ -404,24 +404,28 @@ def ask(request):
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
 def profile(request):
+    profile_obj = Profile.objects.select_related('department', 'school').filter(user_id=request.user.id)[0]
     if request.method == 'PUT':
-        profile_obj = Profile.objects.filter(user_id=request.user.id)[0]
         type = request.GET['type']
-
         if type == 'image':
             profile_obj.profile_image.delete(save=False)
             profile_obj.profile_image = request.FILES.get('image')
-        
-        elif type == 'department':
-            profile_obj.department = request.data['department']
+            profile_obj.save()
 
-        profile_obj.save()
+        elif type == 'sns':
+            type_id = request.data['type']
+            sns_obj = UserSNS.objects.filter(profile_id=profile_obj.id, type=type_id)
+            if sns_obj.exists():
+                sns_obj[0].url = request.data['url']
+            else:
+                UserSNS.objects.create(profile_id=profile_obj.id, type=type_id, url=request.data['url'])
+                
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
     
     elif request.method == 'GET':
         idx = request.GET['id']
         try:
-            profile_obj = Profile.objects.filter(user_id=idx)[0]
+            profile_obj = Profile.objects.select_related('department', 'school').filter(user_id=idx)[0]
             profile = ProfileSerializer(profile_obj).data
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
