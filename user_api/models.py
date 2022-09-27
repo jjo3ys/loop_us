@@ -43,19 +43,28 @@ class Profile(models.Model):
         db_table = "Profile"
 
 class UserSNS(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='user_sns')
     url = models.TextField()
     type = models.SmallIntegerField()
 
 class Company_Inform(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     company = models.ForeignKey(Company, on_delete=models.DO_NOTHING)
     group = models.PositiveSmallIntegerField(default=10)
-    location = models.TextField(null = True)
+    location = models.CharField(max_length = 50, null = True)
     information = models.TextField(null=True)
-    email = models.TextField(null=True)
-
+    category = models.CharField(max_length = 20, null=True)
+    homepage = models.CharField(max_length = 30, null=True)
+    
     class Meta:
         db_table = "Corp_inform"
+
+class CompanyImage(models.Model):
+    company_info = models.ForeignKey(Company_Inform, related_name='company_id', on_delete=models.CASCADE)
+    image = models.ImageField(null=True, upload_to='company/image/%Y%m%d/')
+
+    class Meta:
+        db_table = "Company_Image"
 
 class Activation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

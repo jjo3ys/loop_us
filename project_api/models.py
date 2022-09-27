@@ -1,3 +1,4 @@
+from email.policy import default
 from django.db import models
 from django.conf import settings
 
@@ -16,6 +17,7 @@ class ProjectUser(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='looper')
     post_count = models.PositiveSmallIntegerField(default=0)
     order = models.PositiveSmallIntegerField(default=None, null=True)
+    is_manager = models.BooleanField(default=1)
 
     class Meta:
         db_table = 'ProjectUser'

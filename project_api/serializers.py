@@ -1,9 +1,11 @@
+from django.db.models import Sum
+
 from .models import Project, ProjectUser
 from rest_framework import serializers
-from post_api.models import Post, Like, PostImage
+from post_api.models import Post, Like, PostImage, Comment
 from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
-from post_api.serializers import PostingSerializer
+from post_api.serializers import CommentSerializer, PostTagSerializer, PostingImageSerializer, PostingLinkeSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -24,7 +26,7 @@ class ProjectUserSerializer(serializers.ModelSerializer):
     project = serializers.SerializerMethodField()
     class Meta:
         model = ProjectUser
-        fields = ['user_id', 'project', 'post_count', 'order', 'profile']
+        fields = ['user_id', 'project', 'post_count', 'order', 'profile', 'is_manager']
     
     def get_profile(self, obj):
         try:
@@ -35,26 +37,48 @@ class ProjectUserSerializer(serializers.ModelSerializer):
     def get_project(self, obj):
         return ProjectSerializer(obj.project, read_only=True).data
 
-class ProjectPostSerializer(serializers.ModelSerializer):
-    looper = ProjectUserSerializer(many=True, read_only=True)
-    post = PostingSerializer(many=True, read_only=True)
-    count = serializers.SerializerMethodField()
+class MemberSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
-    
     class Meta:
-        model = Project
-        fields = ['id', 'profile', 'project_name', 'looper', 'count', 'post']
-    
-    def get_count(self, obj):
-        post = Post.objects.filter(project_id=obj.id)
-        post_id = post.values_list('id', flat=True)
+        model = ProjectUser
+        fields = ['profile', 'is_manager']
         
-        count=Like.objects.filter(post_id__in = post_id).count()
-        
-        return {"post_count":post.count(), "like_count":count}
-    
     def get_profile(self, obj):
         try:
             return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
         except:
             return None
+
+class PostingSerializer(serializers.ModelSerializer):
+    post_tag = PostTagSerializer(many=True, read_only=True)
+    contents_image = PostingImageSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
+    contents_link = PostingLinkeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['id', 'user_id', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link']
+        
+    def get_profile(self, obj):
+        try:
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
+        except:
+            return None
+    
+    def get_comments(self, obj):
+        comments_obj = Comment.objects.filter(post_id=obj.id).order_by('-id')[:10]
+        return CommentSerializer(comments_obj, many=True).data
+      
+class ProjectPostSerializer(serializers.ModelSerializer):
+    looper = MemberSerializer(many=True, read_only=True)
+    post = PostingSerializer(many=True, read_only=True)
+    count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Project
+        fields = ['id', 'looper', 'project_name', 'looper', 'count', 'post']
+    
+    def get_count(self, obj):
+        post = Post.objects.filter(project_id=obj.id)  
+        return {"post_count":post.count(), "like_count":post.aggregate(count=Sum('like_count'))['count']}
+    
