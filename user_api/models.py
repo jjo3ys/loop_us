@@ -43,12 +43,12 @@ class Profile(models.Model):
         db_table = "Profile"
 
 class UserSNS(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='user_sns')
     url = models.TextField()
     type = models.SmallIntegerField()
 
 class Company_Inform(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.DO_NOTHING)
+    company = models.ForeignKey(Company, on_delete=models.DO_NOTHING, related_name='company_inform')
     group = models.PositiveSmallIntegerField(default=10)
     location = models.TextField(null = True)
     information = models.TextField(null=True)

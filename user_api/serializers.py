@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from project_api.models import Project
-from .models import Alarm, Banlist, Company, Profile, School, Department
+from .models import Alarm, Banlist, Company, Profile, School, Department, UserSNS
 from loop.models import Loopship
 from post_api.models import Post, Cocomment, Comment
 
@@ -16,8 +16,14 @@ class DepSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = ['id', 'department']
+        
+class SNSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSNS
+        fields = ['type', 'url']
 
 class ProfileSerializer(serializers.ModelSerializer):
+    user_sns = SNSSerializer(many=True)
     follower_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
     total_post_count = serializers.SerializerMethodField()
@@ -26,7 +32,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'follower_count', 'following_count', 'total_post_count', 'group', 'school', 'admission']
+        fields = ['user_id', 'real_name', 'type', 'profile_image', 'department', 'follower_count', 'following_count', 'total_post_count', 'group', 'school', 'admission', 'user_sns']
     
     def get_follower_count(self, obj):
         return Loopship.objects.filter(friend_id=obj.user_id).count()
