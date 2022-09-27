@@ -1,26 +1,31 @@
-from user_api.models import Profile
+from user_api.models import Company, Company_Inform, CompanyImage
 from user_api.serializers import CompanySerializer, SimpleProfileSerializer
 from .models import Contact
 from rest_framework import serializers
 
-class ContactSerializers(serializers.ModelSerializer):
-    company_info = serializers.SerializerMethodField()
-    student_info = serializers.SerializerMethodField()
-    group_name = serializers.SerializerMethodField()
-    count = serializers.SerializerMethodField()
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['company_name', 'logo']
+
+class CompanyImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyImage
+        fields = ['image']
+        
+class CompanyProfileSerializer(serializers.ModelSerializer):
+    company_profile = serializers.SerializerMethodField()
+    company_images = serializers.SerializerMethodField()
 
     class Meta:
-        model = Contact
-        fields = ['id', 'company_info', 'student_info', 'group_name', 'count', 'date']
-    
-    def get_company_info(self, obj):
-        return CompanySerializer(obj.company).data
-    
-    def get_student_info(self, obj):
-        return SimpleProfileSerializer(Profile.objects.filter(user_id = obj.student).select_related('school', 'department')[0]).data
+        model = Company_Inform
+        fields = ['user', 'company_profile', 'company_images', 'group', 'category', 'slogan', 'recommendation']
 
-    def get_group_name(self, obj):
-        return obj.group.group_name
+    def get_company_profile(self, obj):
+        return CompanySerializer(Company.objects.filter(id = obj.company_logo.id)[0]).data
     
-    def get_count(self, obj):
-        return Contact.objects.filter(company = obj.company).count()
+    def get_company_images(self, obj):
+        return CompanyImageSerializer(CompanyImage.objects.filter(company_info_id = obj.id), many = True).data
+    
+        
+    
