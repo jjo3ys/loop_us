@@ -1,4 +1,3 @@
-from email.policy import default
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -45,8 +44,8 @@ class Profile(models.Model):
 
 
 class Company_Inform(models.Model):
-    logo = models.ImageField(null=True, upload_to = 'logo/company_profile/')
-    corp_name = models.TextField()
+    company = models.ForeignKey(Company, on_delete=models.DO_NOTHING)
+    group = models.PositiveSmallIntegerField(default=10)
     location = models.TextField(null = True)
     information = models.TextField(null=True)
     email = models.TextField(null=True)
