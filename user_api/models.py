@@ -49,12 +49,14 @@ class UserSNS(models.Model):
 
 class Company_Inform(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
-    company = models.ForeignKey(Company, on_delete=models.DO_NOTHING)
+    company_logo = models.ForeignKey(Company, related_name='company_logo', on_delete=models.DO_NOTHING)
     group = models.PositiveSmallIntegerField(default=10)
     location = models.CharField(max_length = 50, null = True)
     information = models.TextField(null=True)
     category = models.CharField(max_length = 20, null=True)
     homepage = models.CharField(max_length = 30, null=True)
+    slogan = models.CharField(max_length = 30, null=True)
+    recommendation = models.CharField(max_length = 30, null=True)
     
     class Meta:
         db_table = "Corp_inform"
