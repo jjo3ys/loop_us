@@ -36,16 +36,9 @@ class PostTagSerializer(serializers.ModelSerializer):
         return obj.tag.count
 
 class SimpleProjectserializer(serializers.ModelSerializer):
-    member = serializers.ModelSerializer()
     class Meta:
         model = Project
-        fields =['id', 'project_name', 'member']
-    def get_member(self, obj):
-        if obj.is_public:
-            member_list = list(ProjectUser.objects.filter(project_id=obj.id).values_list('user_id', flat=True))
-            return SimpleProfileSerializer(member_list, many=True)
-        else:
-            return None
+        fields =['id', 'project_name']
     
 class LikeSerializer(serializers.ModelSerializer):
     
