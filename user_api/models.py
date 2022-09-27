@@ -43,7 +43,7 @@ class Profile(models.Model):
         db_table = "Profile"
 
 class UserSNS(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='user_sns')
     url = models.TextField()
     type = models.SmallIntegerField()
 
