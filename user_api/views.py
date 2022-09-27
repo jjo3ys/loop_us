@@ -501,7 +501,7 @@ def project(request):
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
         project_obj = ProjectUserSerializer(project_obj, many=True).data
-
+        
         sum_post = Post.objects.filter(user_id=idx).count()
 
         if sum_post != 0:

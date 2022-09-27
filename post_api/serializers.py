@@ -2,7 +2,7 @@ from user_api.models import Profile
 from user_api.serializers import SimpleProfileSerializer
 from tag.models import Post_Tag
 from .models import CommentLike, Post, PostImage, Like, Cocomment, Comment, PostLink
-from project_api.models import Project
+from project_api.models import Project, ProjectUser
 from crawling_api.models import News, Brunch, Youtube
 
 from rest_framework import serializers
@@ -36,10 +36,17 @@ class PostTagSerializer(serializers.ModelSerializer):
         return obj.tag.count
 
 class SimpleProjectserializer(serializers.ModelSerializer):
+    member = serializers.ModelSerializer()
     class Meta:
         model = Project
-        fields =['id', 'project_name']
-
+        fields =['id', 'project_name', 'member']
+    def get_member(self, obj):
+        if obj.is_public:
+            member_list = list(ProjectUser.objects.filter(project_id=obj.id).values_list('user_id', flat=True))
+            return SimpleProfileSerializer(member_list, many=True)
+        else:
+            return None
+    
 class LikeSerializer(serializers.ModelSerializer):
     
     class Meta:
