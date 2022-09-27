@@ -14,7 +14,7 @@ class Project(models.Model):
 class ProjectUser(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='looper')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='looper')
-    post_count = models.PositiveSmallIntegerField(default=10)
+    post_count = models.PositiveSmallIntegerField(default=0)
     order = models.PositiveSmallIntegerField(default=None, null=True)
 
     class Meta:
