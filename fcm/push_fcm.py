@@ -184,6 +184,7 @@ def chat_fcm(topic, req_from, msg, user_id):
 def certify_fcm(topic):
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         data={
             "type":"certification",
         },
