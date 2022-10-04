@@ -13,8 +13,8 @@ class Project(models.Model):
         db_table = 'Project'
 
 class ProjectUser(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='looper')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='looper')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='member')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='member')
     post_count = models.PositiveSmallIntegerField(default=0)
     order = models.PositiveSmallIntegerField(default=None, null=True)
     is_manager = models.BooleanField(default=1)
