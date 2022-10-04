@@ -419,16 +419,7 @@ def profile(request):
                 sns_obj[0].url = request.data['url']
             else:
                 UserSNS.objects.create(profile_id=profile_obj.id, type=type_id, url=request.data['url'])
-        
-        elif type == 'certification':
-            try:
-                user = User.objects.filter(email=request.data['old_email'])[0]
-                user.is_active = False
-                user.save()
-                send_msg(request.data['new_email'])
-            except IndexError:
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
-        
+
         elif type == 'profile':
             email = request.data['email']
             if User.objects.filter(user_id=email).exists():
