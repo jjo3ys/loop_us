@@ -77,13 +77,13 @@ class PostingSerializer(serializers.ModelSerializer):
         return CommentSerializer(comments_obj, many=True).data
       
 class ProjectPostSerializer(serializers.ModelSerializer):
-    looper = MemberSerializer(many=True, read_only=True)
+    member = MemberSerializer(many=True, read_only=True)
     post = PostingSerializer(many=True, read_only=True)
     count = serializers.SerializerMethodField()
     
     class Meta:
         model = Project
-        fields = ['id', 'looper', 'project_name', 'looper', 'count', 'post']
+        fields = ['id', 'member', 'project_name', 'count', 'post']
     
     def get_count(self, obj):
         post = Post.objects.filter(project_id=obj.id)  
