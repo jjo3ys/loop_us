@@ -49,6 +49,7 @@ class UserSNS(models.Model):
 
 class Company_Inform(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
+    company_name = models.TextField(null = True)
     company_logo = models.ForeignKey(Company, related_name='company_logo', on_delete=models.DO_NOTHING)
     group = models.PositiveSmallIntegerField(default=10)
     location = models.CharField(max_length = 50, null = True)
