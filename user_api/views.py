@@ -35,7 +35,7 @@ from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
 # from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
 from project_api.models import Project, ProjectUser
-from project_api.serializers import ProjectUserSerializer
+from project_api.serializers import OnlyProjectUserSerializer, ProjectUserSerializer
 from post_api.models import BookMark, Like, PostImage, Post
 from loop.models import Loopship
 # from fcm.models import FcmToken
@@ -500,16 +500,7 @@ def project(request):
             project_obj = ProjectUser.objects.filter(user_id=idx).select_related('project').order_by('order')
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        project_obj = ProjectUserSerializer(project_obj, many=True).data
-        
-        sum_post = Post.objects.filter(user_id=idx).count()
-
-        if sum_post != 0:
-            for project in project_obj:
-                project.update({'ratio':round(project['post_count']/sum_post, 2)})
-        else:
-            for project in project_obj:
-                project.update({'ratio':0})
+        project_obj = OnlyProjectUserSerializer(project_obj, many=True).data
 
         return Response(project_obj, status=status.HTTP_200_OK)
 

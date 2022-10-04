@@ -1,6 +1,6 @@
 from search.models import Get_log
 
-from .serializers import ProjectPostSerializer, ProjectUserSerializer
+from .serializers import ProjectUserSerializer
 from .models import Project, ProjectUser
 from user_api.models import Profile
 # from fcm.models import FcmToken
@@ -43,15 +43,15 @@ def project(request):
 
     elif request.method == 'GET':
         try:
-            project_obj = Project.objects.filter(id=request.GET['id'])[0]
+            project_obj = ProjectUser.objects.filter(project_id=request.GET['project_id'], user_id=request.GET['user_id']).select_related('project')[0]
         except IndexError:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
-        project = ProjectPostSerializer(project_obj).data            
-        post_list = list(map(lambda x:x['id'], project['post']))
+        project = ProjectUserSerializer(project_obj).data            
+        post_list = list(map(lambda x:x['id'], project['project']['post']))
         like_list = dict(Like.objects.filter(user_id=request.user.id, post_id__in=post_list).values_list('post_id', 'user_id'))
         book_list = dict(BookMark.objects.filter(user_id=request.user.id, post_id__in=post_list).values_list('user_id', 'post_id'))
-        for post in project['post']:
+        for post in project['project']['post']:
             if post['user_id'] == user_id:
                 post.update({'is_user':1})
             else:
