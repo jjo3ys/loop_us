@@ -35,19 +35,6 @@ class PostTagSerializer(serializers.ModelSerializer):
     def get_tag_count(self, obj):
         return obj.tag.count
 
-class ProjectThumbnailserializer(serializers.ModelSerializer):
-    thumbnail = serializers.SerializerMethodField()
-    class Meta:
-        model = Project
-        fields =['id', 'project_name', 'thumbnail']
-    
-    def get_thumbnail(self, obj):
-        if obj.thumbnail == 0: return None
-        img_obj = PostImage.objects.filter(id=obj.thumbnail)
-        if img_obj:
-            return img_obj[0].image.url
-        return None
-
 class SimpleProjectserializer(serializers.ModelSerializer):
     class Meta:
         model = Project
@@ -132,7 +119,6 @@ class MainloadSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
-    ratio = serializers.SerializerMethodField()
     post_tag = PostTagSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
     contents_link = PostingLinkeSerializer(many=True, read_only=True)
@@ -147,12 +133,8 @@ class MainloadSerializer(serializers.ModelSerializer):
         except:
             return None
     
-    def get_ratio(self, obj):
-            return round(ProjectUser.objects.filter(user_id=obj.user_id, project_id=obj.project_id)[0].post_count/
-                         Post.objects.filter(user_id=obj.user_id).count(), 2)
-    
     def get_project(self, obj):
-        return ProjectThumbnailserializer(obj.project).data
+        return SimpleProjectserializer(obj.project).data
     
     def get_comments(self, obj):
         comment_obj = Comment.objects.filter(post_id=obj.id).order_by('like_count')
