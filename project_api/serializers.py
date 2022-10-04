@@ -55,7 +55,7 @@ class ProjectUserSerializer(serializers.ModelSerializer):
     project = serializers.SerializerMethodField()
     class Meta:
         model = ProjectUser
-        fields = ['user_id', 'project', 'ratio', 'order', 'member', 'manager']
+        fields = ['user_id', 'project', 'ratio', 'post_count', 'order', 'member', 'manager']
         
     def get_manager(self, obj):
         if obj.is_manager:
@@ -85,7 +85,7 @@ class OnlyProjectUserSerializer(serializers.ModelSerializer):
     project = serializers.SerializerMethodField()
     class Meta:
         model = ProjectUser
-        fields = ['user_id', 'project', 'ratio', 'order', 'member', 'manager']
+        fields = ['user_id', 'project', 'ratio', 'post_count', 'order', 'member', 'manager']
         
     def get_manager(self, obj):
         if obj.is_manager:
