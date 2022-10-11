@@ -12,6 +12,7 @@ urlpatterns = [
     # path('logout', views.logout),
     path('resign', views.resign),
     path('activate/<token>',views.activate),
+    path('corp_profile', views.companyProfile),
     path('profile', views.profile),
     path('posting', views.posting),
     path('project', views.project),

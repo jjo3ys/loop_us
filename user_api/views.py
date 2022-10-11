@@ -30,7 +30,7 @@ from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
 from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company, UserSNS
-from .serializers import AlarmSerializer, BanlistSerializer, ProfileSerializer
+from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer
 
 # from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
@@ -269,52 +269,21 @@ def login(request):
     password=request.data['password'],
     )
     if user is not None and user.is_active:
+        try:
+            if request.GET['is_corp']:
+                if Company_Inform.objects.filter(user_id=user.id).exists(): pass
+                else: return Response(status=status.HTTP_401_UNAUTHORIZED)
+        except: pass
+        
         token_obj = Token.objects.filter(user_id=user.id)[0]
         user.last_login = timezone.now()
         user.save()
-        
-        # try:
-        #     fcm_obj = FcmToken.objects.filter(user_id=user.id)[0]
-        #     if fcm_obj.token != request.data['fcm_token']:
-        #         try:
-        #             logout_push(fcm_obj.token)
-        #         except:
-        #             pass
-                
-        #         fcm_obj.token = request.data['fcm_token']
-        #         fcm_obj.save()
-
-        # except IndexError:
-        #     FcmToken.objects.create(user_id=user.id,
-        #                             token=request.data['fcm_token'])
 
         return Response({'token':token_obj.key,
                         'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
     
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
-        
-# @api_view(['POST'])
-# @permission_classes((IsAuthenticated,))
-# def logout(request):
-#     user = request.user
-#     try:
-#         fcm_obj = FcmToken.objects.filter(user_id=user.id)[0]
-#         fcm_obj.delete()
-#     except:
-#         pass
-#     return Response("Successed log out", status=status.HTTP_200_OK)
-
-# @api_view(['POST'])
-# @permission_classes((IsAuthenticated,))
-# def check_token(request):
-#     try:
-#         if request.data['fcm_token'] != FcmToken.objects.filter(user_id=request.user.id)[0].token:
-#             return Response(status=status.HTTP_401_UNAUTHORIZED)
-#         else:
-#             return Response(status=status.HTTP_200_OK)
-#     except:
-#         return Response(status=status.HTTP_401_UNAUTHORIZED)
     
 @api_view(['PUT', 'POST'])
 def password(request):
@@ -400,6 +369,14 @@ def ask(request):
         return Response(status=status.HTTP_200_OK)
     except:
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+    
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def companyProfile(request):
+    try:
+        company_obj = Company_Inform.objects.filter(user_id=request.GET['id'])[0]
+        return Response(CompanyProfileSerializer(company_obj).data, status=status.HTTP_200_OK)
+    except IndexError: return Response(status=status.HTTP_404_NOT_FOUND)
     
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
