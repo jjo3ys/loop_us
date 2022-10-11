@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from project_api.models import Project
-from .models import Alarm, Banlist, Company, Profile, School, Department, UserSNS
+from .models import Alarm, Banlist, Company, Company_Inform, Profile, School, Department, UserSNS
 from loop.models import Loopship
 from post_api.models import Post, Cocomment, Comment
 
@@ -154,5 +154,10 @@ class CompanySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['logo', 'company_name', 'count']
+        fields = ['logo', 'company_name']
 
+class CompanyProfileSerializer(serializers.ModelSerializer):
+    company_logo = CompanySerializer()
+    class Meta:
+        model = Company_Inform
+        fields = ['company_logo', 'information', 'location', 'category', 'homepage', 'user_id', 'recommendation', 'slogan']

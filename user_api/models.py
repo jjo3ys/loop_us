@@ -18,7 +18,6 @@ class Department(models.Model):
 class Company(models.Model):
     logo = models.ImageField(null=True, upload_to = 'logo/company/')
     company_name = models.TextField()
-    count = models.PositiveBigIntegerField(default=0)
 
     class Meta:
         db_table = "Company"
