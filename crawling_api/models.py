@@ -4,6 +4,7 @@ from tag.models import Group
 class News(models.Model):
     urls = models.TextField()
     group = models.ForeignKey(Group, related_name='group_news', on_delete=models.DO_NOTHING)
+    corp = models.TextField(default=None, null=True)
 
     class Meta:
         db_table = "News"

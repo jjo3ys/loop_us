@@ -220,9 +220,7 @@ def career_board_ranking(request):
     if request.GET['type'] == 'main':
         return_dict = {}
         ranked_post_obj = PostingRanking.objects.filter(group=group_id).select_related('post__project')
-        post_list = []
-        for ranked_post in ranked_post_obj:
-            post_list.append(ranked_post.post)
+        post_list = list(map(lambda x:x.post, ranked_post_obj))
 
         profile = Profile.objects.filter(user_id=request.user.id)[0]
         return_dict['posting'] = MainloadSerializer(post_list, many=True).data
