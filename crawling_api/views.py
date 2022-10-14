@@ -58,15 +58,27 @@ def crawling(request):
                 driver.get(news_url)
                 news_count = 0
                 a_tag = driver.find_elements_by_tag_name('a')
+                link_map = []
                 for a in a_tag:
                     if a.get_attribute('jsname') == 'YKoRaf':
                         link = a.get_attribute('href')
                         if link not in link_dict:
-                            News.objects.create(urls=link, group=group)
+                            link_map.append(link)
                             link_dict[link] = True
                             news_count += 1
                     if news_count == 3:
                         break
+                    
+                news_count = 0
+                div_tag = driver.find_elements_by_tag_name('div')
+                for div in div_tag:
+                    if div.get_attribute('class') == 'CEMjEf NUnG9d':
+                        txt = div.find_element_by_tag_name('span').text
+                        News.objects.create(urls=link_map[news_count], group=group, corp=txt)
+                        news_count += 1
+                    if news_count == 3:
+                        break
+                        
             except:pass
             try:
                 driver.get('https://brunch.co.kr/search')

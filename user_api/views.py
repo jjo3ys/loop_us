@@ -269,12 +269,10 @@ def login(request):
     password=request.data['password'],
     )
     if user is not None and user.is_active:
-        try:
-            if request.GET['is_corp']:
-                if Company_Inform.objects.filter(user_id=user.id).exists(): pass
-                else: return Response(status=status.HTTP_401_UNAUTHORIZED)
-        except: pass
-        
+        if int(request.GET['is_corp']):
+            if Company_Inform.objects.filter(user_id=user.id).exists(): pass
+            else: return Response(status=status.HTTP_401_UNAUTHORIZED)
+                
         token_obj = Token.objects.filter(user_id=user.id)[0]
         user.last_login = timezone.now()
         user.save()
@@ -358,12 +356,18 @@ def resign(request):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def ask(request):
-    message = EmailMessage('{}님 문의'.format(request.data['real_name']), '이메일:{} \n 문의내용:{} \n 기기:{} \n OS버젼:{} \n 빌드번호:{} \n 유저id:{}'.format(request.data['email'],
-                                                                                                                                                         request.data['content'],
-                                                                                                                                                         request.data['device'],
-                                                                                                                                                         request.data['os'],
-                                                                                                                                                         request.data['app_ver'],
-                                                                                                                                                         request.data['id']), to=['loopus@loopus.co.kr'])
+    type = request.GET['type']
+    if type == 'normal':
+        message = EmailMessage('{}님 문의'.format(request.data['real_name']), '이메일:{} \n 문의내용:{} \n 기기:{} \n OS버젼:{} \n 빌드번호:{} \n 유저id:{}'.format(request.data['email'],
+                                                                                                                                                            request.data['content'],
+                                                                                                                                                            request.data['device'],
+                                                                                                                                                            request.data['os'],
+                                                                                                                                                            request.data['app_ver'],
+                                                                                                                                                            request.data['id']), to=['loopus@loopus.co.kr'])
+    elif type == 'school':
+        message = EmailMessage('학교 등록 문의', '문의 내용: {}'.format(request.data['content']))
+    elif type == 'department':
+        message = EmailMessage('{} 학과 등록 문의'.format(request.data['school']), '문의 내용: {}'.format(request.data['content']))
     try:
         message.send()
         return Response(status=status.HTTP_200_OK)
