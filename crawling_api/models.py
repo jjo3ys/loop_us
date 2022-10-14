@@ -12,6 +12,8 @@ class News(models.Model):
 class Brunch(models.Model):
     urls = models.TextField()
     group = models.ForeignKey(Group, related_name='group_brunch', on_delete=models.DO_NOTHING)
+    writer = models.CharField(max_length=10)
+    profile = models.ImageField(null=True, upload_to='brunch/')
 
     class Meta:
         db_table = "Brunch"
