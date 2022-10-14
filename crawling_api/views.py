@@ -88,8 +88,13 @@ def crawling(request):
                 results = driver.find_elements_by_class_name('link_post')
                 for result in results:
                     link = result.get_attribute('href')
+                    driver.get(link)
+                    time.sleep(2)
+                    writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
+                    image_url = driver.find_element_by_xpaht('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
+                    driver.back()
                     count +=1
-                    Brunch.objects.create(urls=link, group=group)
+                    Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
                     if count == 3:
                         break   
             except:pass
