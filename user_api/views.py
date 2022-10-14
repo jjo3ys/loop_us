@@ -336,11 +336,16 @@ def resign(request):
         #     intereset_list.delete()
         # except:
         #     pass
-
-        for project in Project.objects.filter(user_id=user.id):
-            for post in Post.objects.filter(project_id=project.id):
-                for image in PostImage.objects.filter(post_id=post.id):
-                    image.image.delete(save=False)
+        project_obj = ProjectUser.objects.filter(user_id=user.id)
+        if project_obj.select_related('project').filter(is_manager=1, project__is_public=1).exists():
+            return Response(status=status.HTTP_403_FORBIDDEN)
+            
+        for post in Post.objects.filter(user_id=user.id).prefetch_related('contents_image'):
+            for image in post.contents_image.objects.filter(post_id=post.id):
+                image.image.delete(save=False)
+                
+        project_list = list(project_obj.values_list('project_id', flat=True))
+        Project.objects.filter(id__in=project_list).delete()
 
         tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
         delete_tag(tag_obj)
