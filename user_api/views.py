@@ -321,42 +321,38 @@ def password(request):
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
 def resign(request):   
-    if check_password(request.data['password'], request.user.password):
-        user = request.user
-        profile_obj = Profile.objects.filter(user_id=user.id).select_related('department', 'school')[0]
-        profile_obj.profile_image.delete(save=False)
-        message = EmailMessage('{}님 탈퇴 사유'.format(profile_obj.real_name), '{} {} \n 사유:{}'.format(profile_obj.school.school, profile_obj.department.department, request.data['reason']), to=['loopus@loopus.co.kr'])
-        try:
-            message.send()
-        except:
-            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+    user = request.user
+    profile_obj = Profile.objects.filter(user_id=user.id).select_related('department', 'school')[0]
+    profile_obj.profile_image.delete(save=False)
+    message = EmailMessage('{}님 탈퇴 사유'.format(profile_obj.real_name), '{} {} \n 사유:{}'.format(profile_obj.school.school, profile_obj.department.department, request.data['reason']), to=['loopus@loopus.co.kr'])
+    try:
+        message.send()
+    except:
+        return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        # try:
-        #     intereset_list = InterestTag.objects.filter(user_id=user.id)[0]
-        #     intereset_list.delete()
-        # except:
-        #     pass
-        project_obj = ProjectUser.objects.filter(user_id=user.id)
-        if project_obj.select_related('project').filter(is_manager=1, project__is_public=1).exists():
-            return Response(status=status.HTTP_403_FORBIDDEN)
+    # try:
+    #     intereset_list = InterestTag.objects.filter(user_id=user.id)[0]
+    #     intereset_list.delete()
+    # except:
+    #     pass
+    project_obj = ProjectUser.objects.filter(user_id=user.id)
+    if project_obj.select_related('project').filter(is_manager=1, project__is_public=1).exists():
+        return Response(status=status.HTTP_403_FORBIDDEN)
+        
+    for post in Post.objects.filter(user_id=user.id).prefetch_related('contents_image'):
+        for image in post.contents_image.objects.filter(post_id=post.id):
+            image.image.delete(save=False)
             
-        for post in Post.objects.filter(user_id=user.id).prefetch_related('contents_image'):
-            for image in post.contents_image.objects.filter(post_id=post.id):
-                image.image.delete(save=False)
-                
-        project_list = list(project_obj.values_list('project_id', flat=True))
-        Project.objects.filter(id__in=project_list).delete()
+    project_list = list(project_obj.values_list('project_id', flat=True))
+    Project.objects.filter(id__in=project_list).delete()
 
-        tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
-        delete_tag(tag_obj)
-        es = Elasticsearch()
-        es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id}}}})
-        user = User.objects.filter(id=user.id)[0]
-        user.delete()
-        return Response("resign from loop", status=status.HTTP_200_OK)
-
-    else:
-        return Response(status=status.HTTP_401_UNAUTHORIZED)   
+    tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
+    delete_tag(tag_obj)
+    es = Elasticsearch()
+    es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id}}}})
+    user = User.objects.filter(id=user.id)[0]
+    user.delete()
+    return Response("resign from loop", status=status.HTTP_200_OK)  
 
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
