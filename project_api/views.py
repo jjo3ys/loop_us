@@ -36,7 +36,7 @@ def project(request):
             looper_list = request.data.getlist('looper')
 
             for looper in looper_list:
-                ProjectUser.objects.create(project_id=project_obj.id, looper_id=looper, is_manager=False)
+                ProjectUser.objects.create(project_id=project_obj.id, user_id=looper, is_manager=False)
                 tag_fcm(looper, profile_obj.real_name, user_id, project_obj.project_name, project_obj.id)
                     
         return Response(status=status.HTTP_200_OK)
