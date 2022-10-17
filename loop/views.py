@@ -1,6 +1,6 @@
 from .models import Loopship
-from user_api.models import Profile
-from user_api.serializers import SimpleProfileSerializer
+from user_api.models import Profile, Company_Inform
+from user_api.serializers import SimpleComapnyProfileSerializer, SimpleProfileSerializer
 from fcm.push_fcm import loop_fcm
 # from fcm.models import FcmToken
 
@@ -73,6 +73,7 @@ def get_list(request, type, idx):
     user_following = dict(Loopship.objects.filter(friend_id=request.user.id).values_list('user_id', 'friend_id'))
     if type == 'following':
         loop_list = Loopship.objects.filter(user=idx).values_list('friend_id', flat=True)
+        corp_sz = SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in=loop_list).select_related('company_logo'), many=True).data
         profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list).select_related('department', 'school'), many=True).data
         for l in profile_sz:
             if l['user_id'] == request.user.id:
@@ -89,12 +90,45 @@ def get_list(request, type, idx):
                 else:
                     l.update({"looped":0})
                 l.update({"is_user":0})
-        return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
+                
+        for l in corp_sz:
+            if l['user_id'] == request.user.id:
+                l.update({"is_user":1})
+            else:
+                follow = l['user_id'] in user_follow
+                following = l['user_id'] in user_following
+                if follow and following:
+                    l.update({"looped":3})
+                elif follow:
+                    l.update({"looped":2})
+                elif following:
+                    l.update({"looped":1})
+                else:
+                    l.update({"looped":0})
+                l.update({"is_user":0})
+        return Response({"follow":profile_sz, 'corp_follow':corp_sz}, status=status.HTTP_200_OK)
 
     elif type == 'follower':
         loop_list = Loopship.objects.filter(friend_id = idx).values_list('user_id', flat=True)
+        corp_sz = SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in=loop_list).select_related('company_logo'), many=True).data
         profile_sz = SimpleProfileSerializer(Profile.objects.filter(user_id__in=loop_list).select_related('department', 'school'), many=True).data
         for l in profile_sz:
+            if l['user_id'] == request.user.id:
+                l.update({"is_user":1})
+            else:
+                follow = l['user_id'] in user_follow
+                following = l['user_id'] in user_following
+                if follow and following:
+                    l.update({"looped":3})
+                elif follow:
+                    l.update({"looped":2})
+                elif following:
+                    l.update({"looped":1})
+                else:
+                    l.update({"looped":0})
+                l.update({"is_user":0})
+                
+        for l in corp_sz:
             if l['user_id'] == request.user.id:
                 l.update({"is_user":1})
             else:
@@ -110,4 +144,4 @@ def get_list(request, type, idx):
                     l.update({"looped":0})
                 l.update({"is_user":0})
         
-        return Response({"follow":profile_sz}, status=status.HTTP_200_OK)
+        return Response({"follow":profile_sz, 'corp_follow':corp_sz}, status=status.HTTP_200_OK)

@@ -155,6 +155,12 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['logo', 'company_name']
+        
+class SimpleComapnyProfileSerializer(serializers.ModelSerializer):
+    company_logo = CompanySerializer()
+    class Meta:
+        model = Company_Inform
+        fields = ['company_logo', 'user_id', 'group']
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
     company_logo = CompanySerializer()
