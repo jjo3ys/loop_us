@@ -22,6 +22,7 @@ from tag.models import Post_Tag
 from elasticsearch import Elasticsearch
 
 es = Elasticsearch(hosts=['localhost:9200'])
+Type = type
 # Create your views here.
 
 # @api_view(['POST'])
@@ -70,7 +71,7 @@ def interest_tag(interest_list, type, tag, score):
 def search(request, type):
     user_id = request.user.id
     query = request.GET['query']
-    page = request.GET['page']
+    page = int(request.GET['page'])
 
     try:
         ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
@@ -81,10 +82,9 @@ def search(request, type):
 
     if type == 'post':
         obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).select_related('project').order_by('-id')
-        obj = Paginator(obj, 5)
-        if obj.num_pages < int(page):
+        if obj.count()//20+1 < page:
             return Response(status=status.HTTP_204_NO_CONTENT)
-
+        obj = obj[(page-1)*20:page*20]
         post_list = list(obj.values_list('id', flat=True))
         like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
         book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
@@ -107,8 +107,9 @@ def search(request, type):
                 p.update({'is_marked':0})
 
     elif type == 'profile':
-        page= int(page)
-        results = es.search(index='profile', body={'query':{'match':{"text":{"query":query, "analyzer":"ngram_analyzer"}}}}, size=1000)['hits']['hits'][(page-1)*10:page*10]
+        results = es.search(index='profile', body={'query':{'match':{"text":{"query":query, "analyzer":"ngram_analyzer"}}}}, size=1000)['hits']['hits'][(page-1)*20:page*20]
+        if len(results) == 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
         results = list(map(lambda x: x['_source']['user_id'], results))
    
         obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=results), many=True).data
@@ -116,7 +117,7 @@ def search(request, type):
     elif type == 'tag_post':
         obj = Post_Tag.objects.filter(tag_id=int(query)).select_related('post_tag', 'post__project').order_by('-id')
         obj = Paginator(obj, 5)
-        if obj.num_pages < int(page):
+        if obj.num_pages < page:
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         obj = MainloadSerializer(obj.get_page(page), many=True).data
