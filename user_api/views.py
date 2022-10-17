@@ -328,7 +328,6 @@ def resign(request):
     return Response("resign from loop", status=status.HTTP_200_OK)  
 
 @api_view(['POST', ])
-@permission_classes((IsAuthenticated,))
 def ask(request):
     type = request.GET['type']
     if type == 'normal':
