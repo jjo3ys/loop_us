@@ -233,8 +233,10 @@ def signup(request):
             loop_list.append(Loopship(user_id=looper.user_id, friend_id=user.id))
         Loopship.objects.bulk_create(loop_list)
     # InterestTag.objects.create(user_id=user.id, tag_list={})
-    return Response({'token':token.key, 'user_id':str(user.id)},status=status.HTTP_200_OK)
-
+    return Response({'token':token.key,
+                     'school_id':str(profile_obj.school_id),
+                     'department_id':str(profile_obj.department_id),
+                     'user_id':str(user.id)}, status=status.HTTP_202_ACCEPTED)
 @api_view(['POST'])
 def login(request):
     user = authenticate(
@@ -247,11 +249,14 @@ def login(request):
             else: return Response(status=status.HTTP_401_UNAUTHORIZED)
                 
         token_obj = Token.objects.filter(user_id=user.id)[0]
+        profile_obj = Profile.objects.filter(user_id=user.id)[0]
         user.last_login = timezone.now()
         user.save()
 
         return Response({'token':token_obj.key,
-                        'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
+                         'school_id':str(profile_obj.school_id),
+                         'department_id':str(profile_obj.department_id),
+                         'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
     
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
