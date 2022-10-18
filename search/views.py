@@ -22,7 +22,7 @@ from tag.models import Post_Tag
 from elasticsearch import Elasticsearch
 
 es = Elasticsearch(hosts=['localhost:9200'])
-Type = type
+
 # Create your views here.
 
 # @api_view(['POST'])
