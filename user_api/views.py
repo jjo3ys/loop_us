@@ -98,6 +98,10 @@ def activate(request):
     email = request.data['email']
     certify_num = request.data['certify_num']
     r = client.get(email.replace('@', ''))
+    print(r)
+    print(type(r))
+    print(certify_num)
+    print(type(certify_num))
     if r == certify_num:
         client.delete(email)
         user = User.objects.filter(username=email['id'])
