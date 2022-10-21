@@ -100,7 +100,7 @@ def activate(request):
     r = client.get(email.replace('@', ''))
     if str(r, 'utf-8') == certify_num:
         client.delete(email)
-        user = User.objects.filter(username=email['id'])
+        user = User.objects.filter(username=email)
         if user.exists():
             user = user[0]
             user.is_active = True
