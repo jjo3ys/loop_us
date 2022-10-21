@@ -74,62 +74,62 @@ def delete_tag(tag_obj):
         else:
             tag.tag.save()
 
-# def send_msg(email):
-#     r = client.get(email.replace('@', ''))
-#     if not r:
-#         pass
-#     else:
-#         client.delete(email)
-#     certify_num = ''
-#     for i in range(6):
-#         certify_num += str(random.randint(0, 9))
-#     main_title = 'LOOP US 이메일 인증'
-#     html_content = f'<h5>아래 인증 번호를 앱에서 입력해 주세요.</h5>\
-#                      <h3>{certify_num}</h3>\
-#                      <h5>감사합니다.</h5>'
-#     mail_to = email
-#     msg = EmailMultiAlternatives(main_title, "아래 인증 번호를 앱에서 입력해 주세요.", to=[mail_to])
-#     msg.attach_alternative(html_content, "text/html")
-#     msg.send()
-#     client.set(email.replace('@', ''), certify_num, datetime.timedelta(seconds=180))
-
-# @api_view(['POST', ])
-# def activate(request):
-#     email = request.data['email']
-#     certify_num = request.data['certify_num']
-#     r = client.get(email.replace('@', ''))
-#     if r == certify_num:
-#         client.delete(email)
-#         user = User.objects.filter(username=email['id'])
-#         if user.exists():
-#             user = user[0]
-#             user.is_active = True
-#             user.save()
-#         else:
-#             pass
-#         return Response(status=status.HTTP_200_OK)
-#     else: return Response(status=status.HTTP_401_UNAUTHORIZED)
-
 def send_msg(email):
     r = client.get(email.replace('@', ''))
     if not r:
         pass
     else:
         client.delete(email)
-    if platform.system() == 'Linux':
-        token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256').decode('utf-8')# ubuntu환경
-    else:
-        token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256')
-    html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br>\
-                     <a href="http://3.35.253.151:8000/user_api/activate/{token}">이메일 인증 링크</a><br><br>\
-                     <h3>감사합니다.</h3>'
-
+    certify_num = ''
+    for i in range(6):
+        certify_num += str(random.randint(0, 9))
     main_title = 'LOOP US 이메일 인증'
+    html_content = f'<h5>아래 인증 번호를 앱에서 입력해 주세요.</h5>\
+                     <h3>{certify_num}</h3>\
+                     <h5>감사합니다.</h5>'
     mail_to = email
-    msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
+    msg = EmailMultiAlternatives(main_title, "아래 인증 번호를 앱에서 입력해 주세요.", to=[mail_to])
     msg.attach_alternative(html_content, "text/html")
     msg.send()
-    client.set(email.replace('@', ''), 0, datetime.timedelta(seconds=180))
+    client.set(email.replace('@', ''), certify_num, datetime.timedelta(seconds=180))
+
+@api_view(['POST', ])
+def activate(request):
+    email = request.data['email']
+    certify_num = request.data['certify_num']
+    r = client.get(email.replace('@', ''))
+    if r == certify_num:
+        client.delete(email)
+        user = User.objects.filter(username=email['id'])
+        if user.exists():
+            user = user[0]
+            user.is_active = True
+            user.save()
+        else:
+            pass
+        return Response(status=status.HTTP_200_OK)
+    else: return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+# def send_msg(email):
+#     r = client.get(email.replace('@', ''))
+#     if not r:
+#         pass
+#     else:
+#         client.delete(email)
+#     if platform.system() == 'Linux':
+#         token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256').decode('utf-8')# ubuntu환경
+#     else:
+#         token = jwt.encode({'id': email}, SECRET_KEY, algorithm='HS256')
+#     html_content = f'<h3>아래 링크를 클릭하시면 인증이 완료됩니다.</h3><br>\
+#                      <a href="http://3.35.253.151:8000/user_api/activate/{token}">이메일 인증 링크</a><br><br>\
+#                      <h3>감사합니다.</h3>'
+
+#     main_title = 'LOOP US 이메일 인증'
+#     mail_to = email
+#     msg = EmailMultiAlternatives(main_title, "아래 링크를 클릭하여 인증을 완료해 주세요.", to=[mail_to])
+#     msg.attach_alternative(html_content, "text/html")
+#     msg.send()
+#     client.set(email.replace('@', ''), 0, datetime.timedelta(seconds=180))
 
 @api_view(['POST'])
 def create_user(request):
@@ -138,26 +138,26 @@ def create_user(request):
     send_msg(request.data['email'])
     return Response(status=status.HTTP_200_OK)
 
-@api_view(['GET', ])
-def activate(request, token):
-    try:
-        user_dic = jwt.decode(token, algorithms='HS256')
-        email = user_dic['id']
-        email = email.replace('@', '')
-        r =  client.get(email)
-        if int(r) == 0:
-            client.delete(email)
-            user = User.objects.filter(username=user_dic['id'])
-            if user.exists():
-                user = user[0]
-                user.is_active = True
-                user.save()
-            else:
-                pass
-            certify_fcm(email)
-            return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
-    except:
-        return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
+# @api_view(['GET', ])
+# def activate(request, token):
+#     try:
+#         user_dic = jwt.decode(token, algorithms='HS256')
+#         email = user_dic['id']
+#         email = email.replace('@', '')
+#         r =  client.get(email)
+#         if int(r) == 0:
+#             client.delete(email)
+#             user = User.objects.filter(username=user_dic['id'])
+#             if user.exists():
+#                 user = user[0]
+#                 user.is_active = True
+#                 user.save()
+#             else:
+#                 pass
+#             certify_fcm(email)
+#             return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_success.png")
+#     except:
+#         return redirect("https://loopusimage.s3.ap-northeast-2.amazonaws.com/static/email_authentification_fail.png")
 
 @api_view(['POST', ])
 def check_corp_num(request):
