@@ -10,17 +10,17 @@ from rest_framework import serializers
 class NewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
-        fields = ['id', 'urls']
+        fields = ['urls', 'corp']
 
 class BrSerializer(serializers.ModelSerializer):
     class Meta:
         model = Brunch
-        fields = ['id', 'urls']
+        fields = ['urls', 'writer', 'profile_url']
 
 class YtSerializer(serializers.ModelSerializer):
     class Meta:
         model = Youtube
-        fields = ['id', 'urls']
+        fields = ['urls']
 
 class PostTagSerializer(serializers.ModelSerializer):
     tag = serializers.SerializerMethodField()
