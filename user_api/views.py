@@ -236,7 +236,7 @@ def signup(request):
     return Response({'token':token.key,
                      'school_id':str(profile_obj.school_id),
                      'department_id':str(profile_obj.department_id),
-                     'user_id':str(user.id)}, status=status.HTTP_202_ACCEPTED)
+                     'user_id':str(user.id)}, status=status.HTTP_200_OK)
 @api_view(['POST'])
 def login(request):
     user = authenticate(
