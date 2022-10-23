@@ -490,13 +490,15 @@ def main_load(request):
             project_obj = SimpleProjectserializer(project_obj.project).data
             
         if profile.group == 10:
-            news_obj = NewsSerializer(News.objects.all(), many=True).data
+            # news_obj = NewsSerializer(News.objects.all(), many=True).data
+            news_obj = list(News.objects.all().values_list('urls', flat=True))
             br_obj = BrSerializer(Brunch.objects.all(), many=True).data
-            yt_obj = Youtube.objects.all().values_list('urls', flat=True)
+            yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
         else:
-            news_obj = NewsSerializer(News.objects.filter(group_id=profile.group), many=True).data
+            # news_obj = NewsSerializer(News.objects.filter(group_id=profile.group), many=True).data
+            news_obj = list(News.objects.filter(group_id=profile.group).values_list('urls', flat=True))
             br_obj = BrSerializer(Brunch.objects.filter(group_id=profile.group), many=True).data
-            yt_obj = Youtube.objects.filter(group_id=profile.group).values_list('urls', flat=True)
+            yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
             
         return Response({'posting':post_obj, 'issue':news_obj, 'brunch':br_obj, 'youtube':yt_obj, 'project':project_obj}, status=status.HTTP_200_OK)
         # if profile.group == 10:
