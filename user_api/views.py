@@ -244,19 +244,22 @@ def login(request):
     password=request.data['password'],
     )
     if user is not None and user.is_active:
-        if int(request.GET['is_corp']):
-            if Company_Inform.objects.filter(user_id=user.id).exists(): pass
-            else: return Response(status=status.HTTP_401_UNAUTHORIZED)
-                
-        token_obj = Token.objects.filter(user_id=user.id)[0]
-        profile_obj = Profile.objects.filter(user_id=user.id)[0]
         user.last_login = timezone.now()
         user.save()
+        if Company_Inform.objects.filter(user_id=user.id).exists(): 
+            return Response({'token':token_obj.key,
+                            'is_student':0,
+                            'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
 
-        return Response({'token':token_obj.key,
-                         'school_id':str(profile_obj.school_id),
-                         'department_id':str(profile_obj.department_id),
-                         'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
+        else:
+            token_obj = Token.objects.filter(user_id=user.id)[0]
+            profile_obj = Profile.objects.filter(user_id=user.id)[0]
+            
+            return Response({'token':token_obj.key,
+                            'school_id':str(profile_obj.school_id),
+                            'department_id':str(profile_obj.department_id),
+                            'is_student':1,
+                            'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
     
     else:
         return Response("인증 만료 로그인 불가",status=status.HTTP_401_UNAUTHORIZED)
