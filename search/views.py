@@ -147,10 +147,11 @@ def search_log(request):
     if request.method == 'POST':
         type = int(request.GET['type'])
         obj = Log.objects.filter(user_id=user_id, type=type, query=request.GET['query'], viewed=True).order_by('-id')[:20]
-        if obj.exists():pass
+        if obj.exists():
+            return Response(status=status.HTTP_200_OK)
         else:
             obj = Log.objects.create(user_id=user_id, type=type, query=request.GET['query'])
-        return Response(LogSerializer(obj).data, status=status.HTTP_200_OK)
+            return Response(LogSerializer(obj).data, status=status.HTTP_200_OK)
     
     elif request.method == 'GET':
         obj = Log.objects.filter(user_id=user_id, viewed=True).order_by('-id')[:20]
