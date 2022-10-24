@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 from .models import Log
 
+from tag.models import Tag
+from tag.serializer import TagSerializer
 from user_api.models import Profile, Company_Inform
 from user_api.serializers import SimpleProfileSerializer, SimpleComapnyProfileSerializer
 
@@ -14,6 +16,8 @@ class LogSerializer(serializers.ModelSerializer):
     def get_data(self, obj):
         if obj.type == 0:
             return SimpleProfileSerializer(Profile.objects.filter(user_id=int(obj.query))[0]).data
+        elif obj.type == 2:
+            return TagSerializer(Tag.objects.filter(id=int(obj.query))[0]).data
         elif obj.type == 3:
             return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=int(obj.query))[0]).data
         else:
