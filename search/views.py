@@ -144,8 +144,8 @@ def search(request, type):
 @api_view(['GET', 'POST', 'DELETE'])
 def search_log(request):
     user_id = request.user.id
-    type = int(request.GET['type'])
     if request.method == 'POST':
+        type = int(request.GET['type'])
         obj = Log.objects.filter(user_id=user_id, type=type, query=request.GET['query'], viewed=True).order_by('-id')[:20]
         if obj.exists():pass
         else:
