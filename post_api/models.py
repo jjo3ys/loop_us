@@ -58,6 +58,13 @@ class Like(models.Model):
     class Meta:
         db_table = "Post_like"
 
+class CorpLike(models.Model):
+    post = models.ForeignKey(Post, null=True, related_name='corp_like', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "Corp_like"
+
 class CommentLike(models.Model):
     comment = models.ForeignKey(Comment, null=True, related_name='comment_like', on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

@@ -16,8 +16,9 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import BrSerializer, CocommentSerializer, CommentSerializer, NewsSerializer,  PostingSerializer, MainloadSerializer, SimpleProjectserializer
-from .models import CocommentLike, CommentLike, Post, PostImage, Like, BookMark, Cocomment, Comment, PostLink
+from .models import CocommentLike, CommentLike, CorpLike, Post, PostImage, Like, BookMark, Cocomment, Comment, PostLink
 
+from user_api.models import Company_Inform
 from loop.models import Loopship
 #from sentence_transformers import SentenceTransformer, util
 import datetime
@@ -298,7 +299,27 @@ def like(request):
                     pass
 
             return Response('liked posting', status=status.HTTP_202_ACCEPTED)
-
+    if type == 'corp':
+        try:
+            like_obj, created = CorpLike.objects.get_or_create(post_id=idx, user_id=user_id)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if not created:
+            like_obj.post.like_count -= 1
+            like_obj.post.save()
+            like_obj.delete()
+            return Response('unliked posting', status=status.HTTP_202_ACCEPTED)
+        
+        else:
+            like_obj.post.like_count += 1
+            like_obj.post.save()
+            if like_obj.post.user_id != user_id:
+                try:
+                    real_name = Company_Inform.objects.filter(user_id=user_id)[0].company_name
+                    like_fcm(like_obj.post.user_id, real_name, idx, user_id)
+                except:
+                    pass
+                
     elif type =='comment':
         try:
             like_obj, created = CommentLike.objects.get_or_create(comment_id=idx, user_id=user_id)
@@ -349,6 +370,23 @@ def like(request):
                     pass
 
             return Response('liked cocomment', status=status.HTTP_202_ACCEPTED)    
+
+@api_view(['GET', ])
+@permission_classes((IsAuthenticated,))
+def like_list_load(request):
+    idx = request.GET['id']
+    if request.GET['type'] == 'post':
+        corp_list = CorpLike.objects.filter(post_id=idx).values_list('user_id', flat=True)
+        like_list = Like.objects.filter(post_id=idx).values_list('user_id', flat=True)
+        like_list = like_list.union(corp_list)
+    
+    elif request.GET['type'] == 'comment':
+        like_list = CommentLike.objects.filter(comment_id=idx).values_list('user_id', flat=True)
+    
+    elif request.GET['type'] == 'cocomment':
+        like_list = CocommentLike.objects.filter(cocomment_id=idx).values_list('user_id', flat=True)
+
+    return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=like_list).select_related('school', 'department'), many=True).data, status=status.HTTP_200_OK)
                     
 @api_view(['POST', ])
 @permission_classes((IsAuthenticated,))
@@ -570,20 +608,6 @@ def loop_load(request):
         return Response({'posting':post_obj, 'issue':obj, 'project':project_obj}, status=status.HTTP_200_OK)
 
     else: return Response({'posting':post_obj})
-@api_view(['GET', ])
-@permission_classes((IsAuthenticated,))
-def like_list_load(request):
-    idx = request.GET['id']
-    if request.GET['type'] == 'post':
-        like_list = Like.objects.filter(post_id=idx).values_list('user_id', flat=True)
-    
-    elif request.GET['type'] == 'comment':
-        like_list = CommentLike.objects.filter(comment_id=idx).values_list('user_id', flat=True)
-    
-    elif request.GET['type'] == 'cocomment':
-        like_list = CocommentLike.objects.filter(cocomment_id=idx).values_list('user_id', flat=True)
-
-    return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=like_list).select_related('school', 'department'), many=True).data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
