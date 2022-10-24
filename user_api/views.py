@@ -569,41 +569,36 @@ def ban(request):
 @permission_classes((IsAuthenticated,))
 def alarm(request):
     if request.method == 'GET':
-        if request.GET['type'] == 'follow':
-            if request.GET['last'] == '0':
-                alarm_obj = Alarm.objects.filter(user_id=request.user.id, type=2).order_by('-id')[:10]               
-            else:
-                alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last'], type=2).order_by('-id')[:10]
-            
-            alarm_obj = AlarmSerializer(alarm_obj, many=True).data
-            for alarm in alarm_obj:
-                follow = Loopship.objects.filter(user_id=request.user.id, friend_id=alarm['target_id']).exists()
-                following = Loopship.objects.filter(user_id=alarm['target_id'], friend_id=request.user.id).exists()
-                if follow and following:
-                    alarm.update({"looped":3})
-                elif follow:
-                    alarm.update({"looped":2})#내가 알람 보낸 사람을 follow
-                elif following:
-                    alarm.update({"looped":1})#알람 보낸 사람이 나를 follow
-                else:
-                    alarm.update({"looped":0})
-
-            return Response(alarm_obj, status=status.HTTP_200_OK)
-
-        elif request.GET['type'] == 'else':            
-            if request.GET['last'] == '0':
-                alarm_obj = Alarm.objects.filter(user_id=request.user.id).exclude(type=2).order_by('-id')[:10]
-            else:
-                alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).exclude(type=2).order_by('-id')[:10]
-                    
-            return Response(AlarmSerializer(alarm_obj, many=True).data, status=status.HTTP_200_OK)
-
-        elif request.GET['type'] == 'read':
+        if request.GET['type'] == 'read':
             alarm_obj = Alarm.objects.filter(target_id=request.GET['id'], type=request.GET['type_id'], alarm_from_id=request.GET['sender_id'])[0]
             alarm_obj.is_read = True
             alarm_obj.save()
 
             return Response(status=status.HTTP_200_OK)
+        
+        else:            
+            if request.GET['last'] == '0':
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id).order_by('-id')[:20]
+            else:
+                alarm_obj = Alarm.objects.filter(user_id=request.user.id, id__lt=request.GET['last']).order_by('-id')[:20]
+            alarm_obj = AlarmSerializer(alarm_obj, many=True).data    
+            # following_list = dict(Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', 'user_id'))
+            # follower_list = dict(Loopship.objects.filter(friend_id=request.user.id).values_list('user_id', 'friend_id'))
+            # for alarm in alarm_obj:
+            #     if alarm['type'] == 2:
+            #         target_id = alarm['target_id']
+            #         following = target_id in following_list
+            #         follow = target_id in follower_list
+            #         if following and follow:
+            #             alarm.update({"looped":3})
+            #         elif following:
+            #             alarm.update({"looped":2})
+            #         elif following:
+            #             alarm.update({"looped":1})
+            #         else:
+            #             alarm.update({"looped":0})
+                    
+            return Response(alarm_obj, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
         alarm_obj = Alarm.objects.filter(id=request.GET['id'])[0]
