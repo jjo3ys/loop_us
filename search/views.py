@@ -149,8 +149,8 @@ def search_log(request):
         obj = Log.objects.filter(user_id=user_id, type=type, query=request.GET['query'], viewed=True).order_by('-id')[:20]
         if obj.exists():pass
         else:
-            Log.objects.create(user_id=user_id, type=type, query=request.GET['query'])
-        return Response(status=status.HTTP_200_OK)
+            obj = Log.objects.create(user_id=user_id, type=type, query=request.GET['query'])
+        return Response(LogSerializer(obj).data, status=status.HTTP_200_OK)
     
     elif request.method == 'GET':
         obj = Log.objects.filter(user_id=user_id, viewed=True).order_by('-id')[:20]
