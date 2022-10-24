@@ -19,6 +19,9 @@ from user_api.models import Banlist, Company, Profile, School, Department
 from user_api.serializers import SchoolSerializer, DepSerializer, SimpleProfileSerializer, CompanySerializer
 from tag.models import Post_Tag
 
+from .models import Log
+from .serializer import LogSerializer
+
 from elasticsearch import Elasticsearch
 
 es = Elasticsearch(hosts=['localhost:9200'])
@@ -66,80 +69,87 @@ def interest_tag(interest_list, type, tag, score):
 
     return interest_list
 
-@api_view(['GET', ])
+@api_view(['GET', 'POST'])
 @permission_classes((IsAuthenticated,))
 def search(request, type):
     user_id = request.user.id
     query = request.GET['query']
-    page = int(request.GET['page'])
-
-    try:
-        ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
-    except:
-        ban_list = []
-
-    ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
-
-    if type == 'post':
-        obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).select_related('project').order_by('-id')
-        if obj.count()//20+1 < page:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        obj = obj[(page-1)*20:page*20]
-        post_list = list(obj.values_list('id', flat=True))
-        like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
-        book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
-        obj = MainloadSerializer(obj, many=True).data
-
-        for p in obj:
-            if p['user_id'] == user_id:
-                p.update({"is_user":1})
-            else:
-                p.update({"is_user":0})
-            
-            if p['id'] in like_list:
-                p.update({'is_liked':1})
-            else:
-                p.update({'is_liked':0})
-
-            if p['id'] in book_list:
-                p.update({'is_marked':1})
-            else:
-                p.update({'is_marked':0})
-
-    elif type == 'profile':
-        results = es.search(index='profile', body={'query':{'match':{"text":{"query":query, "analyzer":"ngram_analyzer"}}}}, size=1000)['hits']['hits'][(page-1)*20:page*20]
-        if len(results) == 0:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        results = list(map(lambda x: x['_source']['user_id'], results))
-   
-        obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=results), many=True).data
-
-    elif type == 'tag_post':
-        obj = Post_Tag.objects.filter(tag_id=int(query)).select_related('post_tag', 'post__project').order_by('-id')
-        obj = Paginator(obj, 5)
-        if obj.num_pages < page:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        obj = MainloadSerializer(obj.get_page(page), many=True).data
-        for p in obj:
-            if user_id == p['user_id']:
-                p.update({"is_user":1})
-            else:
-                p.update({"is_user":0})
-
-    elif type == 'notice':
-        return Response("unrealized", status=status.HTTP_204_NO_CONTENT)
+    if request.method == 'POST':
+        type = request.data['type']
+        Log.objects.create(user_id=user_id, type=type, query=query)
+        return Response(status=status.HTTP_200_OK)
     
-    # if page == '1':
-        # if 'tag' in type:
-        #     interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
-        #     interest_list = interest_tag(interest_list, 'plus', int(query), 1)
-        #     interest_list.save()
-        # else:         
-        #     Log.objects.create(user_id=request.user.id, query=query, type=type_int[type])
+    elif request.method == 'GET':
+        page = int(request.GET['page'])
 
+        try:
+            ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
+        except:
+            ban_list = []
+
+        ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
+
+        if type == 'post':
+            obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).select_related('project').order_by('-id')
+            if obj.count()//20+1 < page:
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            obj = obj[(page-1)*20:page*20]
+            post_list = list(obj.values_list('id', flat=True))
+            like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
+            book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
+            obj = MainloadSerializer(obj, many=True).data
+
+            for p in obj:
+                if p['user_id'] == user_id:
+                    p.update({"is_user":1})
+                else:
+                    p.update({"is_user":0})
+                
+                if p['id'] in like_list:
+                    p.update({'is_liked':1})
+                else:
+                    p.update({'is_liked':0})
+
+                if p['id'] in book_list:
+                    p.update({'is_marked':1})
+                else:
+                    p.update({'is_marked':0})
+
+        elif type == 'profile':
+            results = es.search(index='profile', body={'query':{'match':{"text":{"query":query, "analyzer":"ngram_analyzer"}}}}, size=1000)['hits']['hits'][(page-1)*20:page*20]
+            if len(results) == 0:
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            results = list(map(lambda x: x['_source']['user_id'], results))
     
-    return Response(obj, status=status.HTTP_200_OK)
+            obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=results), many=True).data
+
+        elif type == 'tag_post':
+            obj = Post_Tag.objects.filter(tag_id=int(query)).select_related('post_tag', 'post__project').order_by('-id')
+            obj = Paginator(obj, 5)
+            if obj.num_pages < page:
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
+            obj = MainloadSerializer(obj.get_page(page), many=True).data
+            for p in obj:
+                if user_id == p['user_id']:
+                    p.update({"is_user":1})
+                else:
+                    p.update({"is_user":0})
+
+        elif type == 'list':
+            obj = Log.objects.filter(user_id=user_id).order_by('-id')
+            obj = LogSerializer(obj[:10], many=True).data
+        
+        # if page == '1':
+            # if 'tag' in type:
+            #     interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
+            #     interest_list = interest_tag(interest_list, 'plus', int(query), 1)
+            #     interest_list.save()
+            # else:         
+            #     Log.objects.create(user_id=request.user.id, query=query, type=type_int[type])
+
+        
+        return Response(obj, status=status.HTTP_200_OK)
 
 @api_view(['GET', ])
 def search_university(request):
