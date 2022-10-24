@@ -13,8 +13,8 @@ class LogSerializer(serializers.ModelSerializer):
     
     def get_data(self, obj):
         if obj.type == 0:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=int(obj.query))).data
+            return SimpleProfileSerializer(Profile.objects.filter(user_id=int(obj.query))[0]).data
         elif obj.type == 3:
-            return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=int(obj.query))).data
+            return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=int(obj.query))[0]).data
         else:
             return obj.query
