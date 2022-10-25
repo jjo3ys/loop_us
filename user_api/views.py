@@ -494,7 +494,10 @@ def posting(request):
         post_obj = Post.objects.filter(project_id=idx).select_related('project').order_by('-id')
     elif request.GET['type'] == 'all':
         post_obj = Post.objects.filter(user_id=idx).select_related('project').order_by('-id')
-
+        
+    if page > post_obj.count()//20+1:
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
     post_obj = post_obj[(page-1)*20:page*20]
     post_list = list(post_obj.values_list('id', flat=True))
     like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
