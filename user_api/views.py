@@ -495,7 +495,7 @@ def posting(request):
     elif request.GET['type'] == 'all':
         post_obj = Post.objects.filter(user_id=idx).select_related('project').order_by('-id')
         
-    if page > post_obj.count()//20+1:
+    if page > post_obj.count()//20:
         return Response(status=status.HTTP_204_NO_CONTENT)
     
     post_obj = post_obj[(page-1)*20:page*20]
