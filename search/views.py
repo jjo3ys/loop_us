@@ -15,8 +15,8 @@ from rest_framework import status
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
-from user_api.models import Banlist, Company, Profile, School, Department
-from user_api.serializers import SchoolSerializer, DepSerializer, SimpleProfileSerializer, CompanySerializer
+from user_api.models import Banlist, Company_Inform, Profile, School, Department
+from user_api.serializers import SchoolSerializer, DepSerializer, SimpleComapnyProfileSerializer, SimpleProfileSerializer
 from tag.models import Post_Tag
 
 from .models import Log
@@ -198,11 +198,11 @@ def recommend(request):
 @permission_classes((IsAuthenticated,))
 def search_company(request):
     try:
-        company_obj = Company.objects.filter(company_name__icontains=request.GET['query']).order_by('-id')
+        company_obj = Company_Inform.objects.filter(company_name__icontains=request.GET['query']).order_by('-id')
         company_obj = Paginator(company_obj, 10)
         if company_obj.num_pages < int(request.GET['page']):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        return Response(CompanySerializer(company_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
+        return Response(SimpleComapnyProfileSerializer(company_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
     except:
         return Response(status=status.HTTP_204_NO_CONTENT)
