@@ -1,9 +1,7 @@
-from django.db.models import Sum
-
 from .models import Project, ProjectUser
 from rest_framework import serializers
-from post_api.models import Post, Like, PostImage, Comment
-from user_api.models import Profile
+from post_api.models import Post, PostImage, Comment
+from user_api.models import Company, Profile
 from user_api.serializers import SimpleProfileSerializer
 from post_api.serializers import CommentSerializer, PostTagSerializer, PostingImageSerializer, PostingLinkeSerializer
 
@@ -30,9 +28,15 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         if obj.thumbnail == 0: return None
-        img_obj = PostImage.objects.filter(id=obj.thumbnail)
-        if img_obj:
-            return img_obj[0].image.url
+        elif obj.tag_company:
+            img_obj = Company.objects.filter(id=obj.thumbnail)
+            if img_obj:
+                return img_obj[0].logo.url
+        else:
+            img_obj = PostImage.objects.filter(id=obj.thumbnail)
+            
+            if img_obj:
+                return img_obj[0].image.url
         return None
     
 class OnlyProjectSerializer(serializers.ModelSerializer):
@@ -43,9 +47,15 @@ class OnlyProjectSerializer(serializers.ModelSerializer):
 
     def get_thumbnail(self, obj):
         if obj.thumbnail == 0: return None
-        img_obj = PostImage.objects.filter(id=obj.thumbnail)
-        if img_obj:
-            return img_obj[0].image.url
+        elif obj.tag_company:
+            img_obj = Company.objects.filter(id=obj.thumbnail)
+            if img_obj:
+                return img_obj[0].logo.url
+        else:
+            img_obj = PostImage.objects.filter(id=obj.thumbnail)
+            
+            if img_obj:
+                return img_obj[0].image.url
         return None
     
 class ProjectUserSerializer(serializers.ModelSerializer):
