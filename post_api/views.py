@@ -51,7 +51,7 @@ def posting(request):
 
         for id, image in enumerate(request.FILES.getlist('image')):
             image_obj = PostImage.objects.create(post_id=post_obj.id, image=image)
-            if id == 0:
+            if id == 0 and not post_obj.project.tag_company:
                 post_obj.project.thumbnail=image_obj.id
         
         # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
@@ -169,22 +169,22 @@ def posting(request):
                 tag.tag.delete()
             else: 
                 tag.tag.save()
-
-        thumbnail_id = post_obj.project.thumbnail
-        if contents_image_obj.count() != 0:
-            for image in contents_image_obj:
-                image.image.delete(save=False)
-                if image.id == thumbnail_id:
-                    post = Post.objects.filter(project_id=post_obj.project_id)
-                    post_list = list(post.values_list('id', flat=True))
-                    if post.count() == 0:
-                        post_obj.project.thumbnail = 0
-                    img_obj = PostImage.objects.filter(post_id__in=post_list)
-                    if img_obj.count() == 0:
-                        post_obj.project.thumbnail = 0
-                    else:
-                        post_obj.project.thumbnail = PostImage.objects.filter(post_id=img_obj.last().post_id).first().id
-                    post_obj.project.save()
+        
+        if post_obj.project.tag_company: pass
+        else:
+            thumbnail_id = post_obj.project.thumbnail
+            if contents_image_obj.count() != 0:
+                for image in contents_image_obj:
+                    image.image.delete(save=False)
+                    if image.id == thumbnail_id:
+                        post = Post.objects.filter(project_id=post_obj.project_id)
+                        post_list = list(post.values_list('id', flat=True))
+                        img_obj = PostImage.objects.filter(post_id__in=post_list)
+                        if post.count() == 0 or img_obj.count() == 0:
+                            post_obj.project.thumbnail = 0
+                        else:
+                            post_obj.project.thumbnail = PostImage.objects.filter(post_id=img_obj.last().post_id).first().id
+                        post_obj.project.save()
 
         project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id)[0]
         project_obj.post_count -= 1

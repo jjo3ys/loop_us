@@ -1,4 +1,4 @@
-from email.policy import default
+from user_api.models import Company
 from django.db import models
 from django.conf import settings
 
@@ -9,6 +9,7 @@ class Project(models.Model):
     group = models.PositiveSmallIntegerField(default=10)
     thumbnail = models.PositiveBigIntegerField(null=True, default=0)
     is_public = models.BooleanField(default=False)
+    tag_company = models.BooleanField(default=False)
     class Meta:
         db_table = 'Project'
 

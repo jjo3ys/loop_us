@@ -2,7 +2,7 @@ from search.models import Get_log
 
 from .serializers import ProjectUserSerializer
 from .models import Project, ProjectUser
-from user_api.models import Profile
+from user_api.models import Company, Profile
 # from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
 from post_api.models import PostImage, Like, BookMark, Post
@@ -38,6 +38,12 @@ def project(request):
             for looper in looper_list:
                 ProjectUser.objects.create(project_id=project_obj.id, user_id=looper, is_manager=False)
                 tag_fcm(looper, profile_obj.real_name, user_id, project_obj.project_name, project_obj.id)
+        
+        elif type =='company':
+            company_obj = Company.objects.filter(id=request.GET['company_id'])[0]
+            project_obj.tag_company = True
+            project_obj.thumbnail = company_obj.logo.url
+            project_obj.save()
                     
         return Response(status=status.HTTP_200_OK)
 
@@ -68,11 +74,16 @@ def project(request):
         return Response(project, status=status.HTTP_200_OK)
 
     elif request.method == 'DELETE':
-        project_obj = Project.objects.filter(id=request.GET['id'])[0]
+        project_id = request.GET['id']
+        type = request.GET['type']
+        if type == 'exit':
+            ProjectUser.objects.filter(project_id=project_id, user_id=user_id).delete()
+        elif type == 'del':
+            project_obj = Project.objects.filter(id=project_id)[0]
 
-        for post in Post.objects.filter(project_id=request.GET['id']):
-            for image in PostImage.objects.filter(post_id=post.id):
-                image.image.delete(save=False)
+            for post in Post.objects.filter(project_id=project_id):
+                for image in PostImage.objects.filter(post_id=post.id):
+                    image.image.delete(save=False)
                 
-        project_obj.delete()
-        return Response("is deleted", status=status.HTTP_200_OK)
+            project_obj.delete()
+    return Response(status=status.HTTP_200_OK)
