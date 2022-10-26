@@ -154,7 +154,7 @@ class SearchCompanySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['logo', 'company_name']
+        fields = "__all__"
 
 class CompanySerializer(serializers.ModelSerializer):
 
