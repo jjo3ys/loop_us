@@ -15,8 +15,8 @@ from rest_framework import status
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
-from user_api.models import Banlist, Company_Inform, Profile, School, Department
-from user_api.serializers import SchoolSerializer, DepSerializer, SimpleComapnyProfileSerializer, SimpleProfileSerializer
+from user_api.models import Banlist, Company, Company_Inform, Profile, School, Department
+from user_api.serializers import SchoolSerializer, DepSerializer, SimpleComapnyProfileSerializer, SimpleProfileSerializer, SearchCompanySerializer
 from tag.models import Post_Tag
 
 from .models import Log
@@ -130,6 +130,13 @@ def search(request, type):
             else:
                 p.update({"is_user":0})
     
+    elif type == 'company':
+        obj = Company.objects.filter(company_name__icontains=query)
+        obj = Paginator(obj, 20)
+        if obj.num_pages < page:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        obj = SearchCompanySerializer(obj.get_page(page), many=True).data
     # if page == '1':
         # if 'tag' in type:
         #     interest_list = InterestTag.objects.get_or_create(user_id=request.user.id)[0]
