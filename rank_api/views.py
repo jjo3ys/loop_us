@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from fcm.push_fcm import rank_fcm
 
 from project_api.models import Project
 from user_api.serializers import RankProfileSerailizer, SchoolRankProfileSerailizer, SimpleProfileSerializer
@@ -211,6 +212,7 @@ def user_ranking(request):
                     profile.school_rank = i+1
                     acc = 0
         Profile.objects.bulk_update(school_proifle, ['school_rank', 'school_last_rank'])
+        rank_fcm(school.id)
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
