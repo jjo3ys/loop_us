@@ -24,7 +24,7 @@ class Company(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    real_name = models.CharField(max_length=10)
+    real_name = models.CharField(max_length=20)
     type = models.SmallIntegerField(default=0)
     profile_image = models.ImageField(null = True, upload_to='profile_image/')
     school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
