@@ -6,7 +6,7 @@ from project_api.models import ProjectUser
 
 from tag.models import Post_Tag, Tag
 # from fcm.models import FcmToken
-from fcm.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, like_fcm, report_alarm, comment_like_fcm
+from fcm.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, department_fcm, like_fcm, report_alarm, comment_like_fcm, school_fcm
 from user_api.models import Banlist, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
@@ -74,7 +74,14 @@ def posting(request):
         project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id'])[0]
         project_obj.post_count += 1
         project_obj.save()
-
+        
+        if request.user.is_staff:
+            official_obj = Profile.objects.filter(user_id=user_id)[0]
+            if official_obj.type == 1:
+                department_fcm('department'+str(official_obj.department), post_obj.id, user_id)
+            else:
+                school_fcm('school'+str(official_obj.school), post_obj.id, user_id)
+                
         return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
