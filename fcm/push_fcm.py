@@ -180,6 +180,50 @@ def chat_fcm(topic, req_from, msg, user_id):
         messaging.send(message)
     except UnregisteredError:
         pass
+    
+def department_fcm(topic, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=9, target_id=id, alarm_from_id=from_id)
+    if valid:
+        message = messaging.Message(
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+            notification=messaging.Notification(
+                title='루프어스',
+                body='새로운 학과공지가 올라왔습니다.'
+            ),
+            data={
+                'type':'9',
+                'id':str(id),
+                'sender_id':str(from_id)
+            },
+            topic=str(topic),
+            )
+        try:
+            messaging.send(message)
+        except UnregisteredError:
+            pass
+
+def school_fcm(topic, id, from_id):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=10, target_id=id, alarm_from_id=from_id)
+    if valid:
+        message = messaging.Message(
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+            notification=messaging.Notification(
+                title='루프어스',
+                body='새로운 학교공지가 올라왔습니다.'
+            ),
+            data={
+                'type':'10',
+                'id':str(id),
+                'sender_id':str(from_id)
+            },
+            topic=str(topic),
+            )
+        try:
+            messaging.send(message)
+        except UnregisteredError:
+            pass
 
 def certify_fcm(topic):
     message = messaging.Message(
