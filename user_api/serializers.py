@@ -150,6 +150,12 @@ class AlarmSerializer(serializers.ModelSerializer):
     def get_profile(self, obj):
         return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id).select_related('school', 'department')[0]).data
 
+class SearchCompanySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Company
+        fields = "__all__"
+
 class CompanySerializer(serializers.ModelSerializer):
 
     class Meta:
