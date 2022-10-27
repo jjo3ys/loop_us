@@ -256,8 +256,8 @@ def login(request):
             profile_obj = Profile.objects.filter(user_id=user.id)[0]
             
             return Response({'token':token_obj.key,
-                            'school_id':str(profile_obj.school_id),
-                            'department_id':str(profile_obj.department_id),
+                            'school_id':'school'+str(profile_obj.school_id),
+                            'department_id':'department'+str(profile_obj.department_id),
                             'is_student':1,
                             'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
     
