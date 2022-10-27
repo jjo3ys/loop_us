@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from project_api.models import Project
-from user_api.serializers import RankProfileSerailizer, SchoolRankProfileSerailizer
+from user_api.serializers import RankProfileSerailizer, SchoolRankProfileSerailizer, SimpleProfileSerializer
 
 from .models import HotUser, PostingRanking
 
@@ -242,7 +242,7 @@ def career_board_ranking(request):
         return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
     
 @api_view(['GET', 'POST'])
-@permission_classes((IsAuthenticated))
+@permission_classes((IsAuthenticated,))
 def hot_user(request):
     if request.method == 'POST':
         if request.user.id != 5:
@@ -250,19 +250,38 @@ def hot_user(request):
         user_like_count = {}
         now = datetime.now()
         post_obj = Post.objects.filter(date__range = [now-timedelta(days=7), now])
-        
         for post in post_obj:
             if post.user_id in user_like_count:
                 user_like_count[post.user_id] += post.like_count
             else:
                 user_like_count[post.user_id] = post.like_count
-                
-        last = HotUser.objects.all().last().id
-        user_like_count = sorted(user_like_count.items(), key=lambda x:-x[1])[:100]
-        user_list = []
-        for user in user_like_count:
-            user_list.append(HotUser(user_id = user[0], like_count=user[1]))
-        HotUser.objects.bulk_create(user_list)
-        HotUser.objects.filter(id__lte=last.id).delete()
-
+        
+        group_list = Group.objects.all().values_list('id', flat=True)     
+        group_like_count = {i:{} for i in group_list}
+        profile_obj = Profile.objects.filter(user_id__in = list(user_like_count.keys()))
+        for profile in profile_obj:
+            group_like_count[profile.group][profile.user_id] = user_like_count[profile.user_id]
+            
+        last = HotUser.objects.all().last()
+        for group in group_list:
+            try:
+                sorted_user = sorted(group_like_count[group].items(), key=lambda x:-x[1])[:100]
+            except KeyError: continue
+            user_list = []
+            for user in sorted_user:
+                user_list.append(HotUser(user_id=user[0], like_count=user[1], group=group))
+            HotUser.objects.bulk_create(user_list)
+        if last:
+            HotUser.objects.filter(id__lte=last.id).delete()
+        
+        return Response(status=status.HTTP_200_OK)
+    
+    elif request.method == 'GET':
+        Hot_user_obj = HotUser.objects.filter(group=request.GET['group'])
+        user_list = Hot_user_obj.values_list('user_id', flat=True)
+        like_count = Hot_user_obj.values_list('like_count', flat=True)
+        profile_obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list), many=True).data
+        for i, profile in enumerate(profile_obj):
+            profile.update({'like_count':like_count[i]})
+        return Response(profile_obj, status=status.HTTP_200_OK)
     

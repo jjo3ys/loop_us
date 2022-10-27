@@ -9,4 +9,5 @@ urlpatterns = [
     path('project_group', views.project_group),
     path('profile_group', views.profile_group),
     path('posting_trends', views.posting_with_group),
+    path('hot_user', views.hot_user),
 ]
