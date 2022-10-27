@@ -204,7 +204,7 @@ def department_fcm(topic, id, from_id):
             pass
 
 def school_fcm(topic, id, from_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=10, target_id=id, alarm_from_id=from_id)
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=9, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
             android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
@@ -215,7 +215,7 @@ def school_fcm(topic, id, from_id):
             ),
             data={
                 'type':'10',
-                'id':str(id),
+                'id':str(9),
                 'sender_id':str(from_id)
             },
             topic=str(topic),

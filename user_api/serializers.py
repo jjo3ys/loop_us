@@ -123,25 +123,26 @@ class AlarmSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'type', 'target_id', 'content', 'profile', 'date', 'is_read']
     
     def get_content(self, obj):
-        if int(obj.type) == 2:
+        type = int(obj.type)
+        if type == 2:
             return None
-        elif int(obj.type) == 3:
+        elif type == 3:
             try:
                 return Project.objects.filter(id=obj.target_id)[0].project_name
             except IndexError:
                 return None
-        elif int(obj.type) == 4:
+        elif type == 4 or 9:
             try:
                 return Post.objects.filter(id=obj.target_id)[0].contents
             except IndexError:
                 return None
-        elif int(obj.type) == 5 or int(obj.type) == 7:
+        elif type == 5 or type == 7:
             try:
                 comment_obj = Comment.objects.filter(post_id=obj.target_id).last()
                 return {'content':comment_obj.content, 'post_id':comment_obj.post_id}
             except AttributeError:
                 return None
-        elif int(obj.type) == 6 or int(obj.type) == 8:
+        elif type == 6 or type == 8:
             try:
                 cocomment_obj = Cocomment.objects.filter(comment_id=obj.target_id).select_related('comment').last()
                 return {'content':cocomment_obj.content, 'post_id':cocomment_obj.comment.post_id}
