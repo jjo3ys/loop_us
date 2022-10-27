@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from project_api.models import Project
 from user_api.serializers import RankProfileSerailizer, SchoolRankProfileSerailizer
 
-from .models import PostingRanking
+from .models import HotUser, PostingRanking
 
 from user_api.models import Profile, School
 from tag.models import Post_Tag, Tag
@@ -101,6 +101,7 @@ def posting_ranking(request):
 
     for post in post_obj:
         if group_list[post.project.group] < 10:
+            group_list[post.project.group] += 1
             posting_list.append(PostingRanking(post_id=post.id, group=post.project.group, score=post.like_count))
         
     last = PostingRanking.objects.last()
@@ -144,7 +145,7 @@ def profile_group(request):
         project_obj = Project.objects.filter(user_id=profile.user_id)
         for project in project_obj:
             group_id = project.group
-            if group_id == 10:
+            if group_id == 16:
                 continue
             if group_id in project_group:
                 project_group[group_id] += 1
@@ -174,7 +175,7 @@ def user_ranking(request):
     post = Post.objects.filter(date__range = [now-timedelta(days=30), now])
     for profile in profile_obj:
         post_obj = post.filter(user_id=profile.user_id)
-        score = sum(post_obj.values_list('like_count', flat=True)) + 0.5 * sum(post_obj.values_list('view_count', flat=True)) + 2 * post_obj.count()
+        score = sum(post_obj.values_list('like_count', flat=True)) * 3 + sum(post_obj.values_list('view_count', flat=True)) + post_obj.count() * 5
         score_list[profile.group][profile.user_id] = score
     
     for group in score_list:
@@ -239,3 +240,29 @@ def career_board_ranking(request):
     elif request.GET['type'] == 'group':
         profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:100]
         return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
+    
+@api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated))
+def hot_user(request):
+    if request.method == 'POST':
+        if request.user.id != 5:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        user_like_count = {}
+        now = datetime.now()
+        post_obj = Post.objects.filter(date__range = [now-timedelta(days=7), now])
+        
+        for post in post_obj:
+            if post.user_id in user_like_count:
+                user_like_count[post.user_id] += post.like_count
+            else:
+                user_like_count[post.user_id] = post.like_count
+                
+        last = HotUser.objects.all().last().id
+        user_like_count = sorted(user_like_count.items(), key=lambda x:-x[1])[:100]
+        user_list = []
+        for user in user_like_count:
+            user_list.append(HotUser(user_id = user[0], like_count=user[1]))
+        HotUser.objects.bulk_create(user_list)
+        HotUser.objects.filter(id__lte=last.id).delete()
+
+    
