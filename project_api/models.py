@@ -6,7 +6,7 @@ from django.conf import settings
 class Project(models.Model):
     project_name = models.CharField(max_length=50)
     post_update_date = models.DateTimeField(null=True, default=None)
-    group = models.PositiveSmallIntegerField(default=10)
+    group = models.PositiveSmallIntegerField(default=16)
     thumbnail = models.PositiveBigIntegerField(null=True, default=0)
     is_public = models.BooleanField(default=False)
     tag_company = models.BooleanField(default=False)
