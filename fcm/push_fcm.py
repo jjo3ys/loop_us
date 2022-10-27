@@ -214,8 +214,8 @@ def school_fcm(topic, id, from_id):
                 body='새로운 학교공지가 올라왔습니다.'
             ),
             data={
-                'type':'10',
-                'id':str(9),
+                'type':'9',
+                'id':str(id),
                 'sender_id':str(from_id)
             },
             topic=str(topic),
