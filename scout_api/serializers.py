@@ -11,7 +11,7 @@ class CompanySerializer(serializers.ModelSerializer):
 class CompanyImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyImage
-        fields = ['image']
+        fields = ['image', 'image_info']
         
 class CompanyProfileSerializer(serializers.ModelSerializer):
     company_profile = serializers.SerializerMethodField()
@@ -19,13 +19,10 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company_Inform
-        fields = ['user', 'company_profile', 'company_images', 'group', 'category', 'slogan', 'recommendation']
+        fields = ['user', 'company_profile', 'company_images', 'group', 'category', 'slogan',]
 
     def get_company_profile(self, obj):
         return CompanySerializer(Company.objects.filter(id = obj.company_logo.id)[0]).data
     
     def get_company_images(self, obj):
-        return CompanyImageSerializer(CompanyImage.objects.filter(company_info_id = obj.id), many = True).data
-    
-        
-    
+        return CompanyImageSerializer(CompanyImage.objects.filter(company_info_id = obj.id).first()).data

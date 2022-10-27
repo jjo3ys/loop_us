@@ -56,13 +56,13 @@ class Company_Inform(models.Model):
     category = models.CharField(max_length = 20, null=True)
     homepage = models.CharField(max_length = 30, null=True)
     slogan = models.CharField(max_length = 30, null=True)
-    recommendation = models.CharField(max_length = 30, null=True)
     
     class Meta:
         db_table = "Corp_inform"
 
 class CompanyImage(models.Model):
     company_info = models.ForeignKey(Company_Inform, related_name='company_id', on_delete=models.CASCADE)
+    image_info = models.TextField(null=True)
     image = models.ImageField(null=True, upload_to='company/image/%Y%m%d/')
 
     class Meta:
