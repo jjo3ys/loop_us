@@ -8,9 +8,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 from project_api.models import Project
-from user_api.serializers import RankProfileSerailizer, SchoolRankProfileSerailizer
+from user_api.serializers import RankProfileSerailizer, SchoolRankProfileSerailizer, SimpleProfileSerializer
 
-from .models import PostingRanking
+from .models import HotUser, PostingRanking
 
 from user_api.models import Profile, School
 from tag.models import Post_Tag, Tag
@@ -101,6 +101,7 @@ def posting_ranking(request):
 
     for post in post_obj:
         if group_list[post.project.group] < 10:
+            group_list[post.project.group] += 1
             posting_list.append(PostingRanking(post_id=post.id, group=post.project.group, score=post.like_count))
         
     last = PostingRanking.objects.last()
@@ -144,7 +145,7 @@ def profile_group(request):
         project_obj = Project.objects.filter(user_id=profile.user_id)
         for project in project_obj:
             group_id = project.group
-            if group_id == 10:
+            if group_id == 16:
                 continue
             if group_id in project_group:
                 project_group[group_id] += 1
@@ -174,7 +175,7 @@ def user_ranking(request):
     post = Post.objects.filter(date__range = [now-timedelta(days=30), now])
     for profile in profile_obj:
         post_obj = post.filter(user_id=profile.user_id)
-        score = sum(post_obj.values_list('like_count', flat=True)) + 0.5 * sum(post_obj.values_list('view_count', flat=True)) + 2 * post_obj.count()
+        score = sum(post_obj.values_list('like_count', flat=True)) * 3 + sum(post_obj.values_list('view_count', flat=True)) + post_obj.count() * 5
         score_list[profile.group][profile.user_id] = score
     
     for group in score_list:
@@ -239,3 +240,48 @@ def career_board_ranking(request):
     elif request.GET['type'] == 'group':
         profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:100]
         return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
+    
+@api_view(['GET', 'POST'])
+@permission_classes((IsAuthenticated,))
+def hot_user(request):
+    if request.method == 'POST':
+        if request.user.id != 5:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        user_like_count = {}
+        now = datetime.now()
+        post_obj = Post.objects.filter(date__range = [now-timedelta(days=7), now])
+        for post in post_obj:
+            if post.user_id in user_like_count:
+                user_like_count[post.user_id] += post.like_count
+            else:
+                user_like_count[post.user_id] = post.like_count
+        
+        group_list = Group.objects.all().values_list('id', flat=True)     
+        group_like_count = {i:{} for i in group_list}
+        profile_obj = Profile.objects.filter(user_id__in = list(user_like_count.keys()))
+        for profile in profile_obj:
+            group_like_count[profile.group][profile.user_id] = user_like_count[profile.user_id]
+            
+        last = HotUser.objects.all().last()
+        for group in group_list:
+            try:
+                sorted_user = sorted(group_like_count[group].items(), key=lambda x:-x[1])[:100]
+            except KeyError: continue
+            user_list = []
+            for user in sorted_user:
+                user_list.append(HotUser(user_id=user[0], like_count=user[1], group=group))
+            HotUser.objects.bulk_create(user_list)
+        if last:
+            HotUser.objects.filter(id__lte=last.id).delete()
+        
+        return Response(status=status.HTTP_200_OK)
+    
+    elif request.method == 'GET':
+        Hot_user_obj = HotUser.objects.filter(group=request.GET['group'])
+        user_list = Hot_user_obj.values_list('user_id', flat=True)
+        like_count = Hot_user_obj.values_list('like_count', flat=True)
+        profile_obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list), many=True).data
+        for i, profile in enumerate(profile_obj):
+            profile.update({'like_count':like_count[i]})
+        return Response(profile_obj, status=status.HTTP_200_OK)
+    

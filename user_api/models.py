@@ -29,7 +29,7 @@ class Profile(models.Model):
     profile_image = models.ImageField(null = True, upload_to='profile_image/')
     school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
     department = models.ForeignKey(Department, on_delete=models.DO_NOTHING)
-    group = models.PositiveSmallIntegerField(default=10)
+    group = models.PositiveSmallIntegerField(default=16)
     rank = models.PositiveBigIntegerField(default=0)
     score = models.IntegerField(default=0)
     last_rank = models.PositiveBigIntegerField(default=0)
@@ -50,19 +50,19 @@ class Company_Inform(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     company_name = models.TextField(null = True)
     company_logo = models.ForeignKey(Company, related_name='company_logo', on_delete=models.DO_NOTHING)
-    group = models.PositiveSmallIntegerField(default=10)
+    group = models.PositiveSmallIntegerField(default=16)
     location = models.CharField(max_length = 50, null = True)
     information = models.TextField(null=True)
     category = models.CharField(max_length = 20, null=True)
     homepage = models.CharField(max_length = 30, null=True)
     slogan = models.CharField(max_length = 30, null=True)
-    recommendation = models.CharField(max_length = 30, null=True)
     
     class Meta:
         db_table = "Corp_inform"
 
 class CompanyImage(models.Model):
     company_info = models.ForeignKey(Company_Inform, related_name='company_id', on_delete=models.CASCADE)
+    image_info = models.TextField(null=True)
     image = models.ImageField(null=True, upload_to='company/image/%Y%m%d/')
 
     class Meta:

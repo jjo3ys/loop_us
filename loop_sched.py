@@ -9,13 +9,17 @@ def rank_api():
     except:
         pass
     try:
-        requests.get('http://3.35.253.151:8000/rank/project_group', headers=header)
+        requests.post('http://3.35.253.151:8000/rank/posting_ranking', headers=header)
     except:
         pass
-    try:
-        requests.get('http://3.35.253.151:8000/rank/profile_group', headers=header)
-    except:
-        pass
+    # try:
+    #     requests.get('http://3.35.253.151:8000/rank/project_group', headers=header)
+    # except:
+    #     pass
+    # try:
+    #     requests.get('http://3.35.253.151:8000/rank/profile_group', headers=header)
+    # except:
+    #     pass
     try:
         requests.get('http://3.35.253.151:8000/rank/user_ranking', headers=header)
     except:

@@ -13,7 +13,7 @@ class Tag(models.Model):
     tag = models.CharField(max_length=50, unique=True)
     count = models.IntegerField(default=1)
     monthly_count = models.JSONField(default=dict)
-    group = models.ForeignKey(Group, related_name='tag', default=10, on_delete=models.DO_NOTHING)
+    group = models.ForeignKey(Group, related_name='tag', default=16, on_delete=models.DO_NOTHING)
     
     class Meta:
         db_table = "Tag"
