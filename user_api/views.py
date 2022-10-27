@@ -234,9 +234,11 @@ def signup(request):
         Loopship.objects.bulk_create(loop_list)
     # InterestTag.objects.create(user_id=user.id, tag_list={})
     return Response({'token':token.key,
-                     'school_id':str(profile_obj.school_id),
-                     'department_id':str(profile_obj.department_id),
-                     'user_id':str(user.id)}, status=status.HTTP_200_OK)
+                    'school_id':'school'+str(profile_obj.school_id),
+                    'department_id':'department'+str(profile_obj.department_id),
+                    'is_student':1,
+                    'user_id':str(token.user_id)}, status=status.HTTP_202_ACCEPTED)
+    
 @api_view(['POST'])
 def login(request):
     user = authenticate(
