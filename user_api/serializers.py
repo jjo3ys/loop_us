@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-
 from project_api.models import Project
-from .models import Alarm, Banlist, Company, Company_Inform, Profile, School, Department, UserSNS
+from scout_api.serializers import CompanyImageSerializer
+from .models import Alarm, Banlist, Company, Company_Inform, CompanyImage, Profile, School, Department, UserSNS
 from loop.models import Loopship
 from post_api.models import Post, Cocomment, Comment
 
@@ -171,6 +171,11 @@ class SimpleComapnyProfileSerializer(serializers.ModelSerializer):
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
     company_logo = CompanySerializer()
+    images = serializers.SerializerMethodField()
+
     class Meta:
         model = Company_Inform
-        fields = ['company_logo', 'information', 'location', 'category', 'homepage', 'user_id', 'slogan', 'group']
+        fields = ['company_logo', 'information', 'location', 'category', 'homepage', 'user_id', 'slogan', 'group', 'images']
+    
+    def get_images(self, obj):
+        return CompanyImageSerializer(CompanyImage.objects.filter(company_info = obj), many = True).data

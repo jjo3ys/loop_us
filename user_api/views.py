@@ -29,7 +29,7 @@ from fcm.push_fcm import certify_fcm, report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
-from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company, UserSNS
+from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company, UserSNS, ViewCompany
 from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer
 
 # from search.models import Get_log, InterestTag
@@ -354,20 +354,47 @@ def ask(request):
         message = EmailMessage('학교 등록 문의', '문의 내용: {}'.format(request.data['content']))
     elif type == 'department':
         message = EmailMessage('{} 학과 등록 문의'.format(request.data['school']), '문의 내용: {}'.format(request.data['content']))
+    elif type == 'company_info':
+        message = EmailMessage('{} 기업 소개 수정 이메일'.format(request.data['email']))
     try:
         message.send()
         return Response(status=status.HTTP_200_OK)
     except:
         return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
     
-@api_view(['GET'])
+@api_view(['GET', 'PUT'])
 @permission_classes((IsAuthenticated,))
 def companyProfile(request):
-    try:
-        company_obj = Company_Inform.objects.filter(user_id=request.GET['id'])[0]
-        return Response(CompanyProfileSerializer(company_obj).data, status=status.HTTP_200_OK)
-    except IndexError: return Response(status=status.HTTP_404_NOT_FOUND)
-    
+    if request.method == 'GET':
+        try:
+            user = request.user
+            company_id = request.GET['id']
+
+            # if user.id != company_id:     # 최근 본 프로필 형태형 > 다 같이 회의를 해보고 결정 무엇을 보여줄지
+
+            #     viewd, created = ViewCompany.objects.get_or_create(user = user, company_id = company_id)
+            #     if not created:
+            #         viewd.date = datetime.datetime.now()
+            #         viewd.save()
+
+            company_obj = CompanyProfileSerializer(Company_Inform.objects.filter(user_id=company_id)[0]).data
+
+            follow = Loopship.objects.filter(user_id=user.id, friend_id=company_id).exists()
+            following = Loopship.objects.filter(user_id=company_id, friend_id=user.id).exists()
+
+            if follow and following:
+                company_obj.update({'looped':3})
+            elif follow:
+                company_obj.update({'looped':2})
+            elif following:
+                company_obj.update({'looped':1})
+            else:
+                company_obj.update({'looped':0})
+
+            return Response(company_obj, status=status.HTTP_200_OK)
+
+        except IndexError: return Response(status=status.HTTP_404_NOT_FOUND)
+
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
 def profile(request):
