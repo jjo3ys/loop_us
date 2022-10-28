@@ -1,3 +1,4 @@
+from tag.models import Group
 from user_api.models import Company, Company_Inform, CompanyImage
 from rest_framework import serializers
 
@@ -24,3 +25,13 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
     
     def get_company_images(self, obj):
         return CompanyImageSerializer(CompanyImage.objects.filter(company_info_id = obj.id).first()).data
+
+class GroupSerializers(serializers.ModelSerializer):
+    companies = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Group
+        fields = ['id', 'companies']
+    
+    def get_companies(self, obj):
+        return CompanyProfileSerializer(Company_Inform.objects.filter(group = obj.id)[:3], many = True).data
