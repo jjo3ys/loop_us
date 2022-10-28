@@ -1,6 +1,4 @@
 from user_api.models import Company, Company_Inform, CompanyImage
-from user_api.serializers import CompanySerializer, SimpleProfileSerializer
-from .models import Contact
 from rest_framework import serializers
 
 class CompanySerializer(serializers.ModelSerializer):

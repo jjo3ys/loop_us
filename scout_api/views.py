@@ -34,10 +34,17 @@ def company_group(request):
         companies = CompanyProfileSerializer(company_obj.get_page(request.GET['page']), many=True).data
         for company in companies:
 
-            if Loopship.objects.filter(friend_id = company['user'], user= request.user).exists():
-                company['is_follow'] = True
+            follow = Loopship.objects.filter(user_id=request.user.id, friend_id=company['user']).exists()
+            following = Loopship.objects.filter(user_id=company['user'], friend_id=request.user.id).exists()
+
+            if follow and following:
+                company.update({'looped':3})
+            elif follow:
+                company.update({'looped':2})
+            elif following:
+                company.update({'looped':1})
             else:
-                company['is_follow'] = False
+                company.update({'looped':0})
 
         return Response(companies, status=status.HTTP_200_OK)
     except:
