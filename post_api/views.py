@@ -231,7 +231,7 @@ def comment(request):
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
             if user_id != comment_obj.user_id:
-                cocomment_fcm(request.data['tagged_user'], real_name, comment_obj.id, user_id, comment_obj.post_id)
+                cocomment_fcm(request.data['tagged_user'], real_name, cocomment_obj.id, user_id, comment_obj.post_id)
 
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
