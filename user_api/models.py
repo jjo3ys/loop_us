@@ -68,6 +68,14 @@ class CompanyImage(models.Model):
     class Meta:
         db_table = "Company_Image"
 
+class ViewCompany(models.Model):
+    company_id = models.PositiveBigIntegerField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "View_Company"
+
 class Activation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     corp_num = models.CharField(max_length=10)
