@@ -118,48 +118,48 @@ def cocomment_like_fcm(topic, req_from, id, from_id, post_id):
 
 def comment_fcm(topic, req_from, id, from_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=7, target_id=id, alarm_from_id=from_id)
-    # if valid:
-    message = messaging.Message(
-        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
-        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
-        notification=messaging.Notification(
-            title='루프어스',
-            body='{0}님이 회원님의 포스팅에 댓글을 남겼습니다.'.format(req_from)
-        ),
-        data={
-            'type':'7',
-            'id':str(id),
-            'sender_id':str(from_id)
-        },
-        topic=str(topic),
-        )
-    try:
-        messaging.send(message)
-    except UnregisteredError:
-        pass
+    if valid:
+        message = messaging.Message(
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+            notification=messaging.Notification(
+                title='루프어스',
+                body='{0}님이 회원님의 포스팅에 댓글을 남겼습니다.'.format(req_from)
+            ),
+            data={
+                'type':'7',
+                'id':str(id),
+                'sender_id':str(from_id)
+            },
+            topic=str(topic),
+            )
+        try:
+            messaging.send(message)
+        except UnregisteredError:
+            pass
 
 def cocomment_fcm(topic, req_from, id, from_id, post_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=8, target_id=id, alarm_from_id=from_id)
-    # if valid:
-    message = messaging.Message(
-        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
-        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
-        notification=messaging.Notification(
-            title='루프어스',
-            body='{0}님이 회원님의 댓글에 답글을 남겼습니다.'.format(req_from)
-        ),
-        data={
-            'type':'8',
-            'id':str(id),
-            'post_id':str(post_id),
-            'sender_id':str(from_id)
-        },
-        topic=str(topic),
-        )
-    try:
-        messaging.send(message)
-    except UnregisteredError:
-        pass
+    if valid:
+        message = messaging.Message(
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+            notification=messaging.Notification(
+                title='루프어스',
+                body='{0}님이 회원님의 댓글에 답글을 남겼습니다.'.format(req_from)
+            ),
+            data={
+                'type':'8',
+                'id':str(id),
+                'post_id':str(post_id),
+                'sender_id':str(from_id)
+            },
+            topic=str(topic),
+            )
+        try:
+            messaging.send(message)
+        except UnregisteredError:
+            pass
     
 def chat_fcm(topic, req_from, msg, user_id):
     message = messaging.Message(
