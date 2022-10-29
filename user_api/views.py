@@ -385,7 +385,8 @@ def companyProfile(request):
                 interest_obj = InterestCompany.objects.filter(company=company_id).values_list('user_id', flat=True)[:50]
                 follow = Loopship.objects.filter(user_id=user.id, friend_id=company_id).exists()
                 following = Loopship.objects.filter(user_id=company_id, friend_id=user.id).exists()
-
+                
+                company_obj.update({"is_user":0})
                 if follow and following:
                     company_obj.update({'looped':3})
                 elif follow:
