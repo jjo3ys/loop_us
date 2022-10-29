@@ -249,6 +249,7 @@ def login(request):
     password=request.data['password'],
     )
     if user is not None and user.is_active:
+        token_obj = Token.objects.filter(user_id=user.id)[0]
         user.last_login = timezone.now()
         user.save()
         if Company_Inform.objects.filter(user_id=user.id).exists(): 
@@ -256,8 +257,7 @@ def login(request):
                             'is_student':0,
                             'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
 
-        else:
-            token_obj = Token.objects.filter(user_id=user.id)[0]
+        else:    
             profile_obj = Profile.objects.filter(user_id=user.id)[0]
             
             return Response({'token':token_obj.key,
