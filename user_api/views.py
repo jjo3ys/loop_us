@@ -29,8 +29,8 @@ from fcm.push_fcm import certify_fcm, report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
-from .models import Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company, UserSNS, ViewCompany
-from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer
+from .models import InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company, UserSNS, ViewCompany
+from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer
 
 # from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
@@ -38,6 +38,7 @@ from project_api.models import Project, ProjectUser
 from project_api.serializers import OnlyProjectUserSerializer, ProjectUserSerializer
 from post_api.models import BookMark, Like, PostImage, Post
 from loop.models import Loopship
+from post_api.models import Comment
 # from fcm.models import FcmToken
 from chat.models import Room, Msg
 
@@ -378,18 +379,23 @@ def companyProfile(request):
             #         viewd.save()
 
             company_obj = CompanyProfileSerializer(Company_Inform.objects.filter(user_id=company_id)[0]).data
-
-            follow = Loopship.objects.filter(user_id=user.id, friend_id=company_id).exists()
-            following = Loopship.objects.filter(user_id=company_id, friend_id=user.id).exists()
-
-            if follow and following:
-                company_obj.update({'looped':3})
-            elif follow:
-                company_obj.update({'looped':2})
-            elif following:
-                company_obj.update({'looped':1})
+            if user.id == company_id:
+                company_obj.update({"is_user":1})
             else:
-                company_obj.update({'looped':0})
+                interest_obj = InterestCompany.objects.filter(company=company_id).values_list('user_id', flat=True)[:50]
+                follow = Loopship.objects.filter(user_id=user.id, friend_id=company_id).exists()
+                following = Loopship.objects.filter(user_id=company_id, friend_id=user.id).exists()
+
+                if follow and following:
+                    company_obj.update({'looped':3})
+                elif follow:
+                    company_obj.update({'looped':2})
+                elif following:
+                    company_obj.update({'looped':1})
+                else:
+                    company_obj.update({'looped':0})
+                std_profile = SimpleProfileSerializer(Profile.objects.filter(user_id__in=interest_obj), many=True).data
+                company_obj.update({'interest':std_profile})
 
             return Response(company_obj, status=status.HTTP_200_OK)
 

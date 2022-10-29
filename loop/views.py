@@ -1,5 +1,5 @@
 from .models import Loopship
-from user_api.models import Profile, Company_Inform
+from user_api.models import InterestCompany, Profile, Company_Inform
 from user_api.serializers import SimpleComapnyProfileSerializer, SimpleProfileSerializer
 from fcm.push_fcm import loop_fcm
 # from fcm.models import FcmToken
@@ -51,7 +51,11 @@ def loop(request, idx):
         loop_fcm(idx, profile.real_name, user.id)
 
         Loopship.objects.get_or_create(user_id=user.id, friend_id=idx)
-    
+        if Company_Inform.objects.filter(user_id=idx).exists():
+                obj, created = InterestCompany.objects.get_or_create(company=idx, user_id=user.id)
+                if not created:
+                    obj.delete()
+                    InterestCompany.objects.create(company=idx, user_id=user.id)
         return Response("ok", status=status.HTTP_200_OK)
     except:
         return Response(status=status.HTTP_404_NOT_FOUND)
