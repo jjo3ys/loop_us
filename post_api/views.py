@@ -7,7 +7,7 @@ from project_api.models import ProjectUser
 from tag.models import Post_Tag, Tag
 # from fcm.models import FcmToken
 from fcm.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, department_fcm, like_fcm, report_alarm, comment_like_fcm, school_fcm
-from user_api.models import Banlist, Profile, Report
+from user_api.models import Banlist, InterestCompany, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
 from rest_framework.permissions import IsAuthenticated
@@ -210,12 +210,18 @@ def comment(request):
                                                  content=request.data['content'])
             try:
                 post_obj = Post.objects.filter(id=request.GET['id'])[0]
-                # token = FcmToken.objects.filter(user_id=post_obj.user_id)[0]
-                real_name = Profile.objects.filter(user_id=user_id)[0].real_name
+                # token = FcmToken.objects.filter(user_id=post_obj.user_id)[0]    
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
             if user_id != post_obj.user_id:
+                real_name = Profile.objects.filter(user_id=user_id)[0].real_name
                 comment_fcm(post_obj.user_id, real_name, post_obj.id, user_id)
+            
+            if Company_Inform.objects.filter(user_id=post_obj.user_id).exists():
+                obj, created = InterestCompany.objects.get_or_create(company=post_obj.user_id, user_id=user_id)
+                if not created:
+                    obj.delete()
+                    InterestCompany.objects.create(company=post_obj.user_id, user_id=user_id)
 
             return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
 
@@ -304,6 +310,11 @@ def like(request):
                     like_fcm(like_obj.post.user_id, real_name, idx, user_id)
                 except:
                     pass
+            if Company_Inform.objects.filter(user_id=like_obj.post.user_id).exists():
+                obj, created = InterestCompany.objects.get_or_create(company=like_obj.post.user_id, user_id=user_id)  
+                if not created:
+                    obj.delete()
+                    InterestCompany.objects.create(company=like_obj.post.user_id, user_id=user_id)
 
             return Response('liked posting', status=status.HTTP_202_ACCEPTED)
     if type == 'corp':

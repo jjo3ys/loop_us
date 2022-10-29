@@ -76,6 +76,13 @@ class ViewCompany(models.Model):
     class Meta:
         db_table = "View_Company"
 
+class InterestCompany(models.Model):
+    company = models.PositiveBigIntegerField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "Interset_Company"
+
 class Activation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     corp_num = models.CharField(max_length=10)
