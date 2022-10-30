@@ -21,7 +21,7 @@ class DepSerializer(serializers.ModelSerializer):
 class SNSSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSNS
-        fields = ['type', 'url']
+        fields = ['id', 'type', 'url']
 
 class ProfileSerializer(serializers.ModelSerializer):
     user_sns = SNSSerializer(many=True)

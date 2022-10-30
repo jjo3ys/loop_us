@@ -432,7 +432,7 @@ def view_list(request):
 
 
 
-@api_view(['PUT', 'GET'])
+@api_view(['PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
 def profile(request):
     profile_obj = Profile.objects.select_related('department', 'school').filter(user_id=request.user.id)[0]
@@ -470,7 +470,18 @@ def profile(request):
             profile_obj.save()
             
         return Response(ProfileSerializer(profile_obj).data, status=status.HTTP_200_OK)
-    
+        
+    elif request.method == 'DELETE':
+        type = request.GET['type']
+        if type == 'sns':
+            UserSNS.objects.filter(id=request.GET['id']).delete()
+        elif type == 'image':
+            profile_obj = Profile.objects.filter(user_id=request.GET['id'])[0]
+            profile_obj.profile_image.delete(save=False)
+            profile_obj.save()
+        
+        return Response(status=status.HTTP_200_OK)
+
     elif request.method == 'GET':
         idx = request.GET['id']
 
