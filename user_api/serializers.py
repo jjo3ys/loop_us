@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 
-from attr import field
 from project_api.models import Project
 from scout_api.serializers import CompanyImageSerializer
 from .models import Alarm, Banlist, Company, Company_Inform, CompanyImage, Profile, School, Department, UserSNS, ViewCompany
@@ -182,7 +181,7 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
     def get_images(self, obj):
         return CompanyImageSerializer(CompanyImage.objects.filter(company_info = obj), many = True).data
 
-# class ViewProfileSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ViewCompany
-#         fields = ['user', 'shown']
+class ViewProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewCompany
+        fields = ['user', 'shown']
