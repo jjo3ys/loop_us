@@ -14,7 +14,7 @@ urlpatterns = [
     # path('activate/<token>',views.activate),
     path('activate',views.activate),
     path('corp_profile', views.companyProfile),
-    path('view_list', views.view_list),
+    # path('view_list', views.view_list),
     path('profile', views.profile),
     path('posting', views.posting),
     path('project', views.project),

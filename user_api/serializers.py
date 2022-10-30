@@ -182,7 +182,7 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
     def get_images(self, obj):
         return CompanyImageSerializer(CompanyImage.objects.filter(company_info = obj), many = True).data
 
-class ViewProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ViewCompany
-        fields = ['user', 'shown']
+# class ViewProfileSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ViewCompany
+#         fields = ['user', 'shown']
