@@ -30,7 +30,7 @@ from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
 from .models import InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company, UserSNS, ViewCompany
-from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer
+from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer
 
 # from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
@@ -371,12 +371,11 @@ def companyProfile(request):
             user = request.user
             company_id = request.GET['id']
 
-            # if user.id != company_id:     # 최근 본 프로필 형태형 > 다 같이 회의를 해보고 결정 무엇을 보여줄지
-
-            #     viewd, created = ViewCompany.objects.get_or_create(user = user, company_id = company_id)
-            #     if not created:
-            #         viewd.date = datetime.datetime.now()
-            #         viewd.save()
+            if not Company_Inform.objects.filter(user = user).exists():
+                viewd, created = ViewCompany.objects.get_or_create(user = user, shown_id = company_id)
+                if not created:
+                    viewd.date = datetime.datetime.now()
+                    viewd.save()
 
             company_obj = CompanyProfileSerializer(Company_Inform.objects.filter(user_id=company_id)[0]).data
             if user.id == company_id:
@@ -400,7 +399,41 @@ def companyProfile(request):
 
             return Response(company_obj, status=status.HTTP_200_OK)
 
-        except IndexError: return Response(status=status.HTTP_404_NOT_FOUND)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def view_list(request):
+    if request.GET['type'] == 'all':
+
+        company_show = list(ViewCompany.objects.filter(user = request.user).order_by('date').values_list('shown_id', flat=True)[:3])
+        show_crop_info = list(ViewCompany.objects.filter(shown_id = request.user).order_by('date').values_list('user_id', flat=True)[:3])
+
+        view = SimpleProfileSerializer(Profile.objects.filter(user_id__in=company_show), many=True).data
+        viewd = SimpleProfileSerializer(Profile.objects.filter(user_id__in=show_crop_info), many=True).data
+
+        return Response({"show":view, "shown":viewd}, status=status.HTTP_200_OK)
+
+    else:
+        profile_list = []
+
+        if request.GET['type'] == 'shown':  # 최근 루프어스가 조회한 프로필 
+            view_obj = Paginator(ViewCompany.objects.filter(user = request.user).order_by('date'), 15)
+
+        elif request.GET['type'] == 'user': # 최근 루프어스를 조회한 프로필
+            view_obj = Paginator(ViewCompany.objects.filter(shown_id = request.user).order_by('date'), 15)
+
+        views = ViewProfileSerializer(view_obj.get_page(request.GET['page']), many = True).data   
+        profile_list = list(a[request.GET['type']] for a in views)
+
+        if view_obj.num_pages < int(request.GET['page']):
+                return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=profile_list), many=True).data, status=status.HTTP_200_OK)
+
+
+
 
 @api_view(['PUT', 'GET'])
 @permission_classes((IsAuthenticated,))
@@ -443,6 +476,13 @@ def profile(request):
     
     elif request.method == 'GET':
         idx = request.GET['id']
+
+        if Company_Inform.objects.filter(user = request.user.id).exists():
+            view_obj, created = ViewCompany.objects.get_or_create(user = request.user, shown_id = idx)          
+            if not created:
+                view_obj.date = datetime.datetime.now()
+                view_obj.save()
+
         try:
             profile_obj = Profile.objects.select_related('department', 'school').filter(user_id=idx)[0]
             profile = ProfileSerializer(profile_obj).data

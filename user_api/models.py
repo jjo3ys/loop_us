@@ -60,6 +60,14 @@ class Company_Inform(models.Model):
     class Meta:
         db_table = "Corp_inform"
 
+class ViewCompany(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name= 'show_profile', on_delete=models.CASCADE)
+    shown = models.ForeignKey(settings.AUTH_USER_MODEL, related_name= 'profile_shown', on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "View_Company"
+
 class CompanyImage(models.Model):
     company_info = models.ForeignKey(Company_Inform, related_name='company_id', on_delete=models.CASCADE)
     image_info = models.TextField(null=True)
@@ -67,14 +75,6 @@ class CompanyImage(models.Model):
 
     class Meta:
         db_table = "Company_Image"
-
-class ViewCompany(models.Model):
-    company_id = models.PositiveBigIntegerField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    date = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = "View_Company"
 
 class InterestCompany(models.Model):
     company = models.PositiveBigIntegerField()
