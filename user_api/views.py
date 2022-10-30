@@ -402,35 +402,35 @@ def companyProfile(request):
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-# @api_view(['GET'])
-# @permission_classes((IsAuthenticated,))
-# def view_list(request):
-#     if request.GET['type'] == 'all':
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def view_list(request):
+    if request.GET['type'] == 'all':
 
-#         company_show = list(ViewCompany.objects.filter(user = request.user).order_by('date').values_list('shown_id', flat=True)[:3])
-#         show_crop_info = list(ViewCompany.objects.filter(shown_id = request.user).order_by('date').values_list('user_id', flat=True)[:3])
+        company_show = list(ViewCompany.objects.filter(user = request.user).order_by('date').values_list('shown_id', flat=True)[:3])
+        show_crop_info = list(ViewCompany.objects.filter(shown_id = request.user).order_by('date').values_list('user_id', flat=True)[:3])
 
-#         view = SimpleProfileSerializer(Profile.objects.filter(user_id__in=company_show), many=True).data
-#         viewd = SimpleProfileSerializer(Profile.objects.filter(user_id__in=show_crop_info), many=True).data
+        view = SimpleProfileSerializer(Profile.objects.filter(user_id__in=company_show), many=True).data
+        viewd = SimpleProfileSerializer(Profile.objects.filter(user_id__in=show_crop_info), many=True).data
 
-#         return Response({"show":view, "shown":viewd}, status=status.HTTP_200_OK)
+        return Response({"show":view, "shown":viewd}, status=status.HTTP_200_OK)
 
-#     else:
-#         profile_list = []
+    else:
+        profile_list = []
 
-#         if request.GET['type'] == 'shown':  # 최근 루프어스가 조회한 프로필 
-#             view_obj = Paginator(ViewCompany.objects.filter(user = request.user).order_by('date'), 15)
+        if request.GET['type'] == 'shown':  # 최근 루프어스가 조회한 프로필 
+            view_obj = Paginator(ViewCompany.objects.filter(user = request.user).order_by('date'), 15)
 
-#         elif request.GET['type'] == 'user': # 최근 루프어스를 조회한 프로필
-#             view_obj = Paginator(ViewCompany.objects.filter(shown_id = request.user).order_by('date'), 15)
+        elif request.GET['type'] == 'user': # 최근 루프어스를 조회한 프로필
+            view_obj = Paginator(ViewCompany.objects.filter(shown_id = request.user).order_by('date'), 15)
 
-#         views = ViewProfileSerializer(view_obj.get_page(request.GET['page']), many = True).data   
-#         profile_list = list(a[request.GET['type']] for a in views)
+        views = ViewProfileSerializer(view_obj.get_page(request.GET['page']), many = True).data   
+        profile_list = list(a[request.GET['type']] for a in views)
 
-#         if view_obj.num_pages < int(request.GET['page']):
-#                 return Response(status=status.HTTP_204_NO_CONTENT)
+        if view_obj.num_pages < int(request.GET['page']):
+                return Response(status=status.HTTP_204_NO_CONTENT)
         
-#         return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=profile_list), many=True).data, status=status.HTTP_200_OK)
+        return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=profile_list), many=True).data, status=status.HTTP_200_OK)
 
 
 
