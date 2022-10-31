@@ -389,7 +389,7 @@ def companyProfile(request):
                 company_obj.update({"follow_count":follow_obj.count(), "following_count":following_obj.count()})
 
             else:
-                if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(company_id)).exists() or Banlist.objects.filter(user_id=idx, banlist__contains=request.user.id).exists():
+                if Banlist.objects.filter(user_id=user.id, banlist__contains=int(company_id)).exists() or Banlist.objects.filter(user_id=company_id, banlist__contains=user.id).exists():
                     return Response(status=status.HTTP_204_NO_CONTENT)
                 interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:50]
                 
