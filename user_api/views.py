@@ -389,6 +389,8 @@ def companyProfile(request):
                 company_obj.update({"follow_count":follow_obj.count(), "following_count":following_obj.count()})
 
             else:
+                if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(company_id)).exists() or Banlist.objects.filter(user_id=idx, banlist__contains=request.user.id).exists():
+                    return Response(status=status.HTTP_204_NO_CONTENT)
                 interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:50]
                 
                 company_obj.update({"is_user":0})
@@ -514,17 +516,14 @@ def profile(request):
                 profile.update({'new_message':False})
             
         else:
+            if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(idx)).exists() or Banlist.objects.filter(user_id=idx, banlist__contains=request.user.id).exists():
+                return Response(status=status.HTTP_204_NO_CONTENT)
             # Get_log.objects.create(user_id=request.user.id, target_id=idx, type=1)
             profile_obj.view_count += 1
             profile_obj.save()
 
             profile.update({'is_user':0})
-            if Banlist.objects.filter(user_id=request.user.id, banlist__contains=int(idx)).exists():
-                profile.update({'is_banned':1})
-            elif Banlist.objects.filter(user_id=idx, banlist__contains=request.user.id).exists():
-                profile.update({'is_banned':2})
-            else:
-                profile.update({'is_banned':0})
+            
 
         follow = Loopship.objects.filter(user_id=request.user.id, friend_id=idx).exists()
         following = Loopship.objects.filter(user_id=idx, friend_id=request.user.id).exists()
