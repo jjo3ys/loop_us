@@ -1,5 +1,3 @@
-from search.models import Get_log
-
 from .serializers import ProjectUserSerializer
 from .models import Project, ProjectUser
 from user_api.models import Company, Profile
@@ -40,9 +38,8 @@ def project(request):
                 tag_fcm(looper, profile_obj.real_name, user_id, project_obj.project_name, project_obj.id)
         
         elif type =='company':
-            company_obj = Company.objects.filter(id=request.GET['company_id'])[0]
             project_obj.tag_company = True
-            project_obj.thumbnail = company_obj.logo.url
+            project_obj.thumbnail = request.GET['company_id']
             project_obj.save()
                     
         return Response(status=status.HTTP_200_OK)

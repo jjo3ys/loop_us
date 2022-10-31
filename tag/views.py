@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date
 
 from django.core.paginator import Paginator
 from post_api.models import BookMark, Like

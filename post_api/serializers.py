@@ -1,12 +1,12 @@
 from user_api.models import Profile
-from user_api.serializers import SimpleProfileSerializer
+from user_api.serializers import simpleprofile 
 from tag.models import Post_Tag
-from .models import CommentLike, Post, PostImage, Like, Cocomment, Comment, PostLink
-from project_api.models import Project, ProjectUser
+from .models import Post, PostImage, Like, Cocomment, Comment, PostLink
+from project_api.models import Project
 from crawling_api.models import News, Brunch, Youtube
 
 from rest_framework import serializers
-
+       
 class NewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = News
@@ -65,10 +65,8 @@ class CocommentSerializer(serializers.ModelSerializer):
         fields = ['profile', 'id', 'content', 'date', 'like_count', 'tagged_user']
     
     def get_profile(self, obj):
-        try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
-        except:
-            return None
+        profile = simpleprofile(obj)
+        return profile
     
     def get_tagged_user(self, obj):
         if obj.tagged == None:
@@ -86,10 +84,8 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ['profile', 'id', 'content', 'date', 'cocomments', 'like_count']
     
     def get_profile(self, obj):
-        try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
-        except:
-            return None
+        profile = simpleprofile(obj)
+        return profile
 
     def get_cocomments(self, obj):
         try:
@@ -109,11 +105,8 @@ class MainCommentSerializer(serializers.ModelSerializer):
         fields = ['profile', 'content', 'like_count']
     
     def get_profile(self, obj):
-        try:
-            profile_obj = Profile.objects.filter(user_id=obj.user_id)[0]
-            return {'real_name':profile_obj.real_name, 'user_id':obj.user_id}
-        except:
-            return None
+        profile = simpleprofile(obj)
+        return profile
 
 class MainloadSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
@@ -128,10 +121,8 @@ class MainloadSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments', 'contents_link']
 
     def get_profile(self, obj):
-        try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
-        except:
-            return None
+        profile = simpleprofile(obj)
+        return profile
     
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data
@@ -156,10 +147,8 @@ class PostingSerializer(serializers.ModelSerializer):
         fields = ['id', 'user_id', 'profile', 'project', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link']
         
     def get_profile(self, obj):
-        try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
-        except:
-            return None
+        profile = simpleprofile(obj)
+        return profile
     
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data

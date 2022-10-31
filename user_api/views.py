@@ -1,22 +1,22 @@
-import os
-from django.shortcuts import redirect
+# import os
+# from django.shortcuts import redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from django.core.paginator import Paginator
 # for email check
-from django.conf.global_settings import SECRET_KEY
+# from django.conf.global_settings import SECRET_KEY
 
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.utils import timezone
-from django.utils.http import (
-    urlsafe_base64_encode,
-    urlsafe_base64_decode,
-)
-from django.utils.encoding import (
-    force_bytes,
-    force_text
-)
+# from django.utils.http import (
+#     urlsafe_base64_encode,
+#     urlsafe_base64_decode,
+# )
+# from django.utils.encoding import (
+#     force_bytes,
+#     force_text
+# )
 from django.db.utils import IntegrityError
 
 from rest_framework.response import Response
@@ -25,31 +25,30 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from fcm.push_fcm import certify_fcm, report_alarm
+from fcm.push_fcm import report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
-from .models import InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, Company, UserSNS, ViewCompany
+from .models import InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, UserSNS, ViewCompany
 from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer
 
 # from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
 from project_api.models import Project, ProjectUser
-from project_api.serializers import OnlyProjectUserSerializer, ProjectUserSerializer
-from post_api.models import BookMark, Like, PostImage, Post
+from project_api.serializers import OnlyProjectUserSerializer
+from post_api.models import BookMark, Like, Post
 from loop.models import Loopship
-from post_api.models import Comment
 # from fcm.models import FcmToken
 from chat.models import Room, Msg
 
 from elasticsearch import Elasticsearch
 
-import jwt
+# import jwt
 import json
 import redis
 import datetime
 import requests
-import platform
+# import platform
 import random
 
 headers = {
@@ -133,8 +132,9 @@ def activate(request):
 #     client.set(email.replace('@', ''), 0, datetime.timedelta(seconds=180))
 
 @api_view(['POST'])
-def create_user(request):
-    if User.objects.filter(username=request.data['email']).exists():
+def certification(request):
+    for_create = int(request.GET['is_create'])
+    if for_create and User.objects.filter(username=request.data['email']).exists():       
         return Response(status=status.HTTP_400_BAD_REQUEST)
     send_msg(request.data['email'])
     return Response(status=status.HTTP_200_OK)
@@ -323,14 +323,12 @@ def resign(request):
     # except:
     #     pass
     project_obj = ProjectUser.objects.filter(user_id=user.id)
-    if project_obj.select_related('project').filter(is_manager=1, project__is_public=1).exists():
-        return Response(status=status.HTTP_403_FORBIDDEN)
+    project_list = list(project_obj.values_list('project_id', flat=True))
         
-    for post in Post.objects.filter(user_id=user.id).prefetch_related('contents_image'):
+    for post in Post.objects.filter(project_id__in=project_list).prefetch_related('contents_image'):
         for image in post.contents_image.objects.filter(post_id=post.id):
             image.image.delete(save=False)
             
-    project_list = list(project_obj.values_list('project_id', flat=True))
     Project.objects.filter(id__in=project_list).delete()
 
     tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
@@ -370,18 +368,24 @@ def companyProfile(request):
         try:
             user = request.user
             company_id = request.GET['id']
+            crop_obj = Company_Inform.objects.filter(user_id=company_id)[0]
+    
+            is_student = int(request.GET['is_student'])
+            if is_student:
+                crop_obj.view_count += 1
+                crop_obj.save()
 
-            if not Company_Inform.objects.filter(user = user).exists():
                 viewd, created = ViewCompany.objects.get_or_create(user = user, shown_id = company_id)
                 if not created:
                     viewd.date = datetime.datetime.now()
                     viewd.save()
 
-            company_obj = CompanyProfileSerializer(Company_Inform.objects.filter(user_id=company_id)[0]).data
+            company_obj = CompanyProfileSerializer(crop_obj).data
+
             if user.id == company_id:
                 company_obj.update({"is_user":1})
             else:
-                interest_obj = list(InterestCompany.objects.filter(company=company_id).values_list('user_id', flat=True))[:50]
+                interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:50]
                 follow = Loopship.objects.filter(user_id=user.id, friend_id=company_id).exists()
                 following = Loopship.objects.filter(user_id=company_id, friend_id=user.id).exists()
                 
@@ -452,10 +456,7 @@ def profile(request):
                 UserSNS.objects.create(profile_id=profile_obj.id, type=type_id, url=request.data['url'])
 
         elif type == 'profile':
-            email = request.data['email']
-            if User.objects.filter(username=email).exists():
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
-            
+            email = request.data['email']           
             user_obj = User.objects.filter(user_id=request.user.id)[0]
             user_obj.username = email
             user_obj.email = email
@@ -484,8 +485,9 @@ def profile(request):
 
     elif request.method == 'GET':
         idx = request.GET['id']
-
-        if Company_Inform.objects.filter(user = request.user.id).exists():
+        is_student = int(request.GET['is_student'])
+        
+        if not is_student:
             view_obj, created = ViewCompany.objects.get_or_create(user = request.user, shown_id = idx)          
             if not created:
                 view_obj.date = datetime.datetime.now()

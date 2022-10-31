@@ -8,6 +8,14 @@ from post_api.models import Post, Cocomment, Comment
 
 from rest_framework import serializers
 
+def simpleprofile(obj):
+    try:
+        return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
+    except:
+        try:
+            return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=obj.user_id).select_related('company_logo')[0]).data
+        except: return None
+
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
@@ -150,7 +158,8 @@ class AlarmSerializer(serializers.ModelSerializer):
             except AttributeError:
                 return None
     def get_profile(self, obj):
-        return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id).select_related('school', 'department')[0]).data
+        profile = simpleprofile(obj)
+        return profile
 
 class SearchCompanySerializer(serializers.ModelSerializer):
 
@@ -171,14 +180,17 @@ class SimpleComapnyProfileSerializer(serializers.ModelSerializer):
         fields = ['company_logo', 'user_id', 'category', 'location']
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
-    company_logo = CompanySerializer()
-    images = serializers.SerializerMethodField()
+    company_logo = serializers.SerializerMethodField()
+    company_images = serializers.SerializerMethodField()
 
     class Meta:
         model = Company_Inform
-        fields = ['company_logo', 'information', 'location', 'category', 'homepage', 'user_id', 'slogan', 'group', 'images']
+        fields = ['company_logo','company_name', 'information', 'location', 'category', 'homepage', 'user_id', 'slogan', 'group', 'company_images']
     
-    def get_images(self, obj):
+    def get_company_logo(self, obj):
+        return Company.objects.filter(id = obj.company_logo.id)[0].logo.url
+    
+    def get_company_images(self, obj):
         return CompanyImageSerializer(CompanyImage.objects.filter(company_info = obj), many = True).data
 
 class ViewProfileSerializer(serializers.ModelSerializer):

@@ -56,6 +56,7 @@ class Company_Inform(models.Model):
     category = models.CharField(max_length = 20, null=True)
     homepage = models.CharField(max_length = 30, null=True)
     slogan = models.CharField(max_length = 30, null=True)
+    view_count = models.IntegerField(default=0)
     
     class Meta:
         db_table = "Corp_inform"
