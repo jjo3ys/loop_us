@@ -5,11 +5,11 @@ header = {'Authorization':'Token 9c661c35fb3d6795f39f7c660a414f17a7fd77ec'}
 
 def rank_api():
     try:
-        requests.get('http://3.35.253.151:8000/rank/posting_ranking', headers=header)
+        requests.post('http://3.35.253.151:8000/rank/posting_ranking', headers=header)
     except:
         pass
     try:
-        requests.post('http://3.35.253.151:8000/rank/posting_ranking', headers=header)
+        requests.post('http://3.35.253.151:8000/rank/hot_user', headers=header)
     except:
         pass
     try:
