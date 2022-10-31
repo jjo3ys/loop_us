@@ -8,6 +8,14 @@ from post_api.models import Post, Cocomment, Comment
 
 from rest_framework import serializers
 
+def simpleprofile(obj):
+    try:
+        return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
+    except:
+        try:
+            return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=obj.user_id).select_related('company_logo')[0]).data
+        except: return None
+
 class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
@@ -150,7 +158,8 @@ class AlarmSerializer(serializers.ModelSerializer):
             except AttributeError:
                 return None
     def get_profile(self, obj):
-        return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.alarm_from_id).select_related('school', 'department')[0]).data
+        profile = simpleprofile(obj)
+        return profile
 
 class SearchCompanySerializer(serializers.ModelSerializer):
 
