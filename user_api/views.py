@@ -134,7 +134,8 @@ def activate(request):
 
 @api_view(['POST'])
 def create_user(request):
-    if User.objects.filter(username=request.data['email']).exists():
+    for_create = int(request.GET['is_create'])
+    if for_create and User.objects.filter(username=request.data['email']).exists():       
         return Response(status=status.HTTP_400_BAD_REQUEST)
     send_msg(request.data['email'])
     return Response(status=status.HTTP_200_OK)
@@ -453,10 +454,7 @@ def profile(request):
                 UserSNS.objects.create(profile_id=profile_obj.id, type=type_id, url=request.data['url'])
 
         elif type == 'profile':
-            email = request.data['email']
-            if User.objects.filter(username=email).exists():
-                return Response(status=status.HTTP_401_UNAUTHORIZED)
-            
+            email = request.data['email']           
             user_obj = User.objects.filter(user_id=request.user.id)[0]
             user_obj.username = email
             user_obj.email = email
