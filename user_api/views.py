@@ -447,13 +447,13 @@ def profile(request):
             type_id = request.data['type']
             sns_obj = UserSNS.objects.filter(profile_id=profile_obj.id, type=type_id)
             if sns_obj.exists():
-                sns_obj[0].url = request.data['url']
+                sns_obj.update(url=request.data['url'])
             else:
                 UserSNS.objects.create(profile_id=profile_obj.id, type=type_id, url=request.data['url'])
 
         elif type == 'profile':
             email = request.data['email']
-            if User.objects.filter(user_id=email).exists():
+            if User.objects.filter(username=email).exists():
                 return Response(status=status.HTTP_401_UNAUTHORIZED)
             
             user_obj = User.objects.filter(user_id=request.user.id)[0]
