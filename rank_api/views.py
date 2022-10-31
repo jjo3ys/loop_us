@@ -324,7 +324,7 @@ def hot_user(request):
         last = HotUser.objects.all().last()
         for group in group_list:
             try:
-                sorted_user = sorted(group_like_count[group].items(), key=lambda x:-x[1])[:10]
+                sorted_user = sorted(group_like_count[group].items(), key=lambda x:-x[1])[:20]
             except KeyError: continue
             user_list = []
             for user in sorted_user:
