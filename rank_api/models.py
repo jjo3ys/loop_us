@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 
 from post_api.models import Post
-from user_api.models import Profile
 
 # Create your models here.
 class PostingRanking(models.Model):

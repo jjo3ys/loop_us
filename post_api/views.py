@@ -126,7 +126,6 @@ def posting(request):
         post_obj.save()
         post_obj = PostingSerializer(post_obj).data
 
-
         if user_id == post_obj['user_id']:
             post_obj.update({"is_user":1})
         else:
