@@ -80,25 +80,25 @@ def crawling(request):
                         break
                         
             except:pass
-            try:
-                driver.get('https://brunch.co.kr/search')
-                driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
-                time.sleep(2)
-                count = 0
-                results = driver.find_elements_by_class_name('link_post')
-                for result in results:
-                    link = result.get_attribute('href')
-                    driver.get(link)
-                    time.sleep(2)
-                    writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
-                    image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
-                    driver.back()
-                    count +=1
-                    Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
+            # try:
+            #     driver.get('https://brunch.co.kr/search')
+            #     driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
+            #     time.sleep(2)
+            #     count = 0
+            #     results = driver.find_elements_by_class_name('link_post')
+            #     for result in results:
+            #         link = result.get_attribute('href')
+            #         driver.get(link)
+            #         time.sleep(2)
+            #         writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
+            #         image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
+            #         driver.back()
+            #         count +=1
+            #         Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
                     
-                    if count == 3:
-                        break   
-            except:pass
+            #         if count == 3:
+            #             break   
+            # except:pass
             try:
                 results = youtube.search().list(q=tag.tag, order='relevance', part='snippet', maxResults=10).execute()
                 count = 0
@@ -119,7 +119,7 @@ def crawling(request):
     try:
         News.objects.filter(id__lte=last_news.id).delete()
         Youtube.objects.filter(id__lte=last_yt.id).delete()
-        Brunch.objects.filter(id__lte=last_br.id).delete()
+        # Brunch.objects.filter(id__lte=last_br.id).delete()
     except AttributeError:
         pass
     driver.close()
