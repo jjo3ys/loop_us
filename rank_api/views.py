@@ -279,7 +279,26 @@ def career_board_ranking(request):
     
     elif request.GET['type'] == 'group':
         profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:50]
-        return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
+        profile_obj = RankProfileSerailizer(profile_obj, many=True).data
+        user_follow = dict(Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', 'user_id'))
+        user_following = dict(Loopship.objects.filter(friend_id=request.user.id).values_list('user_id', 'friend_id'))
+        for profile in profile_obj:
+            ranker = profile['user_id']
+            if ranker == request.user.id:
+                profile.update({"is_user":1})
+            else:
+                follow = ranker in user_follow
+                following = ranker in user_following
+                if follow and following:
+                    profile.update({"looped":3})
+                elif follow:
+                    profile.update({"looped":2})
+                elif following:
+                    profile.update({"looped":1})
+                else:
+                    profile.update({"looped":0})
+                profile.update({"is_user":0})
+        return Response(profile_obj, status=status.HTTP_200_OK)
     
 @api_view(['GET', 'POST'])
 @permission_classes((IsAuthenticated,))
