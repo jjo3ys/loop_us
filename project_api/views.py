@@ -42,7 +42,7 @@ def project(request):
             project_obj.thumbnail = request.GET['company_id']
             project_obj.save()
                     
-        return Response(status=status.HTTP_200_OK)
+        return Response(ProjectUserSerializer(project_obj).data, status=status.HTTP_200_OK)
 
     elif request.method == 'GET':
         try:
