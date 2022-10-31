@@ -19,6 +19,6 @@ class LogSerializer(serializers.ModelSerializer):
         elif obj.type == 2:
             return TagSerializer(Tag.objects.filter(id=int(obj.query))[0]).data
         elif obj.type == 3:
-            return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=int(obj.query))[0]).data
+            return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=int(obj.query)).select_related('company_logo')[0]).data
         else:
             return obj.query
