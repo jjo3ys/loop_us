@@ -15,7 +15,6 @@ class PostingRanking(models.Model):
 class HotUser(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     group = models.PositiveSmallIntegerField(default=16)
-    like_count = models.PositiveIntegerField(default=0)
     
     class Meta:
         db_table = 'HotUser'

@@ -1,4 +1,5 @@
 from datetime import datetime, date, timedelta
+from django.core.paginator import Paginator
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -324,11 +325,11 @@ def hot_user(request):
         last = HotUser.objects.all().last()
         for group in group_list:
             try:
-                sorted_user = sorted(group_like_count[group].items(), key=lambda x:-x[1])[:100]
+                sorted_user = sorted(group_like_count[group].items(), key=lambda x:-x[1])[:50]
             except KeyError: continue
             user_list = []
             for user in sorted_user:
-                user_list.append(HotUser(user_id=user[0], like_count=user[1], group=group))
+                user_list.append(HotUser(user_id=user[0], group=group))
             HotUser.objects.bulk_create(user_list)
         if last:
             HotUser.objects.filter(id__lte=last.id).delete()
@@ -338,9 +339,17 @@ def hot_user(request):
     elif request.method == 'GET':
         Hot_user_obj = HotUser.objects.filter(group=request.GET['group'])
         user_list = Hot_user_obj.values_list('user_id', flat=True)
-        like_count = Hot_user_obj.values_list('like_count', flat=True)
-        profile_obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list), many=True).data
-        for i, profile in enumerate(profile_obj):
-            profile.update({'like_count':like_count[i]})
+        
+        now = datetime.now()
+        post_obj = Post.objects.filter(date__range = [now-timedelta(days=30), now], user_id__in=user_list)
+        profile_obj = Profile.objects.filter(user_id__in=user_list).select_related('school', 'department')
+        profile_obj = Paginator(profile_obj, 20)
+        if profile_obj.num_pages < int(request.GET['page']):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        profile_obj = SimpleProfileSerializer(profile_obj.get_page(request.GET['page']), many=True).data
+        for profile in profile_obj:
+            post_count = post_obj.filter(user_id=profile['user_id']).count()
+            profile.update({'post_count':post_count})
         return Response(profile_obj, status=status.HTTP_200_OK)
     
