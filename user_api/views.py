@@ -353,8 +353,10 @@ def ask(request):
         message = EmailMessage('학교 등록 문의', '문의 내용: {}'.format(request.data['content']))
     elif type == 'department':
         message = EmailMessage('{} 학과 등록 문의'.format(request.data['school']), '문의 내용: {}'.format(request.data['content']))
+    elif type == 'company_signup':
+        message = EmailMessage('{} 기업 회원가입 문의'.format(request.data['company_name']), '받을 이메일:'.format(request.data['email']))
     elif type == 'company_info':
-        message = EmailMessage('{} 기업 소개 수정 이메일'.format(request.data['email']))
+        message = EmailMessage('{} 기업 소개 수정 문의'.format(request.data['company_name']), '받을 이메일:'.format(request.data['email']))
     try:
         message.send()
         return Response(status=status.HTTP_200_OK)
