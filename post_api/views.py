@@ -600,17 +600,14 @@ def loop_load(request):
             
         if profile.group == 16:
             news_obj = News.objects.all()
-            issue_obj = list(news_obj.values_list('urls', flat=True))
             br_obj = Brunch.objects.all()
             yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
         else:
             news_obj = News.objects.filter(group_id=profile.group)
-            issue_obj = list(news_obj.values_list('urls', flat=True))
             br_obj = Brunch.objects.filter(group_id=profile.group)
             yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
             
         return Response({'posting':post_obj, 
-                         'issue':issue_obj, 
                          'brunch':BrSerializer(br_obj, many=True).data, 
                          'news': NewsSerializer(news_obj, many=True).data,
                          'youtube':yt_obj, 
