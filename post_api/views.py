@@ -517,8 +517,8 @@ def main_load(request):
         else:
             p.update({'is_marked':0})
     
-    profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
+        profile = Profile.objects.filter(user_id=user_id)[0]
         project_obj = ProjectUser.objects.filter(user_id=user_id).select_related('project').order_by('post_count').first()
         if project_obj:
             project_obj = SimpleProjectserializer(project_obj.project).data
@@ -560,11 +560,16 @@ def loop_load(request):
     user_id = request.user.id
     loop_list = Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True)
     now = datetime.datetime.now()
+    try:
+        ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
+    except:
+        ban_list = []
 
+    ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
     if request.GET['last'] == '0':
-        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).select_related('project').order_by('-id')[:20]
+        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
     else:
-        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).select_related('project').order_by('-id')[:20]
+        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
 
     post_list = list(post_obj.values_list('id', flat=True))
     like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
@@ -586,25 +591,32 @@ def loop_load(request):
             p.update({'is_marked':1})
         else:
             p.update({'is_marked':0})
-
+    
     profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
         project_obj = ProjectUser.objects.filter(user_id=user_id).select_related('project').order_by('post_count').first()
-        project_obj = SimpleProjectserializer(project_obj.project).data
+        if project_obj:
+            project_obj = SimpleProjectserializer(project_obj.project).data
+            
         if profile.group == 16:
-            news_obj = list(News.objects.all().values_list('urls', flat=True))
-            br_obj = list(Brunch.objects.all().values_list('urls', flat=True))
+            news_obj = News.objects.all()
+            issue_obj = list(news_obj.values_list('urls', flat=True))
+            br_obj = Brunch.objects.all()
             yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
         else:
-            news_obj = list(News.objects.filter(group_id=profile.group).values_list('urls', flat=True))
-            br_obj = list(Brunch.objects.filter(group_id=profile.group).values_list('urls', flat=True))
-            yt_obj = list(Youtube.objects.filter(group_id=profile.group).values_list('urls', flat=True))
-        obj = news_obj+br_obj+yt_obj
-        random.shuffle(obj)
-        return Response({'posting':post_obj, 'issue':obj, 'project':project_obj}, status=status.HTTP_200_OK)
-
+            news_obj = News.objects.filter(group_id=profile.group)
+            issue_obj = list(news_obj.values_list('urls', flat=True))
+            br_obj = Brunch.objects.filter(group_id=profile.group)
+            yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
+            
+        return Response({'posting':post_obj, 
+                         'issue':issue_obj, 
+                         'brunch':BrSerializer(br_obj, many=True).data, 
+                         'news': NewsSerializer(news_obj, many=True).data,
+                         'youtube':yt_obj, 
+                         'project':project_obj}, status=status.HTTP_200_OK)
     else: return Response({'posting':post_obj})
-
+    
 @api_view(['POST'])
 @permission_classes((IsAuthenticated,))
 def report(request):
