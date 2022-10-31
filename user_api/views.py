@@ -380,7 +380,7 @@ def companyProfile(request):
             if user.id == company_id:
                 company_obj.update({"is_user":1})
             else:
-                interest_obj = list(InterestCompany.objects.filter(company=company_id).values_list('user_id', flat=True))[:50]
+                interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:50]
                 follow = Loopship.objects.filter(user_id=user.id, friend_id=company_id).exists()
                 following = Loopship.objects.filter(user_id=company_id, friend_id=user.id).exists()
                 
