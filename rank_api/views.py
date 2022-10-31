@@ -1,5 +1,4 @@
 from datetime import datetime, date, timedelta
-from django.core.paginator import Paginator
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -325,7 +324,7 @@ def hot_user(request):
         last = HotUser.objects.all().last()
         for group in group_list:
             try:
-                sorted_user = sorted(group_like_count[group].items(), key=lambda x:-x[1])[:50]
+                sorted_user = sorted(group_like_count[group].items(), key=lambda x:-x[1])[:20]
             except KeyError: continue
             user_list = []
             for user in sorted_user:
@@ -342,12 +341,8 @@ def hot_user(request):
         
         now = datetime.now()
         post_obj = Post.objects.filter(date__range = [now-timedelta(days=30), now], user_id__in=user_list)
-        profile_obj = Profile.objects.filter(user_id__in=user_list).select_related('school', 'department')
-        profile_obj = Paginator(profile_obj, 20)
-        if profile_obj.num_pages < int(request.GET['page']):
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        
-        profile_obj = SimpleProfileSerializer(profile_obj.get_page(request.GET['page']), many=True).data
+        profile_obj = Profile.objects.filter(user_id__in=user_list).select_related('school', 'department')        
+        profile_obj = SimpleProfileSerializer(profile_obj, many=True).data
         for profile in profile_obj:
             post_count = post_obj.filter(user_id=profile['user_id']).count()
             profile.update({'post_count':post_count})
