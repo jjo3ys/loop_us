@@ -3,7 +3,7 @@ from . import views
 # from . import school
 
 urlpatterns = [
-    path('check_email', views.create_user),
+    path('check_email', views.certification),
     path('check_corp_num', views.check_corp_num),
     # path('check_token', views.check_token),
     path('signup', views.signup),

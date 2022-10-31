@@ -133,7 +133,7 @@ def activate(request):
 #     client.set(email.replace('@', ''), 0, datetime.timedelta(seconds=180))
 
 @api_view(['POST'])
-def create_user(request):
+def certification(request):
     for_create = int(request.GET['is_create'])
     if for_create and User.objects.filter(username=request.data['email']).exists():       
         return Response(status=status.HTTP_400_BAD_REQUEST)
