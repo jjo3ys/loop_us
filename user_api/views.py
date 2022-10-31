@@ -354,9 +354,11 @@ def ask(request):
     elif type == 'department':
         message = EmailMessage('{} 학과 등록 문의'.format(request.data['school']), '문의 내용: {}'.format(request.data['content']))
     elif type == 'company_signup':
-        message = EmailMessage('{} 기업 회원가입 문의'.format(request.data['company_name']), '받을 이메일:'.format(request.data['email']))
+        message = EmailMessage('{} 기업 회원가입 문의'.format(request.data['company_name']), '첨부된 파일의 양식에 따라 작성하여 다시 보내주시면 검토하여 등록 후 이 메일을 통해 알려드리겠습니다.', to=[request.data['email']])
+        message.attach_file('signup_form.csv')
     elif type == 'company_info':
-        message = EmailMessage('{} 기업 소개 수정 문의'.format(request.data['company_name']), '받을 이메일:'.format(request.data['email']))
+        message = EmailMessage('{} 기업 소개 수정 문의'.format(request.data['company_name']), '첨부된 파일의 양식에 따라 작성하여 다시 보내주시면 검토하여 등록 후 이 메일을 통해 알려드리겠습니다.', to=[request.data['email']])
+        message.attach_file('edit_information_form.csv')
     try:
         message.send()
         return Response(status=status.HTTP_200_OK)
