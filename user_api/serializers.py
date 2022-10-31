@@ -118,10 +118,10 @@ class BanlistSerializer(serializers.ModelSerializer):
     
     def get_banlist(self, obj):
         ban_list = []
-        for ban in obj.banlist:
-            ban_list.append(SimpleProfileSerializer(Profile.objects.filter(user_id=ban).select_related('school', 'department')[0]).data)
-        
-        return ban_list
+
+        banned_stu = SimpleProfileSerializer(Profile.objects.filter(user_id__in = obj.banlist).select_related('school', 'department'), many=True).data
+        banned_com = SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in = obj.banlist).select_related('company_logo'), many=True).data
+        return banned_stu + banned_com
 
 class AlarmSerializer(serializers.ModelSerializer):
     content = serializers.SerializerMethodField()
