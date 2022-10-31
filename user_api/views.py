@@ -474,6 +474,13 @@ def profile(request):
             profile_obj.department_id = request.data['department']
             profile_obj.admission = request.data['admission']
             profile_obj.rank, profile_obj.last_rank, profile_obj.school_rank, profile_obj.school_last_rank = 0
+            es = Elasticsearch()
+            es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id,}}}})
+            body = {
+                "user_id":request.user.id,
+                "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
+            }
+            es.index(index='profile', doc_type='_doc', body=body)
             
             user_obj.save()
             profile_obj.save()
