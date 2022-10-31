@@ -185,7 +185,7 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company_Inform
-        fields = ['company_logo','company_name', 'information', 'location', 'category', 'homepage', 'user_id', 'slogan', 'group', 'company_images']
+        fields = ['company_logo','company_name', 'information', 'location', 'category', 'homepage', 'user_id', 'slogan', 'group', 'company_images', 'type']
     
     def get_company_logo(self, obj):
         return Company.objects.filter(id = obj.company_logo.id)[0].logo.url
