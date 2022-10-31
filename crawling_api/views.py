@@ -51,6 +51,7 @@ def test(request):
                 writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
                 image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
                 driver.back()
+                time.sleep(2)
                 count +=1
                 Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
                 
