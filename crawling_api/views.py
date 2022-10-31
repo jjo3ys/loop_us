@@ -119,7 +119,7 @@ def crawling(request):
     try:
         News.objects.filter(id__lte=last_news.id).delete()
         Youtube.objects.filter(id__lte=last_yt.id).delete()
-        # Brunch.objects.filter(id__lte=last_br.id).delete()
+        Brunch.objects.filter(id__lte=last_br.id).delete()
     except AttributeError:
         pass
     driver.close()
