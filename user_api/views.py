@@ -365,9 +365,9 @@ def ask(request):
 @permission_classes((IsAuthenticated,))
 def companyProfile(request):
     if request.method == 'GET':
-        try:
+        # try:
             user = request.user
-            company_id = request.GET['id']
+            company_id = int(request.GET['id'])
             crop_obj = Company_Inform.objects.filter(user_id=company_id)[0]
     
             is_student = int(request.GET['is_student'])
@@ -381,20 +381,22 @@ def companyProfile(request):
                     viewd.save()
 
             company_obj = CompanyProfileSerializer(crop_obj).data
+            follow_obj = Loopship.objects.filter(user_id=user.id, friend_id=company_id)
+            following_obj = Loopship.objects.filter(user_id=company_id, friend_id=user.id)
 
             if user.id == company_id:
                 company_obj.update({"is_user":1})
+                company_obj.update({"follow_count":follow_obj.count(), "following_count":following_obj.count()})
+
             else:
                 interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:50]
-                follow = Loopship.objects.filter(user_id=user.id, friend_id=company_id).exists()
-                following = Loopship.objects.filter(user_id=company_id, friend_id=user.id).exists()
                 
                 company_obj.update({"is_user":0})
-                if follow and following:
+                if follow_obj.exists() and following_obj.exists():
                     company_obj.update({'looped':3})
-                elif follow:
+                elif follow_obj.exists():
                     company_obj.update({'looped':2})
-                elif following:
+                elif following_obj.exists():
                     company_obj.update({'looped':1})
                 else:
                     company_obj.update({'looped':0})
@@ -403,8 +405,8 @@ def companyProfile(request):
 
             return Response(company_obj, status=status.HTTP_200_OK)
 
-        except:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        # except:
+        #     return Response(status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated,))
@@ -428,13 +430,13 @@ def view_list(request):
         elif request.GET['type'] == 'user': # 최근 루프어스를 조회한 프로필
             view_obj = Paginator(ViewCompany.objects.filter(shown_id = request.user).order_by('-date'), 15)
 
+        if view_obj.num_pages < int(request.GET['page']):
+                return Response(status=status.HTTP_204_NO_CONTENT)
+
         views = ViewProfileSerializer(view_obj.get_page(request.GET['page']), many = True).data   
         profile_list = list(a[request.GET['type']] for a in views)
         
         return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=profile_list), many=True).data, status=status.HTTP_200_OK)
-
-
-
 
 @api_view(['PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))

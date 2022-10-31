@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from fcm.push_fcm import rank_fcm
+from loop.models import Loopship
 
 from project_api.models import Project
 from user_api.serializers import RankProfileSerailizer, SchoolRankProfileSerailizer, SimpleProfileSerializer
@@ -175,14 +176,13 @@ def user_ranking(request):
     for profile in profile_obj:
         post_obj = post.filter(user_id=profile.user_id)
         score = sum(post_obj.values_list('like_count', flat=True)) * 3 + sum(post_obj.values_list('view_count', flat=True)) + post_obj.count() * 5
-        score_list[profile.group][profile.user_id] = score
-    
+        score_list[profile.group][profile] = score
     for group in score_list:
         sorted_list = sorted(score_list[group].items(), key=lambda x:-x[1])
         score = 0
         acc = 0
         for i, p in enumerate(sorted_list):
-            profile = profile_obj.filter(user_id=p[0])[0]
+            profile = p[0]
             profile.score = p[1]
             profile.last_rank = profile.rank
 
@@ -192,11 +192,12 @@ def user_ranking(request):
             else:
                 profile.rank = i+1
                 acc = 0
+                score = p[1]
+            
     Profile.objects.bulk_update(profile_obj, ['rank', 'score', 'last_rank'])
-
-    school_obj = School.objects.all()
+    school_obj = profile_obj.values('school_id').distinct()
     for school in school_obj:
-        school_proifle = profile_obj.filter(school_id=school.id)
+        school_proifle = profile_obj.filter(school_id=school['school_id'])
         for group in group_list:
             group_school_profile_obj = school_proifle.filter(group=group).order_by('-score')
             score = 0
@@ -209,8 +210,9 @@ def user_ranking(request):
                 else:
                     profile.school_rank = i+1
                     acc = 0
-        Profile.objects.bulk_update(school_proifle, ['school_rank', 'school_last_rank'])
-        rank_fcm(school.id)
+                    score = profile.score
+            Profile.objects.bulk_update(group_school_profile_obj, ['school_rank', 'school_last_rank'])
+        rank_fcm(school['school_id'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -228,17 +230,55 @@ def career_board_ranking(request):
         obj = Profile.objects.filter(group=group_id)
         
         return_dict['group_ranking'] = RankProfileSerailizer(obj.exclude(rank=0).order_by('rank')[:3], many=True).data
-        return_dict['school_ranking'] = SchoolRankProfileSerailizer(obj.filter(school_id=profile.school_id).exclude(school_rank=0).order_by('school_rank')[:3], many=True).data
+        user_follow = dict(Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', 'user_id'))
+        user_following = dict(Loopship.objects.filter(friend_id=request.user.id).values_list('user_id', 'friend_id'))
+        for group_ranker in return_dict['group_ranking']:
+            ranker = group_ranker['user_id']
+            if ranker == request.user.id:
+                group_ranker.update({"is_user":1})
+            else:
+                follow = ranker in user_follow
+                following = ranker in user_following
+                if follow and following:
+                    group_ranker.update({"looped":3})
+                elif follow:
+                    group_ranker.update({"looped":2})
+                elif following:
+                    group_ranker.update({"looped":1})
+                else:
+                    group_ranker.update({"looped":0})
+                group_ranker.update({"is_user":0})
+        # return_dict['school_ranking'] = SchoolRankProfileSerailizer(obj.filter(school_id=profile.school_id).exclude(school_rank=0).order_by('school_rank')[:3], many=True).data
         return_dict['tag'] = TagSerializer(Tag.objects.filter(group_id=group_id).order_by('-count')[:5], many=True).data
         return Response(return_dict, status=status.HTTP_200_OK)
     
     elif request.GET['type'] == 'school':
         profile = Profile.objects.filter(user_id=request.user.id)[0]
-        profile_obj = Profile.objects.filter(school_id=profile.school_id, group=group_id).exclude(rank=0).order_by('school_rank')[:100]
-        return Response(SchoolRankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
+        profile_obj = Profile.objects.filter(school_id=profile.school_id, group=group_id).exclude(rank=0).order_by('school_rank')[:50]
+        profile_obj = SchoolRankProfileSerailizer(profile_obj, many=True).data
+        user_follow = dict(Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', 'user_id'))
+        user_following = dict(Loopship.objects.filter(friend_id=request.user.id).values_list('user_id', 'friend_id'))
+        for profile in profile_obj:
+            ranker = profile['user_id']
+            if ranker == request.user.id:
+                profile.update({"is_user":1})
+            else:
+                follow = ranker in user_follow
+                following = ranker in user_following
+                if follow and following:
+                    profile.update({"looped":3})
+                elif follow:
+                    profile.update({"looped":2})
+                elif following:
+                    profile.update({"looped":1})
+                else:
+                    profile.update({"looped":0})
+                profile.update({"is_user":0})
+                
+        return Response(profile_obj, status=status.HTTP_200_OK)
     
     elif request.GET['type'] == 'group':
-        profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:100]
+        profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:50]
         return Response(RankProfileSerailizer(profile_obj, many=True).data, status=status.HTTP_200_OK)
     
 @api_view(['GET', 'POST'])

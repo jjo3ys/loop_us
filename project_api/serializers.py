@@ -32,9 +32,9 @@ class ProjectSerializer(serializers.ModelSerializer):
             img_obj = Company.objects.filter(id=obj.thumbnail)
             company_profile = Company_Inform.objects.filter(company_logo_id=obj.thumbnail)
             if img_obj and company_profile:
-                return {'logo':img_obj[0].logo.url, 'id':company_profile[0].user_id, 'name':company_profile[0].company_name}
+                return {'company_logo':img_obj[0].logo.url, 'user_id':company_profile[0].user_id, 'company_name':company_profile[0].company_name}
             elif img_obj:
-                return {'logo':img_obj[0].logo.url, 'id':None, 'name':img_obj[0].company_name}
+                return {'company_logo':img_obj[0].logo.url, 'user_id':None, 'company_name':img_obj[0].company_name}
         else:
             img_obj = PostImage.objects.filter(id=obj.thumbnail)
             if img_obj:
