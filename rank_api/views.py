@@ -308,7 +308,7 @@ def hot_user(request):
             return Response(status=status.HTTP_403_FORBIDDEN)
         user_like_count = {}
         now = datetime.now()
-        post_obj = Post.objects.filter(date__range = [now-timedelta(days=30), now])
+        post_obj = Post.objects.filter(date__range = [now-timedelta(days=7), now])
         for post in post_obj:
             if post.user_id in user_like_count:
                 user_like_count[post.user_id] += post.like_count
