@@ -368,15 +368,20 @@ def companyProfile(request):
         try:
             user = request.user
             company_id = request.GET['id']
-
+            crop_obj = Company_Inform.objects.filter(user_id=company_id)[0]
+    
             is_student = int(request.GET['is_student'])
             if is_student:
+                crop_obj.view_count += 1
+                crop_obj.save()
+
                 viewd, created = ViewCompany.objects.get_or_create(user = user, shown_id = company_id)
                 if not created:
                     viewd.date = datetime.datetime.now()
                     viewd.save()
 
-            company_obj = CompanyProfileSerializer(Company_Inform.objects.filter(user_id=company_id)[0]).data
+            company_obj = CompanyProfileSerializer(crop_obj).data
+
             if user.id == company_id:
                 company_obj.update({"is_user":1})
             else:

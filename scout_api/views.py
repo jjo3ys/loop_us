@@ -16,9 +16,13 @@ from user_api.models import Company_Inform, Profile
 def recommendation_company(request):
     try:
         if int(request.GET['type']) == 0:
-            return Response(CompanyProfileSerializer(Company_Inform.objects.filter(group = Profile.objects.filter(user = request.user)[0].group)[:5], many = True).data, status=status.HTTP_200_OK)
+            stud_group = Profile.objects.filter(user = request.user)[0].group
+            if stud_group == 16:
+                return Response(CompanyProfileSerializer(Company_Inform.objects.all().order_by('-view_count')[:5], many = True).data, status=status.HTTP_200_OK)
+
+            return Response(CompanyProfileSerializer(Company_Inform.objects.filter(group = stud_group).order_by('-view_count')[:5], many = True).data, status=status.HTTP_200_OK)
         elif int(request.GET['type']) == 1:
-            return Response(CompanyProfileSerializer(Company_Inform.objects.filter(group = Company_Inform.objects.filter(user = request.user)[0].group)[:5], many = True).data, status=status.HTTP_200_OK)
+            return Response(CompanyProfileSerializer(Company_Inform.objects.filter(group = Company_Inform.objects.filter(user = request.user)[0].group).order_by('-view_count')[:5], many = True).data, status=status.HTTP_200_OK)
             
     except:
         return Response(status=status.HTTP_204_NO_CONTENT)
