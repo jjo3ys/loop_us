@@ -43,17 +43,17 @@ def test(request):
             driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
             time.sleep(2)
             count = 0
-            results = driver.find_elements_by_class_name('link_post')
-            for result in results:
-                link = result.get_attribute('href')
-                driver.get(link)
+            results = len(driver.find_elements_by_class_name('link_post'))
+            for i in range(results):
+                article = driver.find_elements_by_class_name('link_post')[i]
+                article.click()
                 time.sleep(2)
                 writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
                 image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
                 driver.back()
                 time.sleep(2)
                 count +=1
-                Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
+                # Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
                 
                 if count == 3:
                     break   
