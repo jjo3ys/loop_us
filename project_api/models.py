@@ -1,4 +1,3 @@
-from user_api.models import Company
 from django.db import models
 from django.conf import settings
 

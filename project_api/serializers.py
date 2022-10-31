@@ -1,8 +1,8 @@
 from .models import Project, ProjectUser
 from rest_framework import serializers
 from post_api.models import Post, PostImage, Comment
-from user_api.models import Company, Profile
-from user_api.serializers import SimpleProfileSerializer
+from user_api.models import Company, Company_Inform, Profile
+from user_api.serializers import SimpleProfileSerializer, simpleprofile
 from post_api.serializers import CommentSerializer, PostTagSerializer, PostingImageSerializer, PostingLinkeSerializer
 
 class PostingSerializer(serializers.ModelSerializer):
@@ -30,11 +30,13 @@ class ProjectSerializer(serializers.ModelSerializer):
         if obj.thumbnail == 0: return None
         elif obj.tag_company:
             img_obj = Company.objects.filter(id=obj.thumbnail)
-            if img_obj:
-                return img_obj[0].logo.url
+            company_profile = Company_Inform.objects.filter(company_logo_id=obj.thumbnail)
+            if img_obj and company_profile:
+                return {'logo':img_obj[0].logo.url, 'id':company_profile[0].id, 'name':company_profile[0].company_name}
+            elif img_obj:
+                return {'logo':img_obj[0].logo.url, 'id':None, 'name':img_obj[0].company_name}
         else:
             img_obj = PostImage.objects.filter(id=obj.thumbnail)
-            
             if img_obj:
                 return img_obj[0].image.url
         return None
@@ -125,7 +127,5 @@ class MemberSerializer(serializers.ModelSerializer):
         fields = ['profile', 'is_manager']
         
     def get_profile(self, obj):
-        try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id).select_related('school', 'department')[0]).data
-        except:
-            return None
+        profile = simpleprofile(obj)
+        return profile
