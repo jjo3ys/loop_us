@@ -228,7 +228,7 @@ def signup(request):
         corp.delete()
         return Response({'token':token.key,
                         'is_student':0,
-                        'user_id':str(token.user_id)}, status=status.HTTP_202_ACCEPTED)
+                        'user_id':str(token.user_id)}, status=status.HTTP_201_CREATED)
     else:
         loop_list = []
         dep_loop = Profile.objects.filter(department_id=request.data['department']).exclude(user_id=user.id)
@@ -241,7 +241,7 @@ def signup(request):
                         'school_id':'school'+str(profile_obj.school_id),
                         'department_id':'department'+str(profile_obj.department_id),
                         'is_student':1,
-                        'user_id':str(token.user_id)}, status=status.HTTP_202_ACCEPTED)
+                        'user_id':str(token.user_id)}, status=status.HTTP_201_CREATED)
     
 @api_view(['POST'])
 def login(request):
