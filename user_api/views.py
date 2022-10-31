@@ -371,7 +371,8 @@ def companyProfile(request):
             user = request.user
             company_id = request.GET['id']
 
-            if not Company_Inform.objects.filter(user = user).exists():
+            is_student = int(request.GET['is_student'])
+            if is_student:
                 viewd, created = ViewCompany.objects.get_or_create(user = user, shown_id = company_id)
                 if not created:
                     viewd.date = datetime.datetime.now()
@@ -484,8 +485,9 @@ def profile(request):
 
     elif request.method == 'GET':
         idx = request.GET['id']
-
-        if Company_Inform.objects.filter(user = request.user.id).exists():
+        is_student = int(request.GET['is_student'])
+        
+        if not is_student:
             view_obj, created = ViewCompany.objects.get_or_create(user = request.user, shown_id = idx)          
             if not created:
                 view_obj.date = datetime.datetime.now()

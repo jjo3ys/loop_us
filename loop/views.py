@@ -51,7 +51,8 @@ def loop(request, idx):
         loop_fcm(idx, profile.real_name, user.id)
 
         Loopship.objects.get_or_create(user_id=user.id, friend_id=idx)
-        if Company_Inform.objects.filter(user_id=idx).exists():
+        is_student = int(request.GET['is_student'])
+        if is_student and Company_Inform.objects.filter(user_id=idx).exists():
                 obj, created = InterestCompany.objects.get_or_create(company=idx, user_id=user.id)
                 if not created:
                     obj.delete()

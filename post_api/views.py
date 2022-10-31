@@ -210,18 +210,16 @@ def comment(request):
                                                  content=request.data['content'])
             try:
                 post_obj = Post.objects.filter(id=request.GET['id'])[0]
-                # token = FcmToken.objects.filter(user_id=post_obj.user_id)[0]    
-            except:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+            except: return Response(status=status.HTTP_404_NOT_FOUND)
             if user_id != post_obj.user_id:
                 real_name = Profile.objects.filter(user_id=user_id)[0].real_name
                 comment_fcm(post_obj.user_id, real_name, post_obj.id, user_id)
-            
-            if Company_Inform.objects.filter(user_id=post_obj.user_id).exists():
-                obj, created = InterestCompany.objects.get_or_create(company=post_obj.user_id, user_id=user_id)
-                if not created:
-                    obj.delete()
-                    InterestCompany.objects.create(company=post_obj.user_id, user_id=user_id)
+                is_student = int(request.GET['is_student'])
+                if is_student and Company_Inform.objects.filter(user_id=post_obj.user_id).exists():
+                    obj, created = InterestCompany.objects.get_or_create(company=post_obj.user_id, user_id=user_id)
+                    if not created:
+                        obj.delete()
+                        InterestCompany.objects.create(company=post_obj.user_id, user_id=user_id)
 
             return Response(CommentSerializer(comment_obj).data,status=status.HTTP_201_CREATED)
 
@@ -232,10 +230,8 @@ def comment(request):
                                                      tagged_id=request.data['tagged_user'])
             try:
                 comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
-                # token = FcmToken.objects.filter(user_id=comment_obj.user_id)[0]
                 real_name = Profile.objects.filter(user_id=user_id)[0].real_name
-            except:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+            except: return Response(status=status.HTTP_404_NOT_FOUND)
             if user_id != comment_obj.user_id:
                 cocomment_fcm(request.data['tagged_user'], real_name, cocomment_obj.id, user_id, comment_obj.post_id)
 
@@ -289,10 +285,15 @@ def like(request):
     type = request.GET['type']
     idx = request.GET['id']
     if type =='post':
-        try:
-            like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=user_id)
-        except:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        is_student = int(request.GET['is_student'])
+        if is_student:
+            try:
+                like_obj, created = Like.objects.get_or_create(post_id=idx, user_id=user_id)
+            except: return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            try:
+                like_obj, created = CorpLike.objects.get_or_create(post_id=idx, user_id=user_id)
+            except:  return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not created:
             like_obj.post.like_count -= 1
@@ -305,38 +306,16 @@ def like(request):
             like_obj.post.save()
             if like_obj.post.user_id != user_id:
                 try:
-                    # token = FcmToken.objects.filter(user_id=like_obj.post.user_id)[0]
                     real_name = Profile.objects.filter(user_id=user_id)[0].real_name
                     like_fcm(like_obj.post.user_id, real_name, idx, user_id)
-                except:
-                    pass
-            if Company_Inform.objects.filter(user_id=like_obj.post.user_id).exists():
-                obj, created = InterestCompany.objects.get_or_create(company=like_obj.post.user_id, user_id=user_id)  
-                if not created:
-                    obj.delete()
-                    InterestCompany.objects.create(company=like_obj.post.user_id, user_id=user_id)
+                except: pass
+                if is_student and Company_Inform.objects.filter(user_id=like_obj.post.user_id).exists():
+                    obj, created = InterestCompany.objects.get_or_create(company=like_obj.post.user_id, user_id=user_id)  
+                    if not created:
+                        obj.delete()
+                        InterestCompany.objects.create(company=like_obj.post.user_id, user_id=user_id)
 
             return Response('liked posting', status=status.HTTP_202_ACCEPTED)
-    if type == 'corp':
-        try:
-            like_obj, created = CorpLike.objects.get_or_create(post_id=idx, user_id=user_id)
-        except:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if not created:
-            like_obj.post.like_count -= 1
-            like_obj.post.save()
-            like_obj.delete()
-            return Response('unliked posting', status=status.HTTP_202_ACCEPTED)
-        
-        else:
-            like_obj.post.like_count += 1
-            like_obj.post.save()
-            if like_obj.post.user_id != user_id:
-                try:
-                    real_name = Company_Inform.objects.filter(user_id=user_id)[0].company_name
-                    like_fcm(like_obj.post.user_id, real_name, idx, user_id)
-                except:
-                    pass
                 
     elif type =='comment':
         try:
