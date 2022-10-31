@@ -1,5 +1,5 @@
 from firebase_admin import messaging
-from firebase_admin._messaging_utils import UnregisteredError
+from firebase_admin._messaging_utils import UnregisteredError, QuotaExceededError
 # from fcm.models import FcmToken
 from user_api.models import Alarm
     
@@ -23,7 +23,7 @@ def loop_fcm(topic, req_from, id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
 
 def tag_fcm(topic, req_from, from_id, project, id):
@@ -45,7 +45,7 @@ def tag_fcm(topic, req_from, from_id, project, id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
 
 def like_fcm(topic, req_from, id, from_id):
@@ -67,7 +67,7 @@ def like_fcm(topic, req_from, id, from_id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
 
 def comment_like_fcm(topic, req_from, id, from_id, post_id):
@@ -90,7 +90,7 @@ def comment_like_fcm(topic, req_from, id, from_id, post_id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
 
 def cocomment_like_fcm(topic, req_from, id, from_id, post_id):
@@ -113,7 +113,7 @@ def cocomment_like_fcm(topic, req_from, id, from_id, post_id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
 
 def comment_fcm(topic, req_from, id, from_id):
@@ -135,7 +135,7 @@ def comment_fcm(topic, req_from, id, from_id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
 
 def cocomment_fcm(topic, req_from, id, from_id, post_id):
@@ -158,7 +158,7 @@ def cocomment_fcm(topic, req_from, id, from_id, post_id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
     
 def chat_fcm(topic, req_from, msg, user_id):
@@ -178,7 +178,7 @@ def chat_fcm(topic, req_from, msg, user_id):
         )
     try:
         messaging.send(message)
-    except UnregisteredError:
+    except QuotaExceededError:
         pass
     
 def department_fcm(topic, id, from_id):
@@ -200,7 +200,7 @@ def department_fcm(topic, id, from_id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
 
 def school_fcm(topic, id, from_id):
@@ -222,7 +222,7 @@ def school_fcm(topic, id, from_id):
             )
         try:
             messaging.send(message)
-        except UnregisteredError:
+        except QuotaExceededError:
             pass
 
 def rank_fcm(topic):
@@ -240,7 +240,7 @@ def rank_fcm(topic):
         )
     try:
         messaging.send(message)
-    except UnregisteredError:
+    except QuotaExceededError:
         pass
         
 def certify_fcm(topic):
@@ -254,7 +254,7 @@ def certify_fcm(topic):
         )
     try:
         messaging.send(message)
-    except UnregisteredError:
+    except QuotaExceededError:
         pass
 
 def notification_fcm(token_list):
@@ -298,7 +298,7 @@ def report_alarm(count, type, id, reason):
         )
     try:
         messaging.send(message)
-    except UnregisteredError:
+    except QuotaExceededError:
         pass
 
 # def topic_alarm(topic, title):
