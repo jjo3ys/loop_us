@@ -38,4 +38,4 @@ class GroupSerializers(serializers.ModelSerializer):
         fields = ['id', 'companies']
     
     def get_companies(self, obj):
-        return CompanyProfileSerializer(Company_Inform.objects.filter(group = obj.id)[:5], many = True).data
+        return CompanyProfileSerializer(Company_Inform.objects.filter(group = obj.id).order_by('?')[:5], many = True).data
