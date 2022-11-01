@@ -30,31 +30,31 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--single-process")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-# @api_view(['GET'])
-# def test(request):
-#     driver = webdriver.Chrome(path, chrome_options=chrome_options)
-#     driver.implicitly_wait(10)
+@api_view(['GET'])
+def test(request):
+    driver = webdriver.Chrome(path, chrome_options=chrome_options)
+    driver.implicitly_wait(10)
 
-#     group_id = Group.objects.all()
-#     for group in group_id:
-#         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]        
-#         for tag in tag_list:
-#             driver.get('https://brunch.co.kr/search')
-#             driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
-#             time.sleep(2)
-#             count = 0
-#             results = driver.find_elements_by_class_name('link_post')
-#             link_list = []
-#             for result in results:
-#                 link = result.get_attribute('href')
-#                 link_list.append(link)
-#                 count +=1               
-#                 if count == 3:
-#                     break   
-#             for link in link_list:
-#                 driver.get(link)
-#                 writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
-#                 image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
+    group_id = Group.objects.all()
+    for group in group_id:
+        tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]        
+        for tag in tag_list:
+            driver.get('https://brunch.co.kr/search')
+            driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
+            count = 0
+            results = driver.find_elements_by_class_name('link_post')
+            link_list = []
+            for result in results:
+                link = result.get_attribute('href')
+                link_list.append(link)
+                count +=1               
+                if count == 3:
+                    break   
+            for link in link_list:
+                driver.get(link)
+                writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
+                image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
+                print(f'writer: {writer}, url: {image_url}')
 #     return Response(status=status.HTTP_200_OK)
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
