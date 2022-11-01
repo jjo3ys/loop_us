@@ -30,34 +30,32 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--single-process")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-@api_view(['GET'])
-def test(request):
-    driver = webdriver.Chrome(path, chrome_options=chrome_options)
-    driver.implicitly_wait(10)
+# @api_view(['GET'])
+# def test(request):
+#     driver = webdriver.Chrome(path, chrome_options=chrome_options)
+#     driver.implicitly_wait(10)
 
-    group_id = Group.objects.all()
-    for group in group_id:
-        tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]        
-        for tag in tag_list:
-            driver.get('https://brunch.co.kr/search')
-            driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
-            time.sleep(2)
-            count = 0
-            results = len(driver.find_elements_by_class_name('link_post'))
-            for i in range(results):
-                article = driver.find_elements_by_class_name('link_post')[i]
-                article.click()
-                time.sleep(2)
-                writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
-                image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
-                driver.back()
-                time.sleep(2)
-                count +=1
-                # Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
-                
-                if count == 3:
-                    break   
-    return Response(status=status.HTTP_200_OK)
+#     group_id = Group.objects.all()
+#     for group in group_id:
+#         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]        
+#         for tag in tag_list:
+#             driver.get('https://brunch.co.kr/search')
+#             driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
+#             time.sleep(2)
+#             count = 0
+#             results = driver.find_elements_by_class_name('link_post')
+#             link_list = []
+#             for result in results:
+#                 link = result.get_attribute('href')
+#                 link_list.append(link)
+#                 count +=1               
+#                 if count == 3:
+#                     break   
+#             for link in link_list:
+#                 driver.get(link)
+#                 writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
+#                 image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
+#     return Response(status=status.HTTP_200_OK)
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
 def crawling(request):
@@ -111,21 +109,20 @@ def crawling(request):
             try:
                 driver.get('https://brunch.co.kr/search')
                 driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
-                time.sleep(2)
                 count = 0
                 results = driver.find_elements_by_class_name('link_post')
+                link_list = []
                 for result in results:
                     link = result.get_attribute('href')
-                    driver.get(link)
-                    time.sleep(2)
-                    writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
-                    image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
-                    driver.back()
-                    count +=1
-                    Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
-                    
+                    link_list.append(link)
+                    count +=1               
                     if count == 3:
                         break   
+                for link in link_list:
+                    driver.get(link)
+                    writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
+                    image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
+                    Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
             except:pass
             try:
                 results = youtube.search().list(q=tag.tag, order='relevance', part='snippet', maxResults=10).execute()
