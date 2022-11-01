@@ -384,6 +384,11 @@ def companyProfile(request):
                 if not created:
                     viewd.date = datetime.datetime.now()
                     viewd.save()
+                
+                interest_obj, created = InterestCompany.objects.get_or_create(user_id=user.id, company=company_id)
+                if not created:
+                    interest_obj.delete()
+                    InterestCompany.objects.create(user_id=user.id, company=company_id)
 
             company_obj = CompanyProfileSerializer(crop_obj).data
             follow_obj = Loopship.objects.filter(user_id=user.id, friend_id=company_id)
@@ -395,9 +400,7 @@ def companyProfile(request):
 
             else:
                 if Banlist.objects.filter(user_id=user.id, banlist__contains=int(company_id)).exists() or Banlist.objects.filter(user_id=company_id, banlist__contains=user.id).exists():
-                    return Response(status=status.HTTP_204_NO_CONTENT)
-                interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:50]
-                
+                    return Response(status=status.HTTP_204_NO_CONTENT) 
                 company_obj.update({"is_user":0})
                 if follow_obj.exists() and following_obj.exists():
                     company_obj.update({'looped':3})
@@ -407,8 +410,10 @@ def companyProfile(request):
                     company_obj.update({'looped':1})
                 else:
                     company_obj.update({'looped':0})
-                std_profile = SimpleProfileSerializer(Profile.objects.filter(user_id__in=interest_obj), many=True).data
-                company_obj.update({'interest':std_profile})
+                    
+            interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:20]
+            std_profile = SimpleProfileSerializer(Profile.objects.filter(user_id__in=interest_obj).select_related('school', 'department'), many=True).data
+            company_obj.update({'interest':std_profile})
 
             return Response(company_obj, status=status.HTTP_200_OK)
 
