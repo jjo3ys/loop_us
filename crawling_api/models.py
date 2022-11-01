@@ -28,7 +28,7 @@ class Youtube(models.Model):
 class CompanyNews(models.Model):
     urls = models.TextField()
     company = models.ForeignKey(Company_Inform, related_name='company_news', on_delete=models.CASCADE)
-    writer = models.TextField(default=None, null=True)
+    corp = models.TextField(default=None, null=True)
     
     class Meta:
         db_table = "Comapny_News"

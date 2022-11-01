@@ -178,7 +178,7 @@ class CompanySerializer(serializers.ModelSerializer):
 class CompanyNewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CompanyNews
-        fields = ['urls', 'writer']
+        fields = ['urls', 'corp']
         
 class SimpleComapnyProfileSerializer(serializers.ModelSerializer):
     company_logo = CompanySerializer()
