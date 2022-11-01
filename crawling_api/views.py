@@ -61,7 +61,7 @@ def companyNews(request):
         for div in div_tag:
             if div.get_attribute('class') == 'CEMjEf NUnG9d':
                 txt = div.find_element_by_tag_name('span').text
-                obj = CompanyNews(urls=link_map[news_count], company=company, writer=txt)
+                obj = CompanyNews(urls=link_map[news_count], company=company, corp=txt)
                 news_list.append(obj)
                 news_count += 1
             if news_count == 5:
