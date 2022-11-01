@@ -595,13 +595,13 @@ def loop_load(request):
             project_obj = SimpleProjectserializer(project_obj.project).data
             
         if profile.group == 16:
-            news_obj = News.objects.all()
-            br_obj = Brunch.objects.all()
-            yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
+            news_obj = News.objects.all().order_by('?')
+            br_obj = Brunch.objects.all().order_by('?')
+            yt_obj = list(Youtube.objects.all().order_by('?').values_list('urls', flat=True))
         else:
-            news_obj = News.objects.filter(group_id=profile.group)
-            br_obj = Brunch.objects.filter(group_id=profile.group)
-            yt_obj = list(Youtube.objects.all().values_list('urls', flat=True))
+            news_obj = News.objects.filter(group_id=profile.group).order_by('?')
+            br_obj = Brunch.objects.filter(group_id=profile.group).order_by('?')
+            yt_obj = list(Youtube.objects.all().order_by('?').values_list('urls', flat=True))
             
         return Response({'posting':post_obj, 
                          'brunch':BrSerializer(br_obj, many=True).data, 
