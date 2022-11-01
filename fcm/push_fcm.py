@@ -231,7 +231,7 @@ def rank_fcm(topic):
         apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         notification=messaging.Notification(
             title='루프어스',
-            body='교내 사용자 랭킹이 업데이트 되었습니다.'
+            body='사용자 랭킹이 업데이트 되었습니다.'
         ),
         data={
             'type':'10',
