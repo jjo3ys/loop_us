@@ -28,7 +28,7 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
         return CompanyImage.objects.filter(company_info_id = obj.id).first().image.url
     
     def get_interest_count(self, obj):
-        return InterestCompany.objects.filter(company = obj.id).count()
+        return InterestCompany.objects.filter(company = obj.user_id).count()
 
 class GroupSerializers(serializers.ModelSerializer):
     companies = serializers.SerializerMethodField()
