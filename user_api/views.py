@@ -24,14 +24,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
-from crawling_api.models import CompanyNews
 
 from fcm.push_fcm import report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
 from .models import InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, UserSNS, ViewCompany
-from .serializers import AlarmSerializer, BanlistSerializer, CompanyNewsSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer
+from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer
 
 # from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
@@ -374,12 +373,12 @@ def companyProfile(request):
         # try:
             user = request.user
             company_id = int(request.GET['id'])
-            crop_obj = Company_Inform.objects.filter(user_id=company_id)[0]
-    
+            company_obj = Company_Inform.objects.filter(user_id=company_id)[0]
+            
             is_student = int(request.GET['is_student'])
             if is_student:
-                crop_obj.view_count += 1
-                crop_obj.save()
+                company_obj.view_count += 1
+                company_obj.save()
 
                 viewd, created = ViewCompany.objects.get_or_create(user = user, shown_id = company_id)
                 if not created:
@@ -391,7 +390,7 @@ def companyProfile(request):
                     interest_obj.delete()
                     InterestCompany.objects.create(user_id=user.id, company=company_id)
 
-            company_obj = CompanyProfileSerializer(crop_obj).data
+            company_obj = CompanyProfileSerializer(company_obj).data
             follow_obj = Loopship.objects.filter(user_id=user.id, friend_id=company_id)
             following_obj = Loopship.objects.filter(user_id=company_id, friend_id=user.id)
 
@@ -414,11 +413,8 @@ def companyProfile(request):
                     
             interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:20]
             std_profile = SimpleProfileSerializer(Profile.objects.filter(user_id__in=interest_obj).select_related('school', 'department'), many=True).data
-            news_obj = CompanyNews.objects.filter(company_id=company_id)
-            news_obj = CompanyNewsSerializer(news_obj, many=True).data
             
             company_obj.update({'interest':std_profile})
-            company_obj.update({'news':news_obj})
 
             return Response(company_obj, status=status.HTTP_200_OK)
 

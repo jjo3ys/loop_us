@@ -189,16 +189,20 @@ class SimpleComapnyProfileSerializer(serializers.ModelSerializer):
 class CompanyProfileSerializer(serializers.ModelSerializer):
     company_logo = serializers.SerializerMethodField()
     company_images = serializers.SerializerMethodField()
+    news = serializers.SerializerMethodField()
 
     class Meta:
         model = Company_Inform
-        fields = ['company_logo','company_name', 'information', 'location', 'category', 'homepage', 'user_id', 'slogan', 'group', 'company_images', 'type']
+        fields = ['company_logo','company_name', 'information', 'location', 'category', 'homepage', 'user_id', 'slogan', 'group', 'company_images', 'type', 'news']
     
     def get_company_logo(self, obj):
         return Company.objects.filter(id = obj.company_logo.id)[0].logo.url
     
     def get_company_images(self, obj):
         return CompanyImageSerializer(CompanyImage.objects.filter(company_info = obj), many = True).data
+    
+    def get_news(self, obj):
+        return CompanyNewsSerializer(CompanyNews.objects.filter(company_id=obj.id), many=True).data
 
 class ViewProfileSerializer(serializers.ModelSerializer):
     class Meta:
