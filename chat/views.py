@@ -1,5 +1,5 @@
-from user_api.serializers import SimpleProfileSerializer
-from user_api.models import Banlist, Profile
+from user_api.serializers import SimpleComapnyProfileSerializer, SimpleProfileSerializer
+from user_api.models import Banlist, Company_Inform, Profile
 from fcm.push_fcm import chat_fcm
 # from fcm.models import FcmToken
 
@@ -95,6 +95,16 @@ def get_profile(request):
     user_id = int(request.user.id)
 
     member = eval(request.GET['members'])
+
+    company_profile = SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in=member), many=True).data
+    for company in company_profile:
+        if Banlist.objects.filter(user_id=company['user_id'], banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
+            company['is_banned'] = 2
+        else:       
+            company['is_banned'] = 0
+        member.remove(company['user_id'])
+    
+
     profile_obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=member).select_related('school', 'department'), many=True).data
     for profile in profile_obj:
         if Banlist.objects.filter(user_id=profile['user_id'], banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
@@ -103,7 +113,7 @@ def get_profile(request):
             profile['is_banned'] = 0
         member.remove(profile['user_id'])
     
-    return Response({'profile':profile_obj, 'none':member}, status=status.HTTP_200_OK)
+    return Response({'profile':profile_obj,'company_profile':company_profile, 'none':member}, status=status.HTTP_200_OK)
 
 # @api_view(['GET'])
 # @permission_classes((IsAuthenticated,))
