@@ -28,17 +28,23 @@ def rank_api():
 def news_crawling():
     requests.get('http://3.35.253.151:8000/get_data/crawling', headers=header)
 
-def set_monthly_tag_count():
-    requests.get('http://3.35.253.151:8000/rank/tag_count', headers=header)
-
-def set_group_monthly_trends():
-    requests.post('http://3.35.253.151:8000/rank/posting_trends', headers=header)
+def set_monthly():
+    try:
+        requests.get('http://3.35.253.151:8000/rank/tag_count', headers=header)
+    except: pass
+    try:
+        requests.post('http://3.35.253.151:8000/rank/posting_trends', headers=header)
+    except: pass    
     
-
+def set_weekly():
+    try:
+        requests.get('http://3.35.253.151:8000/get_data/company_news', headers=header)
+    except: pass
 bg_scheuler = BlockingScheduler(timezone="Asia/Seoul")
 
-bg_scheuler.add_job(set_monthly_tag_count, 'cron', day=1)
-bg_scheuler.add_job(set_group_monthly_trends, 'cron', day=1)
+bg_scheuler.add_job(set_monthly, 'cron', day=1)
+
+bg_scheuler.add_job(set_weekly, 'cron', day='*/14')
 
 bg_scheuler.add_job(news_crawling, 'cron', hour=7)
 bg_scheuler.add_job(rank_api, 'cron', hour=22)

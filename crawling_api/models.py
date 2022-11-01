@@ -1,6 +1,6 @@
 from django.db import models
 from tag.models import Group
-
+from user_api.models import Company_Inform
 class News(models.Model):
     urls = models.TextField()
     group = models.ForeignKey(Group, related_name='group_news', on_delete=models.DO_NOTHING)
@@ -24,4 +24,12 @@ class Youtube(models.Model):
 
     class Meta:
         db_table = "Youtube"
+        
+class CompanyNews(models.Model):
+    urls = models.TextField()
+    company = models.ForeignKey(Company_Inform, related_name='company_news', on_delete=models.CASCADE)
+    writer = models.TextField(default=None, null=True)
+    
+    class Meta:
+        db_table = "Comapny_News"
 # Create your models here.
