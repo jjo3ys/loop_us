@@ -14,11 +14,14 @@ class LogSerializer(serializers.ModelSerializer):
         fields = ['id', 'type', 'data']
     
     def get_data(self, obj):
-        if obj.type == 0:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=int(obj.query))[0]).data
-        elif obj.type == 2:
-            return TagSerializer(Tag.objects.filter(id=int(obj.query))[0]).data
-        elif obj.type == 3:
-            return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=int(obj.query)).select_related('company_logo')[0]).data
-        else:
-            return obj.query
+        try:
+            if obj.type == 0:
+                return SimpleProfileSerializer(Profile.objects.filter(user_id=int(obj.query))[0]).data
+            elif obj.type == 2:
+                return TagSerializer(Tag.objects.filter(id=int(obj.query))[0]).data
+            elif obj.type == 3:
+                return SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id=int(obj.query)).select_related('company_logo')[0]).data
+            else:
+                return obj.query
+        except IndexError:
+            return None
