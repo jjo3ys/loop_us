@@ -15,8 +15,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from googleapiclient.discovery import build
 
-from .models import News, Brunch, Youtube
+from .models import News, Brunch, Youtube, CompanyNews
 
+from user_api.models import Company_Inform
 from tag.models import Tag, Group
 from config.my_settings import YOUTUBEKEY
 
@@ -31,30 +32,45 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--single-process")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-# @api_view(['GET'])
-# def test(request):
-#     driver = webdriver.Chrome(path, chrome_options=chrome_options)
-#     driver.implicitly_wait(10)
-
-#     group_id = Group.objects.all()
-#     for group in group_id:
-#         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]        
-#         for tag in tag_list:
-#             driver.get('https://brunch.co.kr/search')
-#             driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
-#             link_list = []
-#             for i in range(1, 4):
-#                 try:
-#                     link = driver.find_element_by_xpath(f'//*[@id="resultArticle"]/div/div[1]/div[2]/ul/li[{i}]/a')
-#                 except: break
-#                 link = link.get_attribute('href')
-#                 link_list.append(link)
+@api_view(['GET'])
+def companyNews(request):
+    if request.user.id !=5:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    
+    driver = webdriver.Chrome(path, chrome_options=chrome_options)
+    driver.implicitly_wait(10)
+    url = 'https://www.google.com/search?tbm=nws&q='
+    company_inform = Company_Inform.objects.all()
+    news_list = []
+    last = CompanyNews.objects.last()
+    for company in company_inform:
+        driver.get(url+'기업 '+company.company_name)
+        news_count = 0
+        a_tag = driver.find_elements_by_tag_name('a')
+        link_map = []
+        for a in a_tag:
+            if a.get_attribute('jsname') == 'YKoRaf':
+                link = a.get_attribute('href')
+                link_map.append(link)
+                news_count += 1
+            if news_count == 5:
+                break
             
-#             for link in link_list:
-#                 driver.get(link)
-#                 writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
-#                 image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
-#     return Response(status=status.HTTP_200_OK)
+        news_count = 0
+        div_tag = driver.find_elements_by_tag_name('div')
+        for div in div_tag:
+            if div.get_attribute('class') == 'CEMjEf NUnG9d':
+                txt = div.find_element_by_tag_name('span').text
+                obj = CompanyNews(urls=link_map[news_count], company=company, writer=txt)
+                news_list.append(obj)
+                news_count += 1
+            if news_count == 5:
+                break
+    CompanyNews.objects.bulk_create(news_list)
+    if last:
+        CompanyNews.objects.filter(id__lte=last.id).delete()
+    return Response(status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
 def crawling(request):

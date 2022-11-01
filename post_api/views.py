@@ -558,13 +558,10 @@ def main_load(request):
 @permission_classes((IsAuthenticated,))
 def loop_load(request):
     user_id = request.user.id
-    loop_list = Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True)
-    try:
-        ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
-    except:
-        ban_list = []
+    loop_list = list(Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True))
+    loop_list.append(user_id)
 
-    ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
+    ban_list = Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
     if request.GET['last'] == '0':
         post_obj = Post.objects.filter(user_id__in=loop_list).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
     else:

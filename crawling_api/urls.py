@@ -3,5 +3,5 @@ from . import views
 
 urlpatterns = [
     path('crawling',views.crawling),
-    # path('test',views.test)
+    path('company_news',views.companyNews)
 ]

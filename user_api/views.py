@@ -24,13 +24,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
+from crawling_api.models import CompanyNews
 
 from fcm.push_fcm import report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
 from .models import InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, UserSNS, ViewCompany
-from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer
+from .serializers import AlarmSerializer, BanlistSerializer, CompanyNewsSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer
 
 # from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
@@ -413,7 +414,11 @@ def companyProfile(request):
                     
             interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:20]
             std_profile = SimpleProfileSerializer(Profile.objects.filter(user_id__in=interest_obj).select_related('school', 'department'), many=True).data
+            news_obj = CompanyNews.objects.filter(comapny_id=company_id)
+            news_obj = CompanyNewsSerializer(news_obj, many=True).data
+            
             company_obj.update({'interest':std_profile})
+            company_obj.update({'news':news_obj})
 
             return Response(company_obj, status=status.HTTP_200_OK)
 

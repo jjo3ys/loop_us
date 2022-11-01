@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from crawling_api.models import CompanyNews
 
 from project_api.models import Project
 from scout_api.serializers import CompanyImageSerializer
@@ -173,6 +174,11 @@ class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = ['logo', 'company_name']
+        
+class CompanyNewsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompanyNews
+        fields = ['urls', 'writer']
         
 class SimpleComapnyProfileSerializer(serializers.ModelSerializer):
     company_logo = CompanySerializer()
