@@ -42,7 +42,7 @@ def company_group(request):
             return Response(GroupSerializers(group_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
 
         else:
-            company_obj = Company_Inform.objects.filter(group = request.GET['type']).order_by('-id')
+            company_obj = Company_Inform.objects.filter(group = request.GET['type']).order_by('?')
             company_obj = Paginator(company_obj, 10)
 
             if company_obj.num_pages < int(request.GET['page']):
