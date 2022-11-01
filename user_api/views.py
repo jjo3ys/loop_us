@@ -414,7 +414,7 @@ def companyProfile(request):
                     
             interest_obj = list(InterestCompany.objects.filter(company=company_id).order_by('-id').values_list('user_id', flat=True))[:20]
             std_profile = SimpleProfileSerializer(Profile.objects.filter(user_id__in=interest_obj).select_related('school', 'department'), many=True).data
-            news_obj = CompanyNews.objects.filter(comapny_id=company_id)
+            news_obj = CompanyNews.objects.filter(company_id=company_id)
             news_obj = CompanyNewsSerializer(news_obj, many=True).data
             
             company_obj.update({'interest':std_profile})
