@@ -559,7 +559,6 @@ def main_load(request):
 def loop_load(request):
     user_id = request.user.id
     loop_list = Loopship.objects.filter(user_id=user_id).values_list('friend_id', flat=True)
-    now = datetime.datetime.now()
     try:
         ban_list = Banlist.objects.filter(user_id=user_id)[0].banlist
     except:
@@ -567,9 +566,9 @@ def loop_load(request):
 
     ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
     if request.GET['last'] == '0':
-        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], user_id__in=loop_list).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
+        post_obj = Post.objects.filter(user_id__in=loop_list).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
     else:
-        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now], id__lt=request.GET['last'], user_id__in=loop_list).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
+        post_obj = Post.objects.filter(id__lt=request.GET['last'], user_id__in=loop_list).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
 
     post_list = list(post_obj.values_list('id', flat=True))
     like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
