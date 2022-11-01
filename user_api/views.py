@@ -328,7 +328,8 @@ def resign(request):
     for post in Post.objects.filter(project_id__in=project_list).prefetch_related('contents_image'):
         for image in post.contents_image.filter(post_id=post.id):
             image.image.delete(save=False)
-            
+    
+    project_list = list(project_obj.filter(is_manager=1).values_list('project_id', flat=True))
     Project.objects.filter(id__in=project_list).delete()
 
     tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
