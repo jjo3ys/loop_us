@@ -41,7 +41,7 @@ def project(request):
             project_obj.tag_company = True
             project_obj.thumbnail = request.GET['company_id']
             project_obj.save()
-        project_obj = ProjectUser.objects.filter(project_id=request.GET['project_id'], user_id=user_id).select_related('project')[0]            
+        project_obj = ProjectUser.objects.filter(project_id=request.GET['id'], user_id=user_id).select_related('project')[0]            
         return Response(ProjectUserSerializer(project_obj).data, status=status.HTTP_200_OK)
 
     elif request.method == 'GET':
