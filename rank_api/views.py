@@ -345,6 +345,6 @@ def hot_user(request):
         profile_obj = SimpleProfileSerializer(profile_obj, many=True).data
         for profile in profile_obj:
             post_count = post_obj.filter(user_id=profile['user_id']).count()
-            profile.update({'post_count':post_count})
+            profile.update({'recent_post_count':post_count})
         return Response(profile_obj, status=status.HTTP_200_OK)
     
