@@ -30,7 +30,7 @@ from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
 from .models import Company, InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, UserSNS, ViewCompany
-from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer
+from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer, SimpleComapnyProfileSerializer
 
 # from search.models import Get_log, InterestTag
 from tag.models import Post_Tag
@@ -450,6 +450,21 @@ def view_list(request):
         profile_list = list(a[request.GET['type']] for a in views)
         
         return Response(SimpleProfileSerializer(Profile.objects.filter(user_id__in=profile_list), many=True).data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def interest_companies(request):
+
+    view_obj = ViewCompany.objects.filter(shown_id = request.GET['id'])
+    view_obj = Paginator(view_obj, 20)
+
+    if view_obj.num_pages < int(request.GET['page']):
+        return Response(status=status.HTTP_204_NO_CONTENT)    
+        
+    views = ViewProfileSerializer(view_obj.get_page(request.GET['page']), many = True).data
+    view_list = list(a['user'] for a in views)
+
+    return Response(SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in=view_list).select_related('company_logo'), many = True).data, status=status.HTTP_200_OK)
 
 @api_view(['PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))

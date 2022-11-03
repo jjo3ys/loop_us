@@ -16,6 +16,7 @@ urlpatterns = [
     path('corp_profile', views.companyProfile),
     path('view_list', views.view_list),
     path('profile', views.profile),
+    path('interest_companies', views.interest_companies),
     path('posting', views.posting),
     path('project', views.project),
     path('posting', views.posting),
