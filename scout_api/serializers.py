@@ -22,7 +22,7 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
         fields = ['user_id', 'company_name', 'company_logo', 'location', 'company_images', 'group', 'category', 'slogan', 'interest_count']
 
     def get_company_logo(self, obj):
-        return Company.objects.filter(id = obj.company_logo.id)[0].logo.url
+        return obj.company_logo.logo.url
     
     def get_company_images(self, obj):
         return CompanyImage.objects.filter(company_info_id = obj.id).first().image.url
