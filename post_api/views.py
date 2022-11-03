@@ -161,7 +161,7 @@ def posting(request):
         return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
-        post_obj = Post.objects.filter(id=request.GET['id']).select_related('project')[0]
+        post_obj = Post.objects.get(id=request.GET['id']).select_related('project')
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
         # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tag')
@@ -183,7 +183,7 @@ def posting(request):
                 for image in contents_image_obj:
                     image.image.delete(save=False)
                     if image.id == thumbnail_id:
-                        post = Post.objects.filter(project_id=post_obj.project_id)
+                        post = Post.objects.filter(project_id=post_obj.project_id).exclude(id=post_obj.id)
                         post_list = list(post.values_list('id', flat=True))
                         img_obj = PostImage.objects.filter(post_id__in=post_list)
                         if post.count() == 0 or img_obj.count() == 0:
