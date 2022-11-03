@@ -10,6 +10,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from elasticsearch import Elasticsearch
+
+es = Elasticsearch()
 # Create your views here.
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
@@ -41,6 +44,11 @@ def project(request):
             project_obj.tag_company = True
             project_obj.thumbnail = request.GET['company_id']
             project_obj.save()
+            user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+            text = user['_source']['text']
+            text += " "+Company.objects.get(id=request.GET['company_id']).company_name
+            id = user['_id']
+            es.update(index='profile', id=id, doc={"text":text})
         project_obj = ProjectUser.objects.filter(project_id=request.GET['id'], user_id=user_id).select_related('project')[0]            
         return Response(ProjectUserSerializer(project_obj).data, status=status.HTTP_200_OK)
 
@@ -74,10 +82,23 @@ def project(request):
         project_id = request.GET['id']
         type = request.GET['type']
         if type == 'exit':
-            ProjectUser.objects.filter(project_id=project_id, user_id=user_id).delete()
+            project_obj = ProjectUser.objects.filter(project_id=project_id, user_id=user_id).select_related('project')[0]
+            if project_obj.project.tag_company:
+                user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                text = user['_source']['text']
+                text = text.replace(" "+Company.objects.get(id=project_obj.project.thumbnail).company_name, "")
+                id = user['_id']
+                es.update(index='profile', id=id, doc={"text":text})
+            project_obj.delete()
+            
         elif type == 'del':
             project_obj = Project.objects.filter(id=project_id)[0]
-
+            if project_obj.tag_company:
+                user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                text = user['_source']['text']
+                text = text.replace(" "+Company.objects.get(id=project_obj.thumbnail).company_name, "")
+                id = user['_id']
+                es.update(index='profile', id=id, doc={"text":text})
             for post in Post.objects.filter(project_id=project_id):
                 for image in PostImage.objects.filter(post_id=post.id):
                     image.image.delete(save=False)
