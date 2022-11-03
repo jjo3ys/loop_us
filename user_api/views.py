@@ -29,7 +29,7 @@ from fcm.push_fcm import report_alarm
 from post_api.serializers import MainloadSerializer
 
 # from .department import DEPARTMENT
-from .models import InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, UserSNS, ViewCompany
+from .models import Company, InterestCompany, Profile, Activation, Company_Inform, Banlist, Report, Alarm, UserSNS, ViewCompany
 from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSerializer, ProfileSerializer, SimpleProfileSerializer, ViewProfileSerializer
 
 # from search.models import Get_log, InterestTag
@@ -739,51 +739,69 @@ def alarm(request):
 #         Company.objects.create(logo=request.FILES.get('image'), company_name=request.data['name'])
 #     return Response(status=status.HTTP_200_OK)
 
-@api_view(['GET'])
+@api_view(['GET', 'PUT'])
 def profile_indexing(request):
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     es = Elasticsearch()
     index = "profile"
-    if es.indices.exists(index=index):
-        es.indices.delete(index=index)
+    if request.method == 'GET':
+        if es.indices.exists(index=index):
+            es.indices.delete(index=index)
 
-    body = {
-        "settings":{
-            "analysis":{
-                "analyzer":{
-                    "ngram_analyzer":{
-                        "tokenizer":"ngram_tokenizer"
+        body = {
+            "settings":{
+                "analysis":{
+                    "analyzer":{
+                        "ngram_analyzer":{
+                            "tokenizer":"ngram_tokenizer"
+                        }
+                    },
+                    "tokenizer":{
+                        "ngram_tokenizer":{
+                            "type":"ngram",
+                            "min_gram":"1",
+                            "max_gram":"2",
+                            "token_chars":["letter","digit"]
+                        }
                     }
-                },
-                "tokenizer":{
-                    "ngram_tokenizer":{
-                        "type":"ngram",
-                        "min_gram":"2",
-                        "max_gram":"2",
-                        "token_chars":["letter","digit"]
+                }
+            },
+            "mappings":{
+                "properties":{
+                    "user_id":{
+                        "type":"integer"
+                    },
+                    "text":{
+                        "type":"text",
+                        "analyzer":"ngram_analyzer"
                     }
                 }
             }
-        },
-        "mappings":{
-            "properties":{
-                "user_id":{
-                    "type":"integer"
-                },
-                "text":{
-                    "type":"text",
-                    "analyzer":"ngram_analyzer"
-                }
+        }
+        es.indices.create(index=index, body=body)
+        profile_obj = Profile.objects.all().select_related('school', 'department')
+        for profile in profile_obj:
+            doc = {
+                "user_id":profile.user_id,
+                "text":profile.school.school + " " + profile.department.department + " " + profile.real_name
             }
-        }
-    }
-    es.indices.create(index=index, body=body)
-    profile_obj = Profile.objects.all().select_related('school', 'department')
-    for profile in profile_obj:
-        doc = {
-            "user_id":profile.user_id,
-            "text":profile.school.school + " " + profile.department.department + " " + profile.real_name
-        }
-        es.index(index=index, doc_type='_doc', body=doc)
+            es.index(index=index, doc_type='_doc', body=doc)
+    elif request.method == 'PUT':
+        project_obj = Project.objects.filter(tag_company=1).values_list('id', flat=True)
+        project_obj = ProjectUser.objects.filter(project_id__in=project_obj).select_related('project')
+        user_dic = {}
+        for project in project_obj:
+            if project.user_id in user_dic:
+                user_dic[project.user_id].append(project.project.thumbnail)
+            else:
+                user_dic[project.user_id] = [project.project.thumbnail]
+        for user in user_dic:
+            results = es.search(index='profile', body={'query':{'match':{"user_id":{"query":user}}}}, size=1)['hits']['hits'][0]
+            text = results['_source']['text']
+            id = results['_id']
+            for company in user_dic[user]:
+                name = Company.objects.get(id=company).company_name
+                text += " " + name
+            es.update(index=index, id = id, doc={"text":text})
     return Response(status=status.HTTP_200_OK)
