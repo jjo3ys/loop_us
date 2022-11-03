@@ -1,12 +1,13 @@
 from django.core.paginator import Paginator
+from django.db.models import F
 from crawling_api.models import News, Youtube, Brunch
-from project_api.models import ProjectUser
+from project_api.models import Project, ProjectUser
 # from search.models import Get_log, InterestTag
 # from search.views import interest_tag
 
 from tag.models import Post_Tag, Tag
 # from fcm.models import FcmToken
-from fcm.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, department_fcm, like_fcm, report_alarm, comment_like_fcm, school_fcm
+from fcm.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, department_fcm, like_fcm, report_alarm, comment_like_fcm, school_fcm, public_pj_fcm
 from user_api.models import Banlist, InterestCompany, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
@@ -48,11 +49,12 @@ def posting(request):
         post_obj = Post.objects.create(user_id=user_id, 
                                         project_id=request.GET['id'],    
                                         contents=request.data['contents'])
+        project_obj = Project.objects.get(id=request.GET['id'])
 
         for id, image in enumerate(request.FILES.getlist('image')):
             image_obj = PostImage.objects.create(post_id=post_obj.id, image=image)
-            if id == 0 and not post_obj.project.tag_company:
-                post_obj.project.thumbnail=image_obj.id
+            if id == 0 and not project_obj.tag_company:
+                project_obj.thumbnail=image_obj.id
         
         # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
 
@@ -68,20 +70,21 @@ def posting(request):
                 tag_obj.save()
 
         # interest_list.save()
-        post_obj.project.post_update_date = datetime.datetime.now()
-        post_obj.project.save()
-
-        project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id'])[0]
-        project_obj.post_count += 1
+        
+        project_obj.post_update_date = datetime.datetime.now()
         project_obj.save()
+
+        ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id']).update(post_count=F('post_count') + 1)
         
         if request.user.is_staff:
             official_obj = Profile.objects.filter(user_id=user_id)[0]
             if official_obj.type == 1:
-                department_fcm(official_obj.department, post_obj.id, user_id)
-            else:
-                school_fcm(official_obj.school, post_obj.id, user_id)
+                department_fcm(official_obj.department_id, post_obj.id, user_id)
+            elif official_obj.type == 3:
+                school_fcm(official_obj.school_id, post_obj.id, user_id)
                 
+        if project_obj.is_public:
+            public_pj_fcm(project_obj.id, post_obj.id, user_id, project_obj.project_name)
         return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
@@ -161,7 +164,7 @@ def posting(request):
         return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
-        post_obj = Post.objects.filter(id=request.GET['id']).select_related('project')[0]
+        post_obj = Post.objects.get(id=request.GET['id'])
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
         # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tag')
@@ -183,18 +186,17 @@ def posting(request):
                 for image in contents_image_obj:
                     image.image.delete(save=False)
                     if image.id == thumbnail_id:
-                        post = Post.objects.filter(project_id=post_obj.project_id)
+                        post = Post.objects.filter(project_id=post_obj.project_id).exclude(id=post_obj.id)
                         post_list = list(post.values_list('id', flat=True))
                         img_obj = PostImage.objects.filter(post_id__in=post_list)
                         if post.count() == 0 or img_obj.count() == 0:
                             post_obj.project.thumbnail = 0
                         else:
                             post_obj.project.thumbnail = PostImage.objects.filter(post_id=img_obj.last().post_id).first().id
+                        post_obj.project.post_update_date = post.last().date
                         post_obj.project.save()
 
-        project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id)[0]
-        project_obj.post_count -= 1
-        project_obj.save()
+        ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id).update(post_count=F('post_count')-1)
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 

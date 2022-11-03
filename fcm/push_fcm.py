@@ -181,6 +181,28 @@ def chat_fcm(topic, req_from, msg, user_id):
     except QuotaExceededError:
         pass
     
+def public_pj_fcm(topic, id, from_id, pj_name):
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=9, target_id=id, alarm_from_id=from_id)
+    if valid:
+        message = messaging.Message(
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+            notification=messaging.Notification(
+                title='루프어스',
+                body='{}커리어에 새로운 포스팅이 올라왔습니다.'.format(pj_name)
+            ),
+            data={
+                'type':'9',
+                'id':str(id),
+                'sender_id':str(from_id)
+            },
+            topic='project'+str(topic),
+            )
+        try:
+            messaging.send(message)
+        except QuotaExceededError:
+            pass
+        
 def department_fcm(topic, id, from_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=9, target_id=id, alarm_from_id=from_id)
     if valid:
