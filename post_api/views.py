@@ -161,7 +161,7 @@ def posting(request):
         return Response(post_obj, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
-        post_obj = Post.objects.get(id=request.GET['id']).select_related('project')
+        post_obj = Post.objects.get(id=request.GET['id'])
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
         # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
         tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tag')
