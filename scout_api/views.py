@@ -17,12 +17,16 @@ def recommendation_company(request):
     try:
         if int(request.GET['type']) == 0:
             stud_group = Profile.objects.filter(user = request.user)[0].group
-            if stud_group == 16:
-                return Response(CompanyProfileSerializer(Company_Inform.objects.all().order_by('-view_count')[:5], many = True).data, status=status.HTTP_200_OK)
 
-            return Response(CompanyProfileSerializer(Company_Inform.objects.filter(group = stud_group).order_by('-view_count')[:5], many = True).data, status=status.HTTP_200_OK)
+            if stud_group == 16:
+                company_obj = Company_Inform.objects.all().order_by('-view_count').select_related('company_logo')[:5]
+            else:
+                company_obj = Company_Inform.objects.filter(group = stud_group).order_by('-view_count').select_related('company_logo')[:5]
+           
         elif int(request.GET['type']) == 1:
-            return Response(CompanyProfileSerializer(Company_Inform.objects.filter(group = Company_Inform.objects.filter(user = request.user)[0].group).order_by('-view_count')[:5], many = True).data, status=status.HTTP_200_OK)
+            company_obj = Company_Inform.objects.filter(group = Company_Inform.objects.filter(user = request.user)[0].group).order_by('-view_count').select_related('company_logo')[:5]
+
+        return Response(CompanyProfileSerializer(company_obj, many = True).data, status=status.HTTP_200_OK)
             
     except:
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -34,7 +38,7 @@ def company_group(request):
         if request.GET['type'] == 'main':
         
             group_obj = Group.objects.all()
-            group_obj = Paginator(group_obj, 3)
+            group_obj = Paginator(group_obj, 5)
 
             if group_obj.num_pages < int(request.GET['page']):
                 return Response(status=status.HTTP_204_NO_CONTENT)
@@ -42,7 +46,7 @@ def company_group(request):
             return Response(GroupSerializers(group_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
 
         else:
-            company_obj = Company_Inform.objects.filter(group = request.GET['type']).order_by('?')
+            company_obj = Company_Inform.objects.filter(group = request.GET['type']).order_by('?').select_related('company_logo')
             company_obj = Paginator(company_obj, 10)
 
             if company_obj.num_pages < int(request.GET['page']):

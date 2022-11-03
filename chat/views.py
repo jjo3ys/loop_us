@@ -92,33 +92,18 @@ def get_list(request):
 @permission_classes((IsAuthenticated,))
 def get_profile(request):
 
-    user_id = int(request.user.id)
-
     member = eval(request.GET['members'])
 
-    company_profile = SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in=member), many=True).data
-    for company in company_profile:
-        if Banlist.objects.filter(user_id=company['user_id'], banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
-            company['is_banned'] = 2
-        else:       
-            company['is_banned'] = 0
-        member.remove(company['user_id'])
-    
+    profiles = (SimpleProfileSerializer(Profile.objects.filter(user_id__in=member).select_related('school', 'department'), many=True).data
+                    + SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in=member).select_related('company_logo'), many=True).data)
 
-    profile_obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=member).select_related('school', 'department'), many=True).data
-    for profile in profile_obj:
-        if Banlist.objects.filter(user_id=profile['user_id'], banlist__contains=user_id).exists():      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
+    user_banned = list(Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True))
+   
+    for profile in profiles:
+        if profile['user_id'] in user_banned:      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
             profile['is_banned'] = 2
         else:       
             profile['is_banned'] = 0
         member.remove(profile['user_id'])
-    
-    return Response({'profile':profile_obj,'company_profile':company_profile, 'none':member}, status=status.HTTP_200_OK)
 
-# @api_view(['GET'])
-# @permission_classes((IsAuthenticated,))
-# def get_token(request):
-#     try:
-#         return Response({'token':FcmToken.objects.filter(user_id=request.GET['id'])[0].token}, status=status.HTTP_200_OK)
-#     except:
-#         return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response({'profile':profiles, 'none':member}, status=status.HTTP_200_OK)
