@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator
 from crawling_api.models import News, Youtube, Brunch
-from project_api.models import ProjectUser
+from project_api.models import Project, ProjectUser
 # from search.models import Get_log, InterestTag
 # from search.views import interest_tag
 
@@ -48,11 +48,12 @@ def posting(request):
         post_obj = Post.objects.create(user_id=user_id, 
                                         project_id=request.GET['id'],    
                                         contents=request.data['contents'])
+        project_obj = Project.objects.get(id=request.GET['id'])
 
         for id, image in enumerate(request.FILES.getlist('image')):
             image_obj = PostImage.objects.create(post_id=post_obj.id, image=image)
-            if id == 0 and not post_obj.project.tag_company:
-                post_obj.project.thumbnail=image_obj.id
+            if id == 0 and not project_obj.tag_company:
+                project_obj.thumbnail=image_obj.id
         
         # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
 
@@ -68,8 +69,9 @@ def posting(request):
                 tag_obj.save()
 
         # interest_list.save()
-        post_obj.project.post_update_date = datetime.datetime.now()
-        post_obj.project.save()
+        
+        project_obj.post_update_date = datetime.datetime.now()
+        project_obj.save()
 
         project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id'])[0]
         project_obj.post_count += 1
@@ -79,7 +81,7 @@ def posting(request):
             official_obj = Profile.objects.filter(user_id=user_id)[0]
             if official_obj.type == 1:
                 department_fcm(official_obj.department, post_obj.id, user_id)
-            else:
+            elif official_obj.type == 3:
                 school_fcm(official_obj.school, post_obj.id, user_id)
                 
         return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
@@ -190,6 +192,7 @@ def posting(request):
                             post_obj.project.thumbnail = 0
                         else:
                             post_obj.project.thumbnail = PostImage.objects.filter(post_id=img_obj.last().post_id).first().id
+                        post_obj.project.post_update_date = post.last().date
                         post_obj.project.save()
 
         project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id)[0]
