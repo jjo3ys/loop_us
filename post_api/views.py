@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator
+from django.db.models import F
 from crawling_api.models import News, Youtube, Brunch
 from project_api.models import Project, ProjectUser
 # from search.models import Get_log, InterestTag
@@ -6,7 +7,7 @@ from project_api.models import Project, ProjectUser
 
 from tag.models import Post_Tag, Tag
 # from fcm.models import FcmToken
-from fcm.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, department_fcm, like_fcm, report_alarm, comment_like_fcm, school_fcm
+from fcm.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, department_fcm, like_fcm, report_alarm, comment_like_fcm, school_fcm, public_pj_fcm
 from user_api.models import Banlist, InterestCompany, Profile, Report
 from user_api.serializers import SimpleProfileSerializer
 
@@ -73,17 +74,17 @@ def posting(request):
         project_obj.post_update_date = datetime.datetime.now()
         project_obj.save()
 
-        project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id'])[0]
-        project_obj.post_count += 1
-        project_obj.save()
+        ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id']).update(post_count=F('post_count') + 1)
         
         if request.user.is_staff:
             official_obj = Profile.objects.filter(user_id=user_id)[0]
             if official_obj.type == 1:
-                department_fcm(official_obj.department, post_obj.id, user_id)
+                department_fcm(official_obj.department_id, post_obj.id, user_id)
             elif official_obj.type == 3:
-                school_fcm(official_obj.school, post_obj.id, user_id)
+                school_fcm(official_obj.school_id, post_obj.id, user_id)
                 
+        if project_obj.is_public:
+            public_pj_fcm(project_obj.id, post_obj.id, user_id, project_obj.project_name)
         return Response(PostingSerializer(post_obj).data, status=status.HTTP_200_OK)
     
     elif request.method == 'PUT':
@@ -195,9 +196,7 @@ def posting(request):
                         post_obj.project.post_update_date = post.last().date
                         post_obj.project.save()
 
-        project_obj = ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id)[0]
-        project_obj.post_count -= 1
-        project_obj.save()
+        ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id).update(post_count=F('post_count')-1)
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 
