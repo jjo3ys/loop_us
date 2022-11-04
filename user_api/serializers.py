@@ -184,7 +184,7 @@ class SimpleComapnyProfileSerializer(serializers.ModelSerializer):
     company_logo = CompanySerializer()
     class Meta:
         model = Company_Inform
-        fields = ['company_logo', 'user_id', 'category', 'location']
+        fields = ['company_logo', 'user_id', 'group', 'category', 'location']
 
 class CompanyProfileSerializer(serializers.ModelSerializer):
     company_logo = serializers.SerializerMethodField()
