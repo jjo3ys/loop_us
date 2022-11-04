@@ -94,7 +94,7 @@ def comment_like_fcm(topic, req_from, id, from_id, post_id):
             pass
 
 def cocomment_like_fcm(topic, req_from, id, from_id, post_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=6, target_id=id, alarm_from_id=from_id)
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=6, target_id=post_id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
             android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
@@ -139,7 +139,7 @@ def comment_fcm(topic, req_from, id, from_id):
             pass
 
 def cocomment_fcm(topic, req_from, id, from_id, post_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=8, target_id=id, alarm_from_id=from_id)
+    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=8, target_id=post_id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
             android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
