@@ -20,16 +20,36 @@ def project(request):
     user_id = request.user.id
     if request.method == 'POST':
         
-        project_obj = Project.objects.create(project_name=request.data['project_name'], is_public=request.data['is_public'])
+        project_obj = Project.objects.create(project_name=request.data['project_name'], is_public=request.data['is_public'])        
+        if 'company_id' in request.GET:
+            project_obj.tag_company = True
+            project_obj.thumbnail = request.GET['company_id']
+            project_obj.save()
+            user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+            text = user['_source']['text']
+            text += " "+Company.objects.get(id=request.GET['company_id']).company_name
+            id = user['_id']
+            es.update(index='profile', id=id, doc={"text":text})
+            
         project_obj = ProjectUser.objects.create(user_id=user_id, project_id=project_obj.id)
         
         return Response(ProjectUserSerializer(project_obj).data, status=status.HTTP_201_CREATED)
 
     elif request.method == 'PUT':
         type = request.GET['type']
-        project_obj = Project.objects.filter(id=request.GET['id'])[0]
+        project_obj = Project.objects.get(id=request.GET['id'])
         if type == 'project_name':
             project_obj.project_name = request.data['project_name']
+            if 'company_id' in request.GET:
+                project_obj.tag_company = True
+                project_obj.thumbnail = request.GET['company_id']
+                project_obj.save()
+                user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                text = user['_source']['text']
+                text = text.replace(" "+request.GET['company_name'], "")
+                text += " "+Company.objects.get(id=request.GET['company_id']).company_name
+                id = user['_id']
+                es.update(index='profile', id=id, doc={"text":text})
             project_obj.save()
             
         elif type == 'looper':
@@ -40,15 +60,6 @@ def project(request):
                 ProjectUser.objects.create(project_id=project_obj.id, user_id=looper, is_manager=False)
                 tag_fcm(looper, profile_obj.real_name, user_id, project_obj.project_name, project_obj.id)
         
-        elif type =='company':
-            project_obj.tag_company = True
-            project_obj.thumbnail = request.GET['company_id']
-            project_obj.save()
-            user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
-            text = user['_source']['text']
-            text += " "+Company.objects.get(id=request.GET['company_id']).company_name
-            id = user['_id']
-            es.update(index='profile', id=id, doc={"text":text})
         project_obj = ProjectUser.objects.filter(project_id=request.GET['id'], user_id=user_id).select_related('project')[0]            
         return Response(ProjectUserSerializer(project_obj).data, status=status.HTTP_200_OK)
 
