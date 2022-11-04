@@ -597,7 +597,7 @@ def loop_load(request):
             p.update({'is_marked':0})
     profile = Company_Inform.objects.filter(user_id=user_id)
     if profile.exists():
-        pass
+        profile = profile[0]
     else:
         profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
