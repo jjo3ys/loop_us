@@ -702,7 +702,9 @@ def alarm(request):
 
             return Response(status=status.HTTP_200_OK)
         
-        else:            
+        else:         
+            expired_date = datetime.datetime.now() -datetime.timedelta(days=7)
+            Alarm.objects.filter(user_id=request.user.id, date__lte=expired_date, is_read=False).update(is_read=True)
             if request.GET['last'] == '0':
                 alarm_obj = Alarm.objects.filter(user_id=request.user.id).order_by('-id')[:20]
             else:
