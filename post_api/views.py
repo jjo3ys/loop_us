@@ -19,7 +19,7 @@ from rest_framework import status
 from .serializers import BrSerializer, CocommentSerializer, CommentSerializer, NewsSerializer,  PostingSerializer, MainloadSerializer, SimpleProjectserializer
 from .models import CocommentLike, CommentLike, CorpLike, Post, PostImage, Like, BookMark, Cocomment, Comment, PostLink
 
-from user_api.models import Company_Inform
+from user_api.models import Company_Inform, Alarm
 from loop.models import Loopship
 #from sentence_transformers import SentenceTransformer, util
 import datetime
@@ -197,6 +197,7 @@ def posting(request):
                         post_obj.project.save()
 
         ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id).update(post_count=F('post_count')-1)
+        Alarm.objects.filter(type__in=[4, 5, 6, 7, 8, 9], target_id=request.GET['id']).delete()
         post_obj.delete()
         return Response("delete posting", status=status.HTTP_200_OK)
 
@@ -257,6 +258,7 @@ def comment(request):
         if request.GET['type'] == 'comment':
             try:
                 comment = Comment.objects.filter(id=request.GET['id'])[0]#댓글 id
+                Alarm.objects.filter(type__in=[5, 7], target_id=comment.post_id)
                 comment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)
@@ -264,6 +266,7 @@ def comment(request):
         elif request.GET['type'] == 'cocomment':
             try:
                 cocomment = Cocomment.objects.filter(id=request.GET['id'])[0]#대댓글 id
+                Alarm.objects.filter(type__in=[6, 8], target_id=cocomment.comment.post_id)
                 cocomment.delete()
             except:
                 return Response(status=status.HTTP_404_NOT_FOUND)

@@ -1,6 +1,6 @@
 from .serializers import ProjectUserSerializer
 from .models import Project, ProjectUser
-from user_api.models import Company, Profile
+from user_api.models import Company, Profile, Alarm
 # from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
 from post_api.models import PostImage, Like, BookMark, Post
@@ -102,6 +102,6 @@ def project(request):
             for post in Post.objects.filter(project_id=project_id):
                 for image in PostImage.objects.filter(post_id=post.id):
                     image.image.delete(save=False)
-                
+            Alarm.objects.filter(type=3, target_id=project_id).delete()    
             project_obj.delete()
     return Response(status=status.HTTP_200_OK)
