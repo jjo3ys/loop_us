@@ -113,6 +113,8 @@ def project(request):
             for post in Post.objects.filter(project_id=project_id):
                 for image in PostImage.objects.filter(post_id=post.id):
                     image.image.delete(save=False)
-            Alarm.objects.filter(type=3, target_id=project_id).delete()    
+            Alarm.objects.filter(type__in = [2, 3], target_id=project_id).delete()    
+            post_obj = Post.objects.filter(project_id=project_id).values_list('id', flat=True)
+            Alarm.objects.filter(target_id__in=post_obj).exclude(type__in=[2, 3]).delete()
             project_obj.delete()
     return Response(status=status.HTTP_200_OK)
