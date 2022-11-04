@@ -141,7 +141,10 @@ class AlarmSerializer(serializers.ModelSerializer):
             except IndexError:
                 return None
         elif type in [9, 11]:
-            return Post.objects.filter(id=obj.target_id).select_related('project')[0].project.project_name
+            try:
+                return Post.objects.filter(id=obj.target_id).select_related('project')[0].project.project_name
+            except IndexError:
+                return None
         else:
             return None
                 
