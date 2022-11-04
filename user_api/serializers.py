@@ -141,23 +141,30 @@ class AlarmSerializer(serializers.ModelSerializer):
                 return Project.objects.filter(id=obj.target_id)[0].project_name
             except IndexError:
                 return None
-        elif type in [4, 9, 11]:
+        elif type in [4, 9, 11]:#4: post좋아요, 9: 공식계정 포스팅, 11: 공유 커리어의 포스팅
             try:
                 return Post.objects.filter(id=obj.target_id)[0].contents
             except IndexError:
                 return None
-        elif type == 5 or type == 7:
+        elif type == 5: # 댓글 좋아요
             try:
-                comment_obj = Comment.objects.filter(post_id=obj.target_id).last()
+                comment_obj = Comment.objects.filter(id=obj.target_id).last()
                 return {'content':comment_obj.content, 'post_id':comment_obj.post_id}
             except AttributeError:
                 return None
-        elif type == 6 or type == 8:
+        elif type == 6 or type == 8: # 답글 좋아요(6), 답변(8)
             try:
                 cocomment_obj = Cocomment.objects.filter(comment_id=obj.target_id).select_related('comment').last()
                 return {'content':cocomment_obj.content, 'post_id':cocomment_obj.comment.post_id}
             except AttributeError:
                 return None
+        elif type == 7: # 댓글 작성
+            try:
+                comment_obj = Comment.objects.filter(post_id=obj.target_id).last()
+                return {'content':comment_obj.content, 'post_id':comment_obj.post_id}
+            except AttributeError:
+                return None
+            
     def get_profile(self, obj):
         obj.user_id = obj.alarm_from_id
         profile = simpleprofile(obj)
