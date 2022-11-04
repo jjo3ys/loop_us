@@ -184,7 +184,7 @@ def chat_fcm(topic, req_from, msg, user_id):
     
 def public_pj_fcm(topic, id, from_id, pj_name):
     user_obj = list(ProjectUser.objects.filter(project_id=topic).values_list('user_id'))
-    alarm_list = list(map(lambda x:Alarm(user_id=x, type=9, target_id=id, alarm_from_id=from_id), user_obj))
+    alarm_list = list(map(lambda x:Alarm(user_id=x[0], type=9, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list)
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
@@ -207,7 +207,7 @@ def public_pj_fcm(topic, id, from_id, pj_name):
         
 def department_fcm(topic, id, from_id):
     user_obj = list(Profile.objects.filter(department_id=topic).values_list('user_id'))
-    alarm_list = list(map(lambda x: Alarm(user_id=x, type=9, target_id=id, alarm_from_id=from_id), user_obj))
+    alarm_list = list(map(lambda x: Alarm(user_id=x[0], type=9, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list, batch_size=1000)
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
@@ -230,7 +230,7 @@ def department_fcm(topic, id, from_id):
 
 def school_fcm(topic, id, from_id):
     user_obj = list(Profile.objects.filter(school_id=topic).values_list('user_id'))
-    alarm_list = list(map(lambda x: Alarm(user_id=x, type=9, target_id=id, alarm_from_id=from_id), user_obj))
+    alarm_list = list(map(lambda x: Alarm(user_id=x[0], type=9, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list, batch_size=1000)
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
