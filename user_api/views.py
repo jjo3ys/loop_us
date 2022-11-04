@@ -696,10 +696,7 @@ def ban(request):
 def alarm(request):
     if request.method == 'GET':
         if request.GET['type'] == 'read':
-            alarm_obj = Alarm.objects.filter(target_id=request.GET['id'], type=request.GET['type_id'], alarm_from_id=request.GET['sender_id'])[0]
-            alarm_obj.is_read = True
-            alarm_obj.save()
-
+            Alarm.objects.filter(id=request.GET['id']).update(is_read=True)
             return Response(status=status.HTTP_200_OK)
         
         else:         
