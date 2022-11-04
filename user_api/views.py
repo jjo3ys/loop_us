@@ -260,11 +260,12 @@ def login(request):
 
         else:    
             profile_obj = Profile.objects.filter(user_id=user.id)[0]
-            
+            topic_list = list(ProjectUser.objects.filter(user_id=user.id).select_related('project').filter(project__is_public=True).values_list('project_id', flat=True))
             return Response({'token':token_obj.key,
                             'school_id':'school'+str(profile_obj.school_id),
                             'department_id':'department'+str(profile_obj.department_id),
                             'is_student':1,
+                            'topic_list':topic_list,
                             'user_id':str(token_obj.user_id)}, status=status.HTTP_202_ACCEPTED)
     
     else:
