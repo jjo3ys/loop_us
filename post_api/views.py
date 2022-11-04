@@ -193,7 +193,10 @@ def posting(request):
                             post_obj.project.thumbnail = 0
                         else:
                             post_obj.project.thumbnail = PostImage.objects.filter(post_id=img_obj.last().post_id).first().id
-                        post_obj.project.post_update_date = post.last().date
+                        if post.last():
+                            post_obj.project.post_update_date = post.last().date
+                        else:
+                            post_obj.project.post_update_date = None
                         post_obj.project.save()
 
         ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id).update(post_count=F('post_count')-1)
