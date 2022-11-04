@@ -1,7 +1,8 @@
 from firebase_admin import messaging
 from firebase_admin._messaging_utils import UnregisteredError, QuotaExceededError
 # from fcm.models import FcmToken
-from user_api.models import Alarm
+from user_api.models import Alarm, Profile
+from project_api.models import ProjectUser
     
 def loop_fcm(topic, req_from, id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=2, target_id=id, alarm_from_id=id)
@@ -182,70 +183,73 @@ def chat_fcm(topic, req_from, msg, user_id):
         pass
     
 def public_pj_fcm(topic, id, from_id, pj_name):
-    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=9, target_id=id, alarm_from_id=from_id)
-    if valid:
-        message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
-            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
-            notification=messaging.Notification(
-                title='루프어스',
-                body='{}커리어에 새로운 포스팅이 올라왔습니다.'.format(pj_name)
-            ),
-            data={
-                'type':'9',
-                'id':str(id),
-                'sender_id':str(from_id)
-            },
-            topic='project'+str(topic),
-            )
-        try:
-            messaging.send(message)
-        except QuotaExceededError:
-            pass
+    user_obj = list(ProjectUser.objects.filter(project_id=topic).values_list('user_id'))
+    alarm_list = list(map(lambda x:Alarm(user_id=x, type=9, target_id=id, alarm_from_id=from_id), user_obj))
+    Alarm.objects.bulk_create(alarm_list)
+    message = messaging.Message(
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+        notification=messaging.Notification(
+            title='루프어스',
+            body='{} 커리어에 새로운 포스팅이 올라왔습니다.'.format(pj_name)
+        ),
+        data={
+            'type':'9',
+            'id':str(id),
+            'sender_id':str(from_id)
+        },
+        topic='project'+str(topic),
+        )
+    try:
+        messaging.send(message)
+    except QuotaExceededError:
+        pass
         
 def department_fcm(topic, id, from_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=9, target_id=id, alarm_from_id=from_id)
-    if valid:
-        message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
-            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
-            notification=messaging.Notification(
-                title='루프어스',
-                body='새로운 학과공지가 올라왔습니다.'
-            ),
-            data={
-                'type':'9',
-                'id':str(id),
-                'sender_id':str(from_id)
-            },
-            topic='department'+str(topic),
-            )
-        try:
-            messaging.send(message)
-        except QuotaExceededError:
-            pass
+    user_obj = list(Profile.objects.filter(department_id=topic).values_list('user_id'))
+    alarm_list = list(map(lambda x: Alarm(user_id=x, type=9, target_id=id, alarm_from_id=from_id), user_obj))
+    Alarm.objects.bulk_create(alarm_list, batch_size=1000)
+    message = messaging.Message(
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+        notification=messaging.Notification(
+            title='루프어스',
+            body='새로운 학과공지가 올라왔습니다.'
+        ),
+        data={
+            'type':'9',
+            'id':str(id),
+            'sender_id':str(from_id)
+        },
+        topic='department'+str(topic),
+        )
+    try:
+        messaging.send(message)
+    except QuotaExceededError:
+        pass
 
 def school_fcm(topic, id, from_id):
-    alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=9, target_id=id, alarm_from_id=from_id)
-    if valid:
-        message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
-            apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
-            notification=messaging.Notification(
-                title='루프어스',
-                body='새로운 학교공지가 올라왔습니다.'
-            ),
-            data={
-                'type':'9',
-                'id':str(id),
-                'sender_id':str(from_id)
-            },
-            topic='school'+str(topic),
-            )
-        try:
-            messaging.send(message)
-        except QuotaExceededError:
-            pass
+    user_obj = list(Profile.objects.filter(school_id=topic).values_list('user_id'))
+    alarm_list = list(map(lambda x: Alarm(user_id=x, type=9, target_id=id, alarm_from_id=from_id), user_obj))
+    Alarm.objects.bulk_create(alarm_list, batch_size=1000)
+    message = messaging.Message(
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+        notification=messaging.Notification(
+            title='루프어스',
+            body='새로운 학교공지가 올라왔습니다.'
+        ),
+        data={
+            'type':'9',
+            'id':str(id),
+            'sender_id':str(from_id)
+        },
+        topic='school'+str(topic),
+        )
+    try:
+        messaging.send(message)
+    except QuotaExceededError:
+        pass
 
 def rank_fcm(topic):
     message = messaging.Message(
