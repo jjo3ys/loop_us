@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from elasticsearch import Elasticsearch
 
-es = Elasticsearch()
+es = Elasticsearch(hosts=['localhost:9200'])
 # Create your views here.
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
