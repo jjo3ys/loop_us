@@ -183,7 +183,7 @@ def chat_fcm(topic, req_from, msg, user_id):
         pass
 
 def department_fcm(topic, id, from_id):
-    user_obj = list(Profile.objects.filter(department_id=topic).values_list('user_id'))
+    user_obj = list(Profile.objects.filter(department_id=topic).exclude(user_id=from_id).values_list('user_id'))
     alarm_list = list(map(lambda x: Alarm(user_id=x[0], type=9, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list, batch_size=1000)
     message = messaging.Message(
@@ -206,7 +206,7 @@ def department_fcm(topic, id, from_id):
         pass
 
 def school_fcm(topic, id, from_id):
-    user_obj = list(Profile.objects.filter(school_id=topic).values_list('user_id'))
+    user_obj = list(Profile.objects.filter(school_id=topic).exclude(user_id=from_id).values_list('user_id'))
     alarm_list = list(map(lambda x: Alarm(user_id=x[0], type=9, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list, batch_size=1000)
     message = messaging.Message(
@@ -247,7 +247,7 @@ def rank_fcm(topic):
         pass
    
 def public_pj_fcm(topic, id, from_id, pj_name):
-    user_obj = list(ProjectUser.objects.filter(project_id=topic).values_list('user_id'))
+    user_obj = list(ProjectUser.objects.filter(project_id=topic).exclude(user_id=from_id).values_list('user_id'))
     alarm_list = list(map(lambda x:Alarm(user_id=x[0], type=11, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list)
     message = messaging.Message(
