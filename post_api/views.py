@@ -595,8 +595,11 @@ def loop_load(request):
             p.update({'is_marked':1})
         else:
             p.update({'is_marked':0})
-    
-    profile = Profile.objects.filter(user_id=user_id)[0]
+    profile = Company_Inform.objects.filter(user_id=user_id)
+    if profile.exists():
+        pass
+    else:
+        profile = Profile.objects.filter(user_id=user_id)[0]
     if request.GET['last'] == '0':
         project_obj = ProjectUser.objects.filter(user_id=user_id).select_related('project').order_by('post_count').first()
         if project_obj:
