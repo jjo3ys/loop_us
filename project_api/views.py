@@ -46,7 +46,7 @@ def project(request):
                 project_obj.save()
                 user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
                 text = user['_source']['text']
-                text = text.replace(" "+request.GET['company_name'], "")
+                text = text.replace(" "+request.data['company_name'], "")
                 text += " "+Company.objects.get(id=request.GET['company_id']).company_name
                 id = user['_id']
                 es.update(index='profile', id=id, doc={"text":text})
