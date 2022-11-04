@@ -181,10 +181,28 @@ def chat_fcm(topic, req_from, msg, user_id):
         messaging.send(message)
     except QuotaExceededError:
         pass
-    
+
+def rank_fcm(topic):
+    message = messaging.Message(
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
+        notification=messaging.Notification(
+            title='루프어스',
+            body='사용자 랭킹이 업데이트 되었습니다.'
+        ),
+        data={
+            'type':'10',
+        },
+        topic='school'+str(topic),
+        )
+    try:
+        messaging.send(message)
+    except QuotaExceededError:
+        pass
+   
 def public_pj_fcm(topic, id, from_id, pj_name):
     user_obj = list(ProjectUser.objects.filter(project_id=topic).values_list('user_id'))
-    alarm_list = list(map(lambda x:Alarm(user_id=x[0], type=9, target_id=id, alarm_from_id=from_id), user_obj))
+    alarm_list = list(map(lambda x:Alarm(user_id=x[0], type=11, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list)
     message = messaging.Message(
         android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
@@ -194,7 +212,7 @@ def public_pj_fcm(topic, id, from_id, pj_name):
             body='{} 커리어에 새로운 포스팅이 올라왔습니다.'.format(pj_name)
         ),
         data={
-            'type':'9',
+            'type':'11',
             'id':str(id),
             'sender_id':str(from_id)
         },
@@ -243,24 +261,6 @@ def school_fcm(topic, id, from_id):
             'type':'9',
             'id':str(id),
             'sender_id':str(from_id)
-        },
-        topic='school'+str(topic),
-        )
-    try:
-        messaging.send(message)
-    except QuotaExceededError:
-        pass
-
-def rank_fcm(topic):
-    message = messaging.Message(
-        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
-        apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
-        notification=messaging.Notification(
-            title='루프어스',
-            body='사용자 랭킹이 업데이트 되었습니다.'
-        ),
-        data={
-            'type':'10',
         },
         topic='school'+str(topic),
         )
