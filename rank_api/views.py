@@ -336,7 +336,9 @@ def hot_user(request):
         return Response(status=status.HTTP_200_OK)
     
     elif request.method == 'GET':
-        Hot_user_obj = HotUser.objects.filter(group=request.GET['group'])
+        group_id = request.GET['group']
+        group_id = 15
+        Hot_user_obj = HotUser.objects.filter(group=group_id)
         user_list = Hot_user_obj.values_list('user_id', flat=True)
         
         now = datetime.now()
