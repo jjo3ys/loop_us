@@ -219,7 +219,7 @@ def user_ranking(request):
 @permission_classes((IsAuthenticated,))
 def career_board_ranking(request):
     group_id = request.GET['id']
-
+    group_id = 15
     if request.GET['type'] == 'main':
         return_dict = {}
         ranked_post_obj = PostingRanking.objects.filter(group=group_id).select_related('post__project')
