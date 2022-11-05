@@ -24,7 +24,7 @@ from .serializer import LogSerializer
 
 from elasticsearch import Elasticsearch
 
-# es = Elasticsearch(hosts=['localhost:9200'])
+es = Elasticsearch(hosts=['localhost:9200'])
 
 # Create your views here.
 
