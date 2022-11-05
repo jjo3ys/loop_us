@@ -506,7 +506,7 @@ def main_load(request):
         post_obj = Post.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
     post_list = list(post_obj.values_list('id', flat=True))
     like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
-    book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
+    book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
     post_obj = MainloadSerializer(post_obj, many=True).data
 
     for p in post_obj:

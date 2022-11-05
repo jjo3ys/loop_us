@@ -90,7 +90,7 @@ def search(request, type):
         obj = obj[(page-1)*20:page*20]
         post_list = list(obj.values_list('id', flat=True))
         like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
-        book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('user_id', 'post_id'))
+        book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
         obj = MainloadSerializer(obj, many=True).data
 
         for p in obj:

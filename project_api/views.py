@@ -72,7 +72,7 @@ def project(request):
         project = ProjectUserSerializer(project_obj).data            
         post_list = list(map(lambda x:x['id'], project['project']['post']))
         like_list = dict(Like.objects.filter(user_id=request.user.id, post_id__in=post_list).values_list('post_id', 'user_id'))
-        book_list = dict(BookMark.objects.filter(user_id=request.user.id, post_id__in=post_list).values_list('user_id', 'post_id'))
+        book_list = dict(BookMark.objects.filter(user_id=request.user.id, post_id__in=post_list).values_list('post_id', 'user_id'))
         for post in project['project']['post']:
             if post['user_id'] == user_id:
                 post.update({'is_user':1})
