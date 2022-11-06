@@ -248,7 +248,7 @@ def comment(request):
                     else:
                         real_name = Company_Inform.objects.filter(user_id=user_id)[0].company_name
                 except: return Response(status=status.HTTP_404_NOT_FOUND)
-                cocomment_fcm(request.data['tagged_user'], real_name, cocomment_obj.id, user_id, comment_obj.post_id)
+                cocomment_fcm(request.data['tagged_user'], real_name, cocomment_obj.id, user_id, cocomment_obj.comment.post_id)
 
             return Response(CocommentSerializer(cocomment_obj).data, status=status.HTTP_201_CREATED)
     
