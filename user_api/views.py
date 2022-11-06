@@ -470,8 +470,8 @@ def interest_companies(request):
 @api_view(['PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
 def profile(request):
-    profile_obj = Profile.objects.select_related('department', 'school').filter(user_id=request.user.id)[0]
     if request.method == 'PUT':
+        profile_obj = Profile.objects.select_related('department', 'school').filter(user_id=request.user.id)[0]
         type = request.GET['type']
         if type == 'image':
             profile_obj.profile_image.delete(save=False)
