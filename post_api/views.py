@@ -239,8 +239,8 @@ def comment(request):
                                                      comment_id=request.GET['id'],#댓글 id
                                                      content=request.data['content'],
                                                      tagged_id=request.data['tagged_user'])
-            if int(user_id) != int(request.data['tagged_user']) or int(user_id) != int(comment_obj.user_id):
-                comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
+            if int(user_id) != int(request.data['tagged_user']) or int(user_id) != int(cocomment_obj.comment.user_id):
+                
                 profile_obj = Profile.objects.filter(user_id=user_id)
                 try:
                     if profile_obj:
