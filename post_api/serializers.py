@@ -1,4 +1,4 @@
-from user_api.models import Profile
+from user_api.models import Company_Inform, Profile
 from user_api.serializers import simpleprofile 
 from tag.models import Post_Tag
 from .models import Post, PostImage, Like, Cocomment, Comment, PostLink
@@ -71,7 +71,12 @@ class CocommentSerializer(serializers.ModelSerializer):
     def get_tagged_user(self, obj):
         if obj.tagged == None:
             return None
-        else: return {'real_name':Profile.objects.filter(user_id=obj.tagged_id)[0].real_name, 'user_id':obj.tagged_id}
+        else:
+            try:
+                real_name = Profile.objects.filter(user_id=obj.tagged_id)[0].real_name 
+            except:
+                real_name = Company_Inform.objects.filter(user_id=obj.tagged_id)[0].company_name
+            return {'real_name':real_name, 'user_id':obj.tagged_id}
 
 class CommentSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()

@@ -225,7 +225,6 @@ def career_board_ranking(request):
         ranked_post_obj = PostingRanking.objects.filter(group=group_id).select_related('post__project')
         post_list = list(map(lambda x:x.post, ranked_post_obj))
 
-        profile = Profile.objects.filter(user_id=request.user.id)[0]
         return_dict['posting'] = MainloadSerializer(post_list, many=True).data
         obj = Profile.objects.filter(group=group_id)
         

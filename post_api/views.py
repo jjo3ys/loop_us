@@ -217,7 +217,13 @@ def comment(request):
                 post_obj = Post.objects.filter(id=request.GET['id'])[0]
             except: return Response(status=status.HTTP_404_NOT_FOUND)
             if user_id != post_obj.user_id:
-                real_name = Profile.objects.filter(user_id=user_id)[0].real_name
+                profile_obj = Profile.objects.filter(user_id=user_id)
+                try:
+                    if profile_obj:
+                        real_name = profile_obj[0].real_name
+                    else:
+                        real_name = Company_Inform.objects.filter(user_id=user_id)[0].company_name
+                except: return Response(status=status.HTTP_404_NOT_FOUND)
                 comment_fcm(post_obj.user_id, real_name, post_obj.id, user_id)
                 is_student = int(request.GET['is_student'])
                 if is_student and Company_Inform.objects.filter(user_id=post_obj.user_id).exists():
@@ -235,7 +241,10 @@ def comment(request):
                                                      tagged_id=request.data['tagged_user'])
             try:
                 comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
-                real_name = Profile.objects.filter(user_id=user_id)[0].real_name
+                if profile_obj:
+                    real_name = profile_obj[0].real_name
+                else:
+                    real_name = Company_Inform.objects.filter(user_id=user_id)[0].company_name
             except: return Response(status=status.HTTP_404_NOT_FOUND)
             if int(user_id) != int(request.data['tagged_user']) or int(user_id) != int(comment_obj.user_id):
                 cocomment_fcm(request.data['tagged_user'], real_name, cocomment_obj.id, user_id, comment_obj.post_id)
