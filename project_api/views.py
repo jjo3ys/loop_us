@@ -95,21 +95,25 @@ def project(request):
         if type == 'exit':
             project_obj = ProjectUser.objects.filter(project_id=project_id, user_id=user_id).select_related('project')[0]
             if project_obj.project.tag_company:
-                user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
-                text = user['_source']['text']
-                text = text.replace(" "+Company.objects.get(id=project_obj.project.thumbnail).company_name, "")
-                id = user['_id']
-                es.update(index='profile', id=id, doc={"text":text})
+                company_obj = Company.objects.filter(id=project_obj.project.thumbnail)
+                if company_obj:
+                    user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                    text = user['_source']['text']
+                    text = text.replace(" "+company_obj[0].company_name, "")
+                    id = user['_id']
+                    es.update(index='profile', id=id, doc={"text":text})
             project_obj.delete()
             
         elif type == 'del':
             project_obj = Project.objects.filter(id=project_id)[0]
             if project_obj.tag_company:
-                user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
-                text = user['_source']['text']
-                text = text.replace(" "+Company.objects.get(id=project_obj.thumbnail).company_name, "")
-                id = user['_id']
-                es.update(index='profile', id=id, doc={"text":text})
+                company_obj = Company.objects.filter(id=project_obj.thumbnail)
+                if company_obj:
+                    user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                    text = user['_source']['text']
+                    text = text.replace(" "+company_obj[0].company_name, "")
+                    id = user['_id']
+                    es.update(index='profile', id=id, doc={"text":text})
             for post in Post.objects.filter(project_id=project_id):
                 for image in PostImage.objects.filter(post_id=post.id):
                     image.image.delete(save=False)
