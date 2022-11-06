@@ -241,6 +241,7 @@ def comment(request):
                                                      tagged_id=request.data['tagged_user'])
             # try:
             comment_obj = Comment.objects.filter(id=request.GET['id'])[0]
+            profile_obj = Profile.objects.filter(user_id=user_id)
             if profile_obj:
                 real_name = profile_obj[0].real_name
             else:
