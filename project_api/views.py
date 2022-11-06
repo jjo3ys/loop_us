@@ -42,14 +42,16 @@ def project(request):
             project_obj.project_name = request.data['project_name']
             if 'company_id' in request.GET:
                 project_obj.tag_company = True
-                project_obj.thumbnail = request.GET['company_id']
-                project_obj.save()
-                user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
-                text = user['_source']['text']
-                text = text.replace(" "+request.data['company_name'], "")
-                text += " "+Company.objects.get(id=request.GET['company_id']).company_name
-                id = user['_id']
-                es.update(index='profile', id=id, doc={"text":text})
+                company_id = request.GET['company_id']
+                if int(company_id):
+                    project_obj.thumbnail = company_id
+                    project_obj.save()
+                    user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                    text = user['_source']['text']
+                    text = text.replace(" "+request.data['company_name'], "")
+                    text += " "+Company.objects.get(id=request.GET['company_id']).company_name
+                    id = user['_id']
+                    es.update(index='profile', id=id, doc={"text":text})
             project_obj.save()
             
         elif type == 'looper':
