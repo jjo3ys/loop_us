@@ -1,0 +1,25 @@
+<html>
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+ 
+</head>
+<body>
+<?php
+ 
+$currOS=$_SERVER['HTTP_USER_AGENT'];
+ 
+if (strpos($currOS, 'OS X') !== false) {
+    header('Location: https://www.naver.com');
+}
+ 
+if (strpos($currOS, 'iPhone') !== false) {
+    header('Location: https://www.naver.com}');
+}
+ 
+if (strpos($currOS, 'Android') !== false) {
+    header('Location: https://www.google.com');
+}
+ 
+?>
+</body>
+</html>

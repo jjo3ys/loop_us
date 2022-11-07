@@ -1,5 +1,6 @@
 # import os
 # from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
@@ -820,3 +821,6 @@ def profile_indexing(request):
                 text += " " + name
             es.update(index=index, id = id, doc={"text":text})
     return Response(status=status.HTTP_200_OK)
+
+def qrcode(request):
+    return render(request, 'user_api/qrcode.html')
