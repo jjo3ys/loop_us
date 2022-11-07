@@ -27,5 +27,6 @@ urlpatterns = [
     path('ask', views.ask),
     path('ban', views.ban),
     path('indexing', views.profile_indexing),
+    path('qrcode', views.qrcode),
     # path('company', views.company)
 ]
