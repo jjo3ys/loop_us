@@ -200,4 +200,4 @@ if platform.system() == 'Linux':
         '*.*': {}, # 모든 앱에대해서 캐시적용
     }
     DEBUG = False
-    ALLOWED_HOSTS = ['3.35.253.151']
+    ALLOWED_HOSTS = ['0.0.0.0']
