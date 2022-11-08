@@ -823,4 +823,5 @@ def profile_indexing(request):
     return Response(status=status.HTTP_200_OK)
 
 def qrcode(request):
+    print(request.META['HTTP_USER_AGENT'])
     return render(request, 'user_api/qrcode.html')
