@@ -103,9 +103,7 @@ def activate(request):
         client.delete(email)
         user = User.objects.filter(username=email)
         if user.exists():
-            user = user[0]
-            user.is_active = True
-            user.save()
+            user.update(is_active=True)
         else:
             pass
         return Response(status=status.HTTP_200_OK)
