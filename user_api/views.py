@@ -823,5 +823,10 @@ def profile_indexing(request):
     return Response(status=status.HTTP_200_OK)
 
 def qrcode(request):
-    print(request.META['HTTP_USER_AGENT'])
-    return render(request, 'user_api/qrcode.html')
+    OS = request.META['HTTP_USER_AGENT']
+    if 'Android' in OS:
+        return redirect("https://play.google.com/store/apps/details?id=com.loopus.loopus")
+    elif 'iPhone' in OS:
+        return redirect("https://apps.apple.com/kr/app/%EB%A3%A8%ED%94%84%EC%96%B4%EC%8A%A4/id1603358083")
+    else:
+        return redirect("https://play.google.com/store/apps/details?id=com.loopus.loopus")
