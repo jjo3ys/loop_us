@@ -124,7 +124,7 @@ class MainloadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments', 'contents_link']
+        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments', 'contents_link', 'comment_count']
 
     def get_profile(self, obj):
         profile = simpleprofile(obj)
