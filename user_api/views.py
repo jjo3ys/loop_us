@@ -103,9 +103,7 @@ def activate(request):
         client.delete(email)
         user = User.objects.filter(username=email)
         if user.exists():
-            user = user[0]
-            user.is_active = True
-            user.save()
+            user.update(is_active=True)
         else:
             pass
         return Response(status=status.HTTP_200_OK)
@@ -581,8 +579,15 @@ def profile(request):
         school_ratio = round(profile_obj.school_rank/school_count, 2)
         school_last_ratio = round(profile_obj.school_last_rank/school_count, 2)
 
-        profile.update({"group_ratio":group_ratio, "group_rank_variance":last_group_ratio-group_ratio,
-                        "school_ratio":school_ratio, "school_rank_variance":school_last_ratio-school_ratio})
+        if profile_obj.last_rank == 0:
+            group_variance = 1
+            school_variance = 1
+        else:
+            group_variance = last_group_ratio-group_ratio
+            school_variance = school_last_ratio-school_ratio
+
+        profile.update({"group_ratio":group_ratio, "group_rank_variance":group_variance,
+                        "school_ratio":school_ratio, "school_rank_variance":school_variance})
         
         return Response(profile, status=status.HTTP_200_OK)
 
