@@ -580,8 +580,8 @@ def profile(request):
         school_last_ratio = round(profile_obj.school_last_rank/school_count, 2)
 
         if profile_obj.last_rank == 0:
-            group_variance = 1
-            school_variance = 1
+            group_variance = 1.0
+            school_variance = 1.0
         else:
             group_variance = last_group_ratio-group_ratio
             school_variance = school_last_ratio-school_ratio
