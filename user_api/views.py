@@ -193,10 +193,10 @@ def check_corp_num(request):
 def signup(request):
     type = request.data['type']
 
-    if int(type) == 1:
-        user = User.objects.create_user(username=request.data['username'], email=request.data['username'], password=request.data['password'], is_active=True)
-    else:
-        user = User.objects.create_user(username=request.data['email'], email=request.data['email'], password=request.data['password'], is_active=True)
+    # if int(type) == 1:
+    #     user = User.objects.create_user(username=request.data['username'], email=request.data['username'], password=request.data['password'], is_active=True)
+    # else:
+    user = User.objects.create_user(username=request.data['email'], email=request.data['email'], password=request.data['password'], is_active=True)
     
     token = Token.objects.create(user_id=user.id)
     try:
@@ -208,39 +208,40 @@ def signup(request):
                                             school_id = request.data['school'],
                                             admission = request.data['admission'])
         es = Elasticsearch()
-        body = {
-            "user_id":user.id,
-            "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
-        }
-        es.index(index='profile', doc_type='_doc', body=body)
+        if profile_obj.department:
+            body = {
+                "user_id":user.id,
+                "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
+            }
+            es.index(index='profile', doc_type='_doc', body=body)
     except:
         es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":user.id}}}})
         token.delete()
         user.delete()
         return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
 
-    if type == 1:
-        corp = Activation.objects.filter(user_id=user.id)[0]
-        Company_Inform.objects.create(profile_id = profile_obj.id,
-                                    corp_num = corp.corp_num,
-                                    corp_name = corp.corp_name)
-        corp.delete()
-        return Response({'token':token.key,
-                        'is_student':0,
-                        'user_id':str(token.user_id)}, status=status.HTTP_201_CREATED)
-    else:
-        loop_list = []
-        dep_loop = Profile.objects.filter(department_id=request.data['department']).exclude(user_id=user.id)
-        for looper in dep_loop:
-            loop_list.append(Loopship(user_id=user.id, friend_id=looper.user_id))
-            loop_list.append(Loopship(user_id=looper.user_id, friend_id=user.id))
-        Loopship.objects.bulk_create(loop_list)
-    # InterestTag.objects.create(user_id=user.id, tag_list={})
-        return Response({'token':token.key,
-                        'school_id':'school'+str(profile_obj.school_id),
-                        'department_id':'department'+str(profile_obj.department_id),
-                        'is_student':1,
-                        'user_id':str(token.user_id)}, status=status.HTTP_201_CREATED)
+    # if type == 1:
+    #     corp = Activation.objects.filter(user_id=user.id)[0]
+    #     Company_Inform.objects.create(profile_id = profile_obj.id,
+    #                                 corp_num = corp.corp_num,
+    #                                 corp_name = corp.corp_name)
+    #     corp.delete()
+    #     return Response({'token':token.key,
+    #                     'is_student':0,
+    #                     'user_id':str(token.user_id)}, status=status.HTTP_201_CREATED)
+    # else:
+    loop_list = []
+    dep_loop = Profile.objects.filter(department_id=request.data['department']).exclude(user_id=user.id)
+    for looper in dep_loop:
+        loop_list.append(Loopship(user_id=user.id, friend_id=looper.user_id))
+        loop_list.append(Loopship(user_id=looper.user_id, friend_id=user.id))
+    Loopship.objects.bulk_create(loop_list)
+# InterestTag.objects.create(user_id=user.id, tag_list={})
+    return Response({'token':token.key,
+                    'school_id':'school'+str(profile_obj.school_id),
+                    'department_id':'department'+str(profile_obj.department_id),
+                    'is_student':1,
+                    'user_id':str(token.user_id)}, status=status.HTTP_201_CREATED)
     
 @api_view(['POST'])
 def login(request):

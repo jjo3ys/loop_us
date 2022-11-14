@@ -28,7 +28,7 @@ class Profile(models.Model):
     type = models.SmallIntegerField(default=0)
     profile_image = models.ImageField(null = True, upload_to='profile_image/')
     school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
-    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING)
+    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, null=True)
     group = models.PositiveSmallIntegerField(default=16)
     rank = models.PositiveBigIntegerField(default=0)
     score = models.IntegerField(default=0)
