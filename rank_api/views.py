@@ -1,4 +1,5 @@
 from datetime import datetime, date, timedelta
+from dateutil.relativedelta import relativedelta
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -77,15 +78,15 @@ def monthly_tag_count(request):
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     today = date.today()
-    post_tags = Post_Tag.objects.select_related('post', 'tag').filter(post__date__range=[today-timedelta(days=183), today])
-
-    for id, tag in enumerate(post_tags):
+    post_tags = Post_Tag.objects.select_related('post', 'tag').filter(post__date__range=[today-relativedelta(months=1), today])
+    for tag in post_tags:
         month = str(tag.post.date.month)
         if month not in tag.tag.monthly_count:
             tag.tag.monthly_count[month] = 1
         else:
             tag.tag.monthly_count[month] += 1
-    Post_Tag.objects.bulk_update(post_tags, ['monthly_count'])
+    post_tags = list(map(lambda x: x.tag, post_tags))
+    Tag.objects.bulk_update(post_tags, ['monthly_count'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])   
