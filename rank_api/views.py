@@ -78,15 +78,21 @@ def monthly_tag_count(request):
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
     today = date.today()
-    post_tags = Post_Tag.objects.select_related('post', 'tag').filter(post__date__range=[today-relativedelta(months=1), today])
+    date_range = today-relativedelta(months=1)
+    last_month = date_range.month
+    
+    post_tags = Post_Tag.objects.select_related('post', 'tag').filter(post__date__range=[date_range, today])
+    tag_dict = {}
     for tag in post_tags:
-        month = str(tag.post.date.month)
-        if month not in tag.tag.monthly_count:
-            tag.tag.monthly_count[month] = 1
+        if tag.tag not in tag_dict:
+            tag_dict[tag.tag] = 1
         else:
-            tag.tag.monthly_count[month] += 1
-    post_tags = list(map(lambda x: x.tag, post_tags))
-    Tag.objects.bulk_update(post_tags, ['monthly_count'])
+            tag_dict[tag.tag] += 1
+    
+    for tag in tag_dict:
+        tag.monthly_count[last_month] = tag_dict[tag]
+
+    Tag.objects.bulk_update(tag_dict, ['monthly_count'])
     return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])   
