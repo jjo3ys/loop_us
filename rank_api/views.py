@@ -260,7 +260,7 @@ def career_board_ranking(request):
     
     elif request.GET['type'] == 'school':
         profile = Profile.objects.filter(user_id=request.user.id)[0]
-        profile_obj = Profile.objects.filter(school_id=profile.school_id, group=group_id).exclude(rank=0).order_by('school_rank')[:50]
+        profile_obj = Profile.objects.filter(school_id=profile.school_id, group=group_id).exclude(rank=0, type=1).order_by('school_rank')[:50]
         profile_obj = SchoolRankProfileSerailizer(profile_obj, many=True).data
         user_follow = dict(Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', 'user_id'))
         user_following = dict(Loopship.objects.filter(friend_id=request.user.id).values_list('user_id', 'friend_id'))
@@ -284,7 +284,7 @@ def career_board_ranking(request):
         return Response(profile_obj, status=status.HTTP_200_OK)
     
     elif request.GET['type'] == 'group':
-        profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0).order_by('rank')[:50]
+        profile_obj = Profile.objects.filter(group=group_id).exclude(rank=0, type=1).order_by('rank')[:50]
         profile_obj = RankProfileSerailizer(profile_obj, many=True).data
         user_follow = dict(Loopship.objects.filter(user_id=request.user.id).values_list('friend_id', 'user_id'))
         user_following = dict(Loopship.objects.filter(friend_id=request.user.id).values_list('user_id', 'friend_id'))

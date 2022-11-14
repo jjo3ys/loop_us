@@ -113,9 +113,9 @@ def search(request, type):
         results = es.search(index='profile', body={'query':{'match':{"text":{"query":query, "analyzer":"ngram_analyzer"}}}}, size=1000)['hits']['hits'][(page-1)*20:page*20]
         if len(results) == 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        results = list(map(lambda x: x['_source']['user_id'], results))
+        results = list(map(lambda x: Profile.objects.filter(user_id= x['_source']['user_id'])[0], results))
 
-        obj = SimpleProfileSerializer(Profile.objects.filter(user_id__in=results), many=True).data
+        obj = SimpleProfileSerializer(results, many=True).data
 
     elif type == 'tag_post':
         obj = Post_Tag.objects.filter(tag_id=int(query)).select_related('post_tag', 'post__project').order_by('-id')
