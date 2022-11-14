@@ -103,7 +103,7 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['user_id', 'real_name', 'profile_image', 'department', 'school_name']
+        fields = ['user_id', 'real_name', 'profile_image', 'department', 'school_name', 'type']
     
     def get_department(self, obj):
         return obj.department.department
