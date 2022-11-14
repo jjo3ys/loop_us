@@ -173,7 +173,7 @@ def profile_group(request):
 def user_ranking(request):
     if request.user.id != 5:
         return Response(status=status.HTTP_403_FORBIDDEN)
-    profile_obj = Profile.objects.all()
+    profile_obj = Profile.objects.filter(type=0)
     group_list = Group.objects.all().values_list('id', flat=True)
     score_list = {}
     for g in group_list:
