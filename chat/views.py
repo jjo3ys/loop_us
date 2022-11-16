@@ -98,7 +98,11 @@ def get_profile(request):
                     + SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in=member).select_related('company_logo'), many=True).data)
 
     user_banned = list(Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True))
-    user_ban = Banlist.objects.filter(user_id=request.user.id)[0].banlist
+    try:
+        user_ban = Banlist.objects.filter(user_id=request.user.id)[0].banlist
+    except IndexError:
+        user_ban = []
+
     for profile in profiles:
         if profile['user_id'] in user_banned:      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
             profile['is_banned'] = 2
