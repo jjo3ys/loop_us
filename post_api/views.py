@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator
-from django.db.models import F
+from django.db.models import F, Q
 from crawling_api.models import News, Youtube, Brunch
 from project_api.models import Project, ProjectUser
 # from search.models import Get_log, InterestTag
@@ -509,11 +509,18 @@ def main_load(request):
         ban_list = []
 
     ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
-
-    if request.GET['last'] == '0':
-        post_obj = Post.objects.all().exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
+    profile = Profile.objects.filter(user_id=user_id)
+    if profile.exists():
+        ban_list += Profile.objects.filter(Q(type=1)& ~Q(department_id=profile[0].department_id)).values_list('user_id', flat=True)
+        
     else:
-        post_obj = Post.objects.filter(id__lt=request.GET['last']).exclude(user_id__in=ban_list).select_related('project').order_by('-id')[:20]
+        ban_list += Profile.objects.filter(type=1).values_list('user_id', flat=True)
+        
+    if request.GET['last'] == '0':
+        post_obj = Post.objects.all().select_related('user', 'project').exclude(user_id__in=ban_list).order_by('-id')[:20]
+    else:
+        post_obj = Post.objects.filter(id__lt=request.GET['last']).select_related('user', 'project').exclude(user_id__in=ban_list).order_by('-id')[:20]
+
     post_list = list(post_obj.values_list('id', flat=True))
     like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
     book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
@@ -536,24 +543,22 @@ def main_load(request):
             p.update({'is_marked':0})
     
     if request.GET['last'] == '0':
-        profile = Profile.objects.filter(user_id=user_id)
-        if profile.exists():
-            profile = profile[0]
-        else:
-            profile = Company_Inform.objects.filter(user_id=user_id)[0]
-            
+        
         project_obj = ProjectUser.objects.filter(user_id=user_id).select_related('project').order_by('post_count').first()
         if project_obj:
             project_obj = SimpleProjectserializer(project_obj.project).data
             
-        if profile.group == 16:
-            news_obj = News.objects.all().order_by('?')
-            br_obj = Brunch.objects.all().order_by('?')
-            yt_obj = list(Youtube.objects.all().order_by('?').values_list('urls', flat=True))
-        else:
-            news_obj = News.objects.filter(group_id=profile.group).order_by('?')
-            br_obj = Brunch.objects.filter(group_id=profile.group).order_by('?')
-            yt_obj = list(Youtube.objects.all().order_by('?').values_list('urls', flat=True))
+        # if profile.group == 16:
+        #     news_obj = News.objects.all().order_by('?')
+        #     br_obj = Brunch.objects.all().order_by('?')
+        #     yt_obj = list(Youtube.objects.all().order_by('?').values_list('urls', flat=True))
+        # else:
+        # news_obj = News.objects.filter(group_id=profile.group).order_by('?')
+        # br_obj = Brunch.objects.filter(group_id=profile.group).order_by('?')
+        # yt_obj = list(Youtube.objects.filter(group_id=profile.group).order_by('?').values_list('urls', flat=True))
+        news_obj = News.objects.all().order_by('?')
+        br_obj = Brunch.objects.all().order_by('?')
+        yt_obj = list(Youtube.objects.all().order_by('?').values_list('urls', flat=True))
             
         return Response({'posting':post_obj, 
                          'brunch':BrSerializer(br_obj, many=True).data, 
