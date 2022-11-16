@@ -76,12 +76,12 @@ def posting(request):
 
         ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id']).update(post_count=F('post_count') + 1)
         
-        # if request.user.is_staff:
-        #     official_obj = Profile.objects.filter(user_id=user_id)[0]
-        #     if official_obj.type == 1:
-        #         department_fcm(official_obj.department_id, post_obj.id, user_id)
-        #     elif official_obj.type == 3:
-        #         school_fcm(official_obj.school_id, post_obj.id, user_id)
+        if request.user.is_staff:
+            official_obj = Profile.objects.filter(user_id=user_id)[0]
+            if official_obj.type == 1:
+                department_fcm(official_obj.department_id, post_obj.id, user_id)
+            elif official_obj.type == 3:
+                school_fcm(official_obj.school_id, post_obj.id, user_id)
                 
         if project_obj.is_public:
             public_pj_fcm(project_obj.id, post_obj.id, user_id, project_obj.project_name)
