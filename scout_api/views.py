@@ -37,7 +37,7 @@ def company_group(request):
 
         if request.GET['type'] == 'main':
         
-            group_obj = Group.objects.all()
+            group_obj = Group.objects.all().order_by('id')
             group_obj = Paginator(group_obj, 5)
 
             if group_obj.num_pages < int(request.GET['page']):
@@ -53,5 +53,3 @@ def company_group(request):
                 return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(CompanyProfileSerializer(company_obj.get_page(request.GET['page']), many=True).data, status=status.HTTP_200_OK)
-
-
