@@ -64,6 +64,8 @@ params = (
 
 client = redis.Redis()
 
+ES = Elasticsearch('localhost:9200')
+
 def delete_tag(tag_obj):
     for tag in tag_obj:
         tag.tag.count = tag.tag.count-1
@@ -207,15 +209,14 @@ def signup(request):
                                             department_id = request.data['department'],
                                             school_id = request.data['school'],
                                             admission = request.data['admission'])
-        es = Elasticsearch()
         if profile_obj.department:
             body = {
                 "user_id":user.id,
                 "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
             }
-            es.index(index='profile', doc_type='_doc', body=body)
+            ES.index(index='profile', doc_type='_doc', body=body)
     except:
-        es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":user.id}}}})
+        ES.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":user.id}}}})
         token.delete()
         user.delete()
         return Response('Profile information is not invalid', status=status.HTTP_404_NOT_FOUND)
@@ -335,8 +336,8 @@ def resign(request):
 
     tag_obj = Post_Tag.objects.filter(post__in=Post.objects.filter(user_id=user.id))
     delete_tag(tag_obj)
-    es = Elasticsearch()
-    es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id}}}})
+    
+    ES.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id}}}})
     user = User.objects.filter(id=user.id)[0]
     user.delete()
     return Response("resign from loop", status=status.HTTP_200_OK)  
