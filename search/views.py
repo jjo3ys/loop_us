@@ -15,6 +15,7 @@ from rest_framework import status
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
+from user_api.views import ES
 from user_api.models import Banlist, Company, Company_Inform, Profile, School, Department
 from user_api.serializers import SchoolSerializer, DepSerializer, SimpleComapnyProfileSerializer, SimpleProfileSerializer, SearchCompanySerializer
 from tag.models import Post_Tag
@@ -24,7 +25,7 @@ from .serializer import LogSerializer
 
 from elasticsearch import Elasticsearch
 
-es = Elasticsearch(hosts=['localhost:9200'])
+# es = Elasticsearch(hosts=['localhost:9200'])
 
 # Create your views here.
 
@@ -110,7 +111,7 @@ def search(request, type):
                 p.update({'is_marked':0})
 
     elif type == 'profile':
-        results = es.search(index='profile', body={'query':{'match':{"text":{"query":query, "analyzer":"ngram_analyzer"}}}}, size=1000)['hits']['hits'][(page-1)*20:page*20]
+        results = ES.search(index='profile', body={'query':{'match':{"text":{"query":query, "analyzer":"ngram_analyzer"}}}}, size=1000)['hits']['hits'][(page-1)*20:page*20]
         if len(results) == 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
         results = list(map(lambda x: Profile.objects.filter(user_id= x['_source']['user_id'])[0], results))

@@ -1,6 +1,7 @@
 from .serializers import ProjectUserSerializer
 from .models import Project, ProjectUser
 from user_api.models import Company, Profile, Alarm
+from user_api.views import ES
 # from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
 from post_api.models import PostImage, Like, BookMark, Post
@@ -12,7 +13,6 @@ from rest_framework.permissions import IsAuthenticated
 
 from elasticsearch import Elasticsearch
 
-es = Elasticsearch(hosts=['localhost:9200'])
 # Create your views here.
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
@@ -25,11 +25,11 @@ def project(request):
             project_obj.tag_company = True
             project_obj.thumbnail = request.GET['company_id']
             project_obj.save()
-            user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+            user = ES.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
             text = user['_source']['text']
             text += " "+Company.objects.get(id=request.GET['company_id']).company_name
             id = user['_id']
-            es.update(index='profile', id=id, doc={"text":text})
+            ES.update(index='profile', id=id, doc={"text":text})
             
         project_obj = ProjectUser.objects.create(user_id=user_id, project_id=project_obj.id)
         
@@ -46,12 +46,12 @@ def project(request):
                 if int(company_id):
                     project_obj.thumbnail = company_id
                     project_obj.save()
-                    user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                    user = ES.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
                     text = user['_source']['text']
                     text = text.replace(" "+request.data['company_name'], "")
                     text += " "+Company.objects.get(id=request.GET['company_id']).company_name
                     id = user['_id']
-                    es.update(index='profile', id=id, doc={"text":text})
+                    ES.update(index='profile', id=id, doc={"text":text})
             project_obj.save()
             
         elif type == 'looper':
@@ -99,11 +99,11 @@ def project(request):
             if project_obj.project.tag_company:
                 company_obj = Company.objects.filter(id=project_obj.project.thumbnail)
                 if company_obj:
-                    user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                    user = ES.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
                     text = user['_source']['text']
                     text = text.replace(" "+company_obj[0].company_name, "")
                     id = user['_id']
-                    es.update(index='profile', id=id, doc={"text":text})
+                    ES.update(index='profile', id=id, doc={"text":text})
             project_obj.delete()
             
         elif type == 'del':
@@ -111,11 +111,11 @@ def project(request):
             if project_obj.tag_company:
                 company_obj = Company.objects.filter(id=project_obj.thumbnail)
                 if company_obj:
-                    user = es.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
+                    user = ES.search(index='profile', body={'query':{'match':{'user_id':{'query':user_id}}}})['hits']['hits'][0]
                     text = user['_source']['text']
                     text = text.replace(" "+company_obj[0].company_name, "")
                     id = user['_id']
-                    es.update(index='profile', id=id, doc={"text":text})
+                    ES.update(index='profile', id=id, doc={"text":text})
             for post in Post.objects.filter(project_id=project_id):
                 for image in PostImage.objects.filter(post_id=post.id):
                     image.image.delete(save=False)
