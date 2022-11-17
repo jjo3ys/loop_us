@@ -230,6 +230,9 @@ def signup(request):
     #     return Response({'token':token.key,
     #                     'is_student':0,
     #                     'user_id':str(token.user_id)}, status=status.HTTP_201_CREATED)
+    if int(type) == 0:
+        project_obj = Project.objects.create(project_name = '일상', is_public=0)
+        ProjectUser.objects.create(user_id=user.id, project_id=project_obj.id)
     # else:
     loop_list = []
     dep_loop = Profile.objects.filter(department_id=request.data['department']).exclude(user_id=user.id)
