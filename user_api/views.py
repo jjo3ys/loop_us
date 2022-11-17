@@ -501,13 +501,13 @@ def profile(request):
             profile_obj.department_id = request.data['department']
             profile_obj.admission = request.data['admission']
             profile_obj.rank, profile_obj.last_rank, profile_obj.school_rank, profile_obj.school_last_rank = 0
-            es = Elasticsearch()
-            es.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id,}}}})
+
+            ES.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id,}}}})
             body = {
                 "user_id":request.user.id,
                 "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
             }
-            es.index(index='profile', doc_type='_doc', body=body)
+            ES.index(index='profile', doc_type='_doc', body=body)
             
             user_obj.save()
             profile_obj.save()
@@ -588,10 +588,10 @@ def profile(request):
             group_variance = 1.0
             school_variance = 1.0
             if profile_obj.rank == 0:
-                group_ratio = 0
-                group_variance = 0
-                school_ratio = 0
-                school_variance = 0
+                group_ratio = 0.0
+                group_variance = 0.0
+                school_ratio = 0.0
+                school_variance = 0.0
         else:
             group_variance = last_group_ratio-group_ratio
             school_variance = school_last_ratio-school_ratio
