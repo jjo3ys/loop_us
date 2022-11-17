@@ -583,6 +583,11 @@ def profile(request):
         if profile_obj.last_rank == 0:
             group_variance = 1.0
             school_variance = 1.0
+            if profile_obj.rank == 0:
+                group_ratio = 0
+                group_variance = 0
+                school_ratio = 0
+                school_variance = 0
         else:
             group_variance = last_group_ratio-group_ratio
             school_variance = school_last_ratio-school_ratio
