@@ -25,7 +25,7 @@ class PostLink(models.Model):
 
 class PostImage(models.Model):
     post = models.ForeignKey(Post, related_name='contents_image', on_delete=models.CASCADE)
-    image = models.ImageField(null=True, upload_to='post/image/%Y%m%d/')
+    image = models.ImageField(null=True, upload_to='post/')
 
     class Meta:
         db_table = "Post_image"
