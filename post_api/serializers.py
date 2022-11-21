@@ -1,7 +1,7 @@
 from user_api.models import Company_Inform, Profile
 from user_api.serializers import simpleprofile 
 from tag.models import Post_Tag
-from .models import Post, PostImage, Like, Cocomment, Comment, PostLink
+from .models import Post, PostFile, PostImage, Like, Cocomment, Comment, PostLink
 from project_api.models import Project
 from crawling_api.models import News, Brunch, Youtube
 
@@ -45,6 +45,11 @@ class LikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
         fields = ['id', 'post_id', 'user_id']
+        
+class PostingFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostFile
+        fields = ['file']
     
 class PostingImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -155,13 +160,14 @@ class PostingSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
     post_tag = PostTagSerializer(many=True, read_only=True)
+    file = PostingFileSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
     comments = serializers.SerializerMethodField()
     contents_link = PostingLinkeSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'profile', 'project', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link']
+        fields = ['id', 'user_id', 'profile', 'project', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link', 'file']
         
     def get_profile(self, obj):
         profile = simpleprofile(obj)
