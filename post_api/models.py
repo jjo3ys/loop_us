@@ -4,6 +4,8 @@ from project_api.models import Project
 from user_api.models import User
 # Create your models here.
 
+def file_upload_path(instance, filename):
+    return 'post_file/{}/{}'.format(instance.user_id, filename)
 
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -32,7 +34,7 @@ class PostImage(models.Model):
 
 class PostFile(models.Model):
     post = models.ForeignKey(Post, related_name='contents_file', on_delete=models.CASCADE)
-    file = models.FileField(upload_to='post_file/')
+    file = models.FileField(upload_to=file_upload_path)
     
 class Comment(models.Model):
     post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
