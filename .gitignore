@@ -7,8 +7,8 @@ __pycache__/
 /venv/
 /docker-compose.yml
 Dockerfile
-/requirements.txt
-requirements.txt
+#/requirements.txt
+#requirements.txt
 /Pipfile
 /Pipfile.lock
 
@@ -30,3 +30,11 @@ serviceAccountKey.json
 youtube_crawler.py
 locust.py
 signup.py
+
+chromdriver
+
+*.swm
+*.swn
+*.swo
+*.swp
+*.out
