@@ -5,7 +5,7 @@ from user_api.models import User
 # Create your models here.
 
 def file_upload_path(instance, filename):
-    return 'post_file/{}/{}'.format(instance.user_id, filename)
+    return 'post_file/{}/{}'.format(instance.post.user_id, filename)
 
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
