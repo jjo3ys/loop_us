@@ -57,7 +57,7 @@ def tagged_post(request):
             else:
                 monthly_count[month] = tag_obj.monthly_count[month]
 
-        post_obj = Paginator(post_tag_obj.order_by('-post_id'), 20).get_page('1')
+        post_obj = Paginator(post_tag_obj.order_by('-post_id'), 10).get_page('1')
         post_list = list(map(lambda x: x.post, post_obj))
 
         like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_list).values_list('post_id', 'user_id'))
@@ -79,7 +79,7 @@ def tagged_post(request):
             else:
                 post.update({'is_marked':0})
 
-        post_obj = Paginator(post_tag_obj.order_by('-post__like_count'), 5).get_page('1')
+        post_obj = Paginator(post_tag_obj.order_by('-post__like_count'), 10).get_page('1')
         post_list = list(map(lambda x: x.post, post_obj))
         
         like_list = dict(Like.objects.filter(user_id=user_id, post__in=post_list).values_list('post_id', 'user_id'))
