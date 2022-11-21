@@ -15,7 +15,9 @@ from rest_framework import status
 
 from post_api.models import Post, Like, BookMark
 from post_api.serializers import MainloadSerializer
-from user_api.views import ES
+try:
+    from user_api.views import ES
+except: pass
 from user_api.models import Banlist, Company, Company_Inform, Profile, School, Department
 from user_api.serializers import SchoolSerializer, DepSerializer, SimpleComapnyProfileSerializer, SimpleProfileSerializer, SearchCompanySerializer
 from tag.models import Post_Tag
