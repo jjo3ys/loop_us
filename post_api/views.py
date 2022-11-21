@@ -169,6 +169,7 @@ def posting(request):
         post_obj = Post.objects.get(id=request.GET['id'])
         contents_image_obj = PostImage.objects.filter(post_id=post_obj.id)
         # interest_list = InterestTag.objects.get_or_create(user_id=user_id)[0]
+        file_obj = PostFile.objects.filter(post_id=post_obj.id)
         tag_obj = Post_Tag.objects.filter(post_id=post_obj.id).select_related('tag')
 
         for tag in tag_obj:
@@ -200,7 +201,8 @@ def posting(request):
                         else:
                             post_obj.project.post_update_date = None
                         post_obj.project.save()
-
+        for file in file_obj:
+            file.file.delete(save=False)
         ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id).update(post_count=F('post_count')-1)
         Alarm.objects.filter(type__in=[4, 5, 6, 7, 8, 9], target_id=request.GET['id']).delete()
         post_obj.delete()
