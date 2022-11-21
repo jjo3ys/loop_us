@@ -264,10 +264,10 @@ def public_pj_fcm(topic, id, from_id, pj_name):
         },
         topic='project'+str(topic),
         )
-    try:
-        messaging.send(message)
-    except QuotaExceededError:
-        pass
+    # try:
+    messaging.send(message)
+    # except QuotaExceededError:
+    #     pass
         
 def certify_fcm(topic):
     message = messaging.Message(
