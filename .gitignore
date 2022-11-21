@@ -20,6 +20,7 @@ config/__pycache__
 
 /**/migrations
 *.exe
+*.csv
 
 # /**/migrations
 config/my_settings.py
@@ -28,3 +29,4 @@ serviceAccountKey.json
 
 youtube_crawler.py
 locust.py
+signup.py
