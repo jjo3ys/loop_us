@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import BrSerializer, CocommentSerializer, CommentSerializer, NewsSerializer,  PostingSerializer, MainloadSerializer, SimpleProjectserializer
-from .models import CocommentLike, CommentLike, CorpLike, Post, PostImage, Like, BookMark, Cocomment, Comment, PostLink
+from .models import CocommentLike, CommentLike, CorpLike, Post, PostFile, PostImage, Like, BookMark, Cocomment, Comment, PostLink
 
 from user_api.models import Company_Inform, Alarm
 from loop.models import Loopship
@@ -69,6 +69,8 @@ def posting(request):
                 tag_obj.count += 1
                 tag_obj.save()
 
+        for file in request.data.getlist('file'):
+            PostFile.objects.create(post=post_obj, file=file)
         # interest_list.save()
         
         project_obj.post_update_date = datetime.datetime.now()

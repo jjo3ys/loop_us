@@ -29,6 +29,10 @@ class PostImage(models.Model):
 
     class Meta:
         db_table = "Post_image"
+
+class PostFile(models.Model):
+    post = models.ForeignKey(Post, related_name='contents_file', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='post_file/')
     
 class Comment(models.Model):
     post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
