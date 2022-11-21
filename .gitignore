@@ -31,7 +31,7 @@ youtube_crawler.py
 locust.py
 signup.py
 
-chromdriver
+chromedriver
 
 *.swm
 *.swn
