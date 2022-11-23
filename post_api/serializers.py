@@ -122,6 +122,7 @@ class MainloadSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
     comments = serializers.SerializerMethodField()
+    file_count = serializers.SerializerMethodField()
     comment_count = serializers.SerializerMethodField()
     post_tag = PostTagSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
@@ -129,7 +130,7 @@ class MainloadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments', 'contents_link', 'comment_count']
+        fields = ['id', 'user_id', 'contents', 'profile', 'date', 'like_count', 'project', 'contents_image', 'post_tag', 'comments', 'contents_link', 'comment_count', 'file_count']
 
     def get_profile(self, obj):
         profile = simpleprofile(obj)
@@ -155,10 +156,14 @@ class MainloadSerializer(serializers.ModelSerializer):
                 count += cocomment_obj.count()
                 
         return count
+    
+    def get_file_count(self, obj):
+        return PostFile.objects.filter(post_id=obj.id).count()
 
 class PostingSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     project = serializers.SerializerMethodField()
+    file_count = serializers.SerializerMethodField()
     post_tag = PostTagSerializer(many=True, read_only=True)
     contents_file = PostingFileSerializer(many=True, read_only=True)
     contents_image = PostingImageSerializer(many=True, read_only=True)
@@ -167,7 +172,7 @@ class PostingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'user_id', 'profile', 'project', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link', 'contents_file']
+        fields = ['id', 'user_id', 'profile', 'project', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link', 'contents_file', 'file_count']
         
     def get_profile(self, obj):
         profile = simpleprofile(obj)
@@ -175,6 +180,9 @@ class PostingSerializer(serializers.ModelSerializer):
     
     def get_project(self, obj):
         return SimpleProjectserializer(obj.project).data
+
+    def get_file_count(self, obj):
+        return PostFile.objects.filter(post_id=obj.id).count()
     
     def get_comments(self, obj):
         comments_obj = Comment.objects.filter(post_id=obj.id).order_by('-id')[:10]
