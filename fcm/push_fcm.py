@@ -8,7 +8,7 @@ def loop_fcm(topic, req_from, id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=2, target_id=id, alarm_from_id=id)
     if valid:
         message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
             apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
@@ -31,7 +31,7 @@ def tag_fcm(topic, req_from, from_id, project, id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=3, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
             apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
@@ -53,7 +53,7 @@ def like_fcm(topic, req_from, id, from_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=4, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
             apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
@@ -75,7 +75,7 @@ def comment_like_fcm(topic, req_from, id, from_id, post_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=5, target_id=post_id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
             apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
                 notification=messaging.Notification(
                 title='루프어스',
@@ -98,7 +98,7 @@ def cocomment_like_fcm(topic, req_from, id, from_id, post_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=6, target_id=post_id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
             apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
@@ -121,7 +121,7 @@ def comment_fcm(topic, req_from, id, from_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=7, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
             apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
@@ -143,7 +143,7 @@ def cocomment_fcm(topic, req_from, id, from_id, post_id):
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=8, target_id=post_id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
-            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+            android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
             apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
                 title='루프어스',
@@ -164,7 +164,7 @@ def cocomment_fcm(topic, req_from, id, from_id, post_id):
     
 def chat_fcm(topic, req_from, msg, user_id):
     message = messaging.Message(
-        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='chat'),
         apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
             notification=messaging.Notification(
             title='{0}님'.format(req_from),
@@ -187,7 +187,7 @@ def department_fcm(topic, id, from_id):
     alarm_list = list(map(lambda x: Alarm(user_id=x[0], type=9, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list, batch_size=1000)
     message = messaging.Message(
-        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
         apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         notification=messaging.Notification(
             title='루프어스',
@@ -210,7 +210,7 @@ def school_fcm(topic, id, from_id):
     alarm_list = list(map(lambda x: Alarm(user_id=x[0], type=9, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list, batch_size=1000)
     message = messaging.Message(
-        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
         apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         notification=messaging.Notification(
             title='루프어스',
@@ -230,7 +230,7 @@ def school_fcm(topic, id, from_id):
         
 def rank_fcm(topic):
     message = messaging.Message(
-        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
         apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         notification=messaging.Notification(
             title='루프어스',
@@ -251,7 +251,7 @@ def public_pj_fcm(topic, id, from_id, pj_name):
     alarm_list = list(map(lambda x:Alarm(user_id=x[0], type=11, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list)
     message = messaging.Message(
-        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default')),
+        android = messaging.AndroidConfig(notification=messaging.AndroidNotification(channel_id='high_importance_channel', sound='default'), collapse_key='alarm'),
         apns= messaging.APNSConfig(payload=messaging.APNSPayload(aps=messaging.Aps(sound='default'))),
         notification=messaging.Notification(
             title='루프어스',
