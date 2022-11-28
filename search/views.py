@@ -195,7 +195,7 @@ def search_university(request):
 @permission_classes((IsAuthenticated,))
 def recommend(request):
     now = datetime.datetime.now()
-    post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).select_related('project').order_by('-like_count')
+    post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]).select_related('project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').order_by('-like_count')
     post_obj = Paginator(post_obj, 5)
     if post_obj.num_pages < int(request.GET['page']):
         return Response(status=status.HTTP_204_NO_CONTENT)
