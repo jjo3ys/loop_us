@@ -37,7 +37,7 @@ from .serializers import AlarmSerializer, BanlistSerializer, CompanyProfileSeria
 from tag.models import Post_Tag
 from project_api.models import Project, ProjectUser
 from project_api.serializers import OnlyProjectUserSerializer
-from post_api.models import BookMark, Like, Post
+from post_api.models import BookMark, Like, Post, PostImage
 from loop.models import Loopship
 # from fcm.models import FcmToken
 from chat.models import Room, Msg
@@ -329,10 +329,20 @@ def resign(request):
     #     pass
     project_obj = ProjectUser.objects.filter(user_id=user.id)
     project_list = list(project_obj.values_list('project_id', flat=True))
+    thumbnail_list = dict(Project.objects.filter(id__in=project_list, is_public=True, tag_company=False).exclude(thumbnail=None).values_list('thumbnail',flat=True))
         
-    for post in Post.objects.filter(project_id__in=project_list).prefetch_related('contents_image'):
-        for image in post.contents_image.filter(post_id=post.id):
+    for post in Post.objects.filter(project_id__in=project_list).prefetch_related('contents_image', 'contents_file').select_related('project'):
+        for image in post.contents_image.all():
+            if image.id in thumbnail_list:
+                post_list = Post.objects.filter(project_id=post.project_id).exclude(user_id=user.id)
+                post_image_obj = PostImage.objects.filter(post__in=post_list)
+                post.career.thumbnail = None
+                if post_image_obj.exists():
+                    post.project.thumbnail = post_image_obj.last().id
+                post.project.save()   
             image.image.delete(save=False)
+        for file in post.contents_file.all():
+            file.file.delete(save=False)
     
     project_list = list(project_obj.filter(is_manager=1).values_list('project_id', flat=True))
     Project.objects.filter(id__in=project_list).delete()
