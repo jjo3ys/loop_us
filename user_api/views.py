@@ -631,9 +631,9 @@ def posting(request):
     page = int(request.GET['page'])
     idx = int(request.GET['id'])
     if request.GET['type'] == 'career':
-        post_obj = Post.objects.filter(project_id=idx).select_related('project').order_by('-id')
+        post_obj = Post.objects.filter(project_id=idx).select_related('project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').order_by('-id')
     elif request.GET['type'] == 'all':
-        post_obj = Post.objects.filter(user_id=idx).select_related('project').order_by('-id')
+        post_obj = Post.objects.filter(user_id=idx).select_related('project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').order_by('-id')
         
     if page > post_obj.count()//20+1:
         return Response(status=status.HTTP_204_NO_CONTENT)

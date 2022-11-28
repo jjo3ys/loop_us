@@ -521,9 +521,9 @@ def main_load(request):
         ban_list += Profile.objects.filter(type=1).values_list('user_id', flat=True)
         
     if request.GET['last'] == '0':
-        post_obj = Post.objects.all().select_related('user', 'project').exclude(user_id__in=ban_list).order_by('-id')[:20]
+        post_obj = Post.objects.all().select_related('user', 'project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').exclude(user_id__in=ban_list).order_by('-id')[:20]
     else:
-        post_obj = Post.objects.filter(id__lt=request.GET['last']).select_related('user', 'project').exclude(user_id__in=ban_list).order_by('-id')[:20]
+        post_obj = Post.objects.filter(id__lt=request.GET['last']).select_related('user', 'project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').exclude(user_id__in=ban_list).order_by('-id')[:20]
 
     post_list = list(post_obj.values_list('id', flat=True))
     like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))

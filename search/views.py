@@ -85,7 +85,7 @@ def search(request, type):
     ban_list += Banlist.objects.filter(banlist__contains=user_id).values_list('user_id', flat=True)
 
     if type == 'post':
-        obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).select_related('project').order_by('-id')
+        obj = Post.objects.filter(contents__icontains=query).exclude(user_id__in=ban_list).select_related('project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').order_by('-id')
         if obj.count()//20+1 < page:
             return Response(status=status.HTTP_204_NO_CONTENT)
         obj = obj[(page-1)*20:page*20]
@@ -119,7 +119,7 @@ def search(request, type):
         obj = SimpleProfileSerializer(results, many=True).data
 
     elif type == 'tag_post':
-        obj = Post_Tag.objects.filter(tag_id=int(query)).select_related('post_tag', 'post__project').order_by('-id')
+        obj = Post_Tag.objects.filter(tag_id=int(query)).select_related('post_tag', 'post__project').prefetch_related('post__contents_image', 'post__contents_link', 'post__contents_file', 'post__comments__cocomments', 'post__post_like', 'post__post_tag').order_by('-id')
         obj = Paginator(obj, 5)
         if obj.num_pages < page:
             return Response(status=status.HTTP_204_NO_CONTENT)
