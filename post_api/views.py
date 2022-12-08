@@ -23,7 +23,6 @@ from user_api.models import Company_Inform, Alarm
 from loop.models import Loopship
 #from sentence_transformers import SentenceTransformer, util
 import datetime
-import random
 # Create your views here.
 #emb = SentenceTransformer("jhgan/ko-sroberta-multitask")
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
@@ -31,6 +30,13 @@ import random
 def posting(request):
     user_id = request.user.id
     if request.method == 'POST': 
+        profile_obj = Profile.objects.get(user_id=user_id)
+        file_size = sum(list(map(lambda x: x.size, request.data.getlist('file'))))
+        if profile_obj.upload_size+file_size > 314572800:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+        profile_obj.upload_size += file_size
+        profile_obj.save()
+        
         tags = request.data.getlist('tag')
         '''
         q = Post.objects.filter(project_id=request.GET['id'])
@@ -79,11 +85,10 @@ def posting(request):
         ProjectUser.objects.filter(user_id=user_id, project_id=request.GET['id']).update(post_count=F('post_count') + 1)
         
         if request.user.is_staff:
-            official_obj = Profile.objects.filter(user_id=user_id)[0]
-            if official_obj.type == 1:
-                department_fcm(official_obj.department_id, post_obj.id, user_id)
-            elif official_obj.type == 3:
-                school_fcm(official_obj.school_id, post_obj.id, user_id)
+            if profile_obj.type == 1:
+                department_fcm(profile_obj.department_id, post_obj.id, user_id)
+            elif profile_obj.type == 3:
+                school_fcm(profile_obj.school_id, post_obj.id, user_id)
                 
         if project_obj.is_public:
             public_pj_fcm(project_obj.id, post_obj.id, user_id, project_obj.project_name)
@@ -201,8 +206,13 @@ def posting(request):
                         else:
                             post_obj.project.post_update_date = None
                         post_obj.project.save()
+        file_size = 0
         for file in file_obj:
+            file_size += file.file.size
             file.file.delete(save=False)
+        profile_obj = Profile.objects.get(user_id=user_id)
+        profile_obj.upload_size = max(profile_obj.upload_size-file_size, 0)
+        profile_obj.save()
         ProjectUser.objects.filter(user_id=user_id, project_id=post_obj.project_id).update(post_count=F('post_count')-1)
         Alarm.objects.filter(type__in=[4, 5, 6, 7, 8, 9], target_id=request.GET['id']).delete()
         post_obj.delete()

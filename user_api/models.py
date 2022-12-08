@@ -38,6 +38,7 @@ class Profile(models.Model):
     view_count = models.PositiveBigIntegerField(default=0)
     admission = models.CharField(max_length=10)
     company = models.ForeignKey(Company, null=True, default=None, on_delete=models.DO_NOTHING)
+    upload_size = models.PositiveBigIntegerField(default=0)
     class Meta:
         db_table = "Profile"
 

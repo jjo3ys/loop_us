@@ -4,14 +4,12 @@ from user_api.models import Company, Profile, Alarm
 from user_api.views import ES
 # from fcm.models import FcmToken
 from fcm.push_fcm import tag_fcm
-from post_api.models import PostImage, Like, BookMark, Post
+from post_api.models import Like, BookMark, Post
 
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-
-from elasticsearch import Elasticsearch
 
 # Create your views here.
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
@@ -116,9 +114,18 @@ def project(request):
                     text = text.replace(" "+company_obj[0].company_name, "")
                     id = user['_id']
                     ES.update(index='profile', id=id, doc={"text":text})
-            for post in Post.objects.filter(project_id=project_id):
-                for image in PostImage.objects.filter(post_id=post.id):
+                    
+            file_size = 0
+            for post in Post.objects.filter(project_id=project_id).prefetch_related('contents_image', 'contents_file'):
+                for image in post.contents_image.all():
                     image.image.delete(save=False)
+                for file in post.contents_file.all():
+                    file_size+=file.file.size
+                    file.file.delete(save=False)
+                    
+            profile_obj = Profile.objects.get(user_id=user_id)     
+            profile_obj.upload_size = max(profile_obj.upload_size-file_size, 0)   
+            
             Alarm.objects.filter(type__in = [2, 3], target_id=project_id).delete()    
             post_obj = Post.objects.filter(project_id=project_id).values_list('id', flat=True)
             Alarm.objects.filter(target_id__in=post_obj).exclude(type__in=[2, 3]).delete()
