@@ -233,6 +233,7 @@ def signup(request):
     if int(type) == 0:
         project_obj = Project.objects.create(project_name = '나만의 커리어', is_public=0)
         ProjectUser.objects.create(user_id=user.id, project_id=project_obj.id)
+        Loopship.objects.create(user_id=user.id, friend_id=1038)
     # else:
     
 # InterestTag.objects.create(user_id=user.id, tag_list={})
