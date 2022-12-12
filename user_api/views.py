@@ -233,13 +233,9 @@ def signup(request):
     if int(type) == 0:
         project_obj = Project.objects.create(project_name = '나만의 커리어', is_public=0)
         ProjectUser.objects.create(user_id=user.id, project_id=project_obj.id)
+        Loopship.objects.create(user_id=user.id, friend_id=1038)
     # else:
-    loop_list = []
-    dep_loop = Profile.objects.filter(department_id=request.data['department']).exclude(user_id=user.id)
-    for looper in dep_loop:
-        loop_list.append(Loopship(user_id=user.id, friend_id=looper.user_id))
-        loop_list.append(Loopship(user_id=looper.user_id, friend_id=user.id))
-    Loopship.objects.bulk_create(loop_list)
+    
 # InterestTag.objects.create(user_id=user.id, tag_list={})
     return Response({'token':token.key,
                     'school_id':'school'+str(profile_obj.school_id),
