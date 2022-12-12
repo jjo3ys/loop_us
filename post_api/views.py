@@ -532,7 +532,7 @@ def main_load(request):
         
     if request.GET['last'] == '0':
         post_obj = Post.objects.filter(user_id=1038).order_by('-id')
-        post_obj += Post.objects.all().select_related('user', 'project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').exclude(user_id__in=ban_list).exclude(user_id=1038).order_by('-id')[:20]
+        post_obj = Post.objects.all().select_related('user', 'project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').exclude(user_id__in=ban_list).exclude(user_id=1038).order_by('-id')[:20]
         
     else:
         post_obj = Post.objects.filter(id__lt=request.GET['last']).select_related('user', 'project').prefetch_related('contents_image', 'contents_link', 'contents_file', 'comments__cocomments', 'post_like', 'post_tag').exclude(user_id__in=ban_list).order_by('-id')[:20]
