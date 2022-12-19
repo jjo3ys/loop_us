@@ -32,4 +32,15 @@ class CompanyNews(models.Model):
     
     class Meta:
         db_table = "Comapny_News"
+
+class Competition(models.Model):
+    group = models.CharField(max_length=20)
+    content = models.TextField()
+    image = models.TextField()
+    organizer = models.CharField(max_length=30)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    class Meta:
+        db_table = "Competition"
 # Create your models here.
