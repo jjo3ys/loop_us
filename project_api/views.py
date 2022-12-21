@@ -139,7 +139,7 @@ def project(request):
 def in_school(request):
     if request.method == 'GET':
         profile_obj = Profile.objects.select_related('school').get(user_id=request.user.id)
-        school = {'school':profile_obj.school.school, 'logo':profile_obj.school.logo}
+        school = {'school':profile_obj.school.school, 'logo':profile_obj.school.logo.url}
         
         class_obj = ClassProject.objects.select_related('project','class_inform').filter(class_inform__school_id=profile_obj.school_id).order_by('-project__post_update_date')[:3]
         class_obj = ClassProjectSerializer(class_obj, many=True).data
