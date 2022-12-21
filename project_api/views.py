@@ -1,4 +1,4 @@
-from crawling_api.models import SchoolNews, ClassProject
+from crawling_api.models import Competition, SchoolNews, ClassProject
 from .serializers import ClassInformSerializer, ClassProjectSerializer, ProjectUserSerializer, SchoolNewsSerializer
 from .models import Project, ProjectUser
 from user_api.models import Company, Profile, Alarm
@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+import datetime
 # Create your views here.
 @api_view(['POST', 'PUT', 'GET', 'DELETE'])
 @permission_classes((IsAuthenticated,))
@@ -137,13 +138,24 @@ def project(request):
 @permission_classes((IsAuthenticated,))
 def in_school(request):
     if request.method == 'GET':
+        profile_obj = Profile.objects.select_related('school').get(user_id=request.user.id)
+        school = {'school':profile_obj.school.school, 'logo':profile_obj.school.logo}
+        
         class_obj = ClassProject.objects.select_related('project','class_inform').filter(class_inform__school_id=request.GET['school_id']).order_by('-project__post_update_date')[:3]
         class_obj = ClassProjectSerializer(class_obj, many=True).data
         
         school_act_obj = SchoolNews.objects.filter(school_id=request.GET['school_id']).order_by('-upload_date')[:4]
         school_act_obj = SchoolNewsSerializer(school_act_obj, many=True).data
         result = {
+            'school':school,
             'class':class_obj,
             'activity':school_act_obj
         }
         return Response(result, status=status.HTTP_200_OK)
+
+# @api_view(['GET',])
+# @permission_classes((IsAuthenticated,))
+# def out_school(request):
+#     if request.method == 'GET':
+#         if request.GET['type'] == 'competition':
+#             competition_obj = Competition.objects.filter(end_date__gte=datetime.date.today()).order_by('end_date')[:4]
