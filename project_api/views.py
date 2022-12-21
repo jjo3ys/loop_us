@@ -1,4 +1,5 @@
-from .serializers import ProjectUserSerializer
+from crawling_api.models import SchoolNews, ClassProject
+from .serializers import ClassInformSerializer, ClassProjectSerializer, ProjectUserSerializer, SchoolNewsSerializer
 from .models import Project, ProjectUser
 from user_api.models import Company, Profile, Alarm
 from user_api.views import ES
@@ -131,3 +132,18 @@ def project(request):
             Alarm.objects.filter(target_id__in=post_obj).exclude(type__in=[2, 3]).delete()
             project_obj.delete()
     return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET',])
+@permission_classes((IsAuthenticated,))
+def in_school(request):
+    if request.method == 'GET':
+        class_obj = ClassProject.objects.select_related('project','class_inform').filter(class_inform__school_id=request.GET['school_id']).order_by('-project__post_update_date')[:3]
+        class_obj = ClassProjectSerializer(class_obj, many=True).data
+        
+        school_act_obj = SchoolNews.objects.filter(school_id=request.GET['school_id']).order_by('-upload_date')[:4]
+        school_act_obj = SchoolNewsSerializer(school_act_obj, many=True).data
+        result = {
+            'class':class_obj,
+            'activity':school_act_obj
+        }
+        return Response(result, status=status.HTTP_200_OK)

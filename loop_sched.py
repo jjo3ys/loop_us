@@ -1,7 +1,9 @@
 import requests
 
+from config.my_settings import HEADER
 from apscheduler.schedulers.blocking import BlockingScheduler
-header = {'Authorization':'Token 9c661c35fb3d6795f39f7c660a414f17a7fd77ec'}
+
+header = HEADER
 
 def rank_api():
     try:

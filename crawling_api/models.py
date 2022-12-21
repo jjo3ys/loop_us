@@ -64,6 +64,7 @@ class OutActivity(models.Model):
         
 class SchoolNews(models.Model):
     school = models.ForeignKey(School, related_name='school_news', on_delete=models.DO_NOTHING)
+    cat = models.CharField(max_length=20)
     title = models.CharField(max_length=50)
     image = models.TextField()
     url = models.TextField()
@@ -81,8 +82,7 @@ class ClassInform(models.Model):
     
     class Meta:
         db_table = "ClassInform"
-        
-        
+              
 class ClassProject(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='class_project')
     class_inform = models.ForeignKey(ClassInform, on_delete=models.DO_NOTHING, related_name='class_inform')

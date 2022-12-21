@@ -1,9 +1,20 @@
 from .models import Project, ProjectUser
 from rest_framework import serializers
+from crawling_api.models import ClassProject, SchoolNews, ClassInform
 from post_api.models import Post, PostImage, Comment
 from user_api.models import Company, Company_Inform, Profile
 from user_api.serializers import SimpleProfileSerializer, simpleprofile
 from post_api.serializers import CommentSerializer, PostTagSerializer, PostingImageSerializer, PostingLinkeSerializer
+
+class ClassInformSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClassInform
+        fields = '__all__'
+        
+class SchoolNewsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SchoolNews
+        fields = '__all__'
 
 class PostingSerializer(serializers.ModelSerializer):
     post_tag = PostTagSerializer(many=True, read_only=True)
@@ -129,3 +140,17 @@ class MemberSerializer(serializers.ModelSerializer):
     def get_profile(self, obj):
         profile = simpleprofile(obj)
         return profile
+
+class ClassProjectSerializer(serializers.ModelSerializer):
+    class_inform = ClassInformSerializer()
+    project = OnlyProjectSerializer()
+    member = serializers.SerializerMethodField()
+    class Meta:
+        model = ClassProject
+        fields = ['class_inform', 'project', 'member']
+        
+    def get_member(self, obj):
+        project_obj = ProjectUser.objects.filter(project_id=obj.project_id)
+        user_list = list(project_obj.order_by('?')[:3].values_list('user_id', flat=True))
+        return {'profile':SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data,
+                'count':project_obj.count()}

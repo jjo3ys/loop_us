@@ -15,7 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from googleapiclient.discovery import build
 
-from .models import News, Brunch, Youtube, CompanyNews
+from .models import News, Brunch, SchoolNews, Youtube, CompanyNews
 
 from user_api.models import Company_Inform
 from tag.models import Tag, Group
@@ -162,4 +162,45 @@ def crawling(request):
     except AttributeError:
         pass
     driver.close()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def schoolNews(request):
+    if request.user.id !=5:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    driver = webdriver.Chrome(path, chrome_options=chrome_options)
+    driver.implicitly_wait(10)
+    cat_dict = {'행사':'https://www.inu.ac.kr/user/boardList.do?boardId=49243&page=1&siteId=inu&id=inu_070207000000&column=&search=',
+                '모집':'https://www.inu.ac.kr/user/boardList.do?boardId=49235&page=1&siteId=inu&id=inu_070205000000&column=&search='}
+    news_list = []
+    for cat in cat_dict:
+        driver.get(cat_dict[cat])
+        dummy = 1
+        while True:
+            a = driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[1]'.format(dummy))
+            if not a.text:
+                dummy += 1
+            else:break
+        for i in range(15):
+            upload_date = driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[4]'.format(dummy+i)).text.replace('.', '-')
+            driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[2]/a'.format(dummy+i)).click()
+            time.sleep(2)
+            title = driver.find_element_by_xpath('//*[@id="board-container"]/div[1]/table/tbody/tr[2]/td').text
+            content = driver.find_element_by_xpath('//*[@id="board-container"]/div[2]')
+            img = content.find_elements_by_tag_name('img')
+            try:
+                img_url = img[0].get_attribute('src')
+            except:
+                img_url = None
+            driver.back()
+            news_list.append(SchoolNews(
+                school_id=275,
+                cat=cat,
+                title=title,
+                image = img_url,
+                content = content,
+                upload_date = upload_date
+            ))
+    SchoolNews.objects.bulk_create(news_list)
     return Response(status=status.HTTP_200_OK)
