@@ -1,5 +1,6 @@
-from crawling_api.models import Competition, SchoolNews, ClassProject
-from .serializers import ClassInformSerializer, ClassProjectSerializer, ProjectUserSerializer, SchoolNewsSerializer
+from crawling_api.models import Competition, SchoolNews, ClassProject, SchoolProject
+from post_api.serializers import MainloadSerializer
+from .serializers import ClassInformSerializer, ClassProjectSerializer, DetailSerializer, ProjectUserSerializer, SchoolNewsSerializer
 from .models import Project, ProjectUser
 from user_api.models import Company, Profile, Alarm
 from user_api.views import ES
@@ -152,6 +153,50 @@ def in_school(request):
             'activity':school_act_obj
         }
         return Response(result, status=status.HTTP_200_OK)
+    
+@api_view(['GET',])
+@permission_classes((IsAuthenticated,))
+def detail(request):
+    user_id = request.user.id
+    if request.method == 'GET':
+        if request.GET['type'] == 'class':
+            project_obj = ClassProject.objects.select_related('class_inform').get(project_id=request.GET['id'])
+            project_obj = DetailSerializer(project_obj).data
+            project_id = request.GET['id']
+            
+        elif request.GET['type'] == 'school':
+            project_obj = SchoolProject.objects.select_related('project', 'school_news').filter(school_news_id=request.GET['id'])
+            if project_obj.exists():
+                project_obj = project_obj[0]
+                project_id = project_obj.project_id
+            else: 
+                project_obj = SchoolNews.objects.get(id=request.GET['id'])
+                project_id = None
+            project_obj = SchoolNewsSerializer(project_obj).data
+            
+        post_obj = Post.objects.filter(project_id=project_id, id__lte=request.GET['last'])[:20]
+        post_list = list(post_obj.values_list('id', flat=True))
+        like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
+        book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
+        post_obj = MainloadSerializer(post_obj, many=True).data
+
+        for p in post_obj:
+            if p['user_id'] == user_id:
+                p.update({"is_user":1})
+            else:
+                p.update({"is_user":0})
+            
+            if p['id'] in like_list:
+                p.update({'is_liked':1})
+            else:
+                p.update({'is_liked':0})
+
+            if p['id'] in book_list:
+                p.update({'is_marked':1})
+            else:
+                p.update({'is_marked':0})
+        project_obj['post'] = post_obj   
+        return Response(project_obj, status=status.HTTP_200_OK)
 
 # @api_view(['GET',])
 # @permission_classes((IsAuthenticated,))
