@@ -184,11 +184,14 @@ def schoolNews(request):
             else:break
         for i in range(15):
             upload_date = driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[4]'.format(dummy+i)).text.replace('.', '-')
-            driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[2]/a'.format(dummy+i)).click()
+            src = driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[2]/a'.format(dummy+i))
+            link = src.get_attribute('href')
+            src.click()
             time.sleep(2)
             title = driver.find_element_by_xpath('//*[@id="board-container"]/div[1]/table/tbody/tr[2]/td').text
-            content = driver.find_element_by_xpath('//*[@id="board-container"]/div[2]')
-            img = content.find_elements_by_tag_name('img')
+            div = driver.find_element_by_xpath('//*[@id="board-container"]/div[2]')
+            content = div.text
+            img = div.find_elements_by_tag_name('img')
             try:
                 img_url = img[0].get_attribute('src')
             except:
@@ -197,6 +200,7 @@ def schoolNews(request):
             news_list.append(SchoolNews(
                 school_id=275,
                 cat=cat,
+                url=link,
                 title=title,
                 image = img_url,
                 content = content,

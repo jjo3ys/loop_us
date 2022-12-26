@@ -61,6 +61,13 @@ class SchoolNews(models.Model):
     
     class Meta:
         db_table = "School_News"
+        
+class SchoolProject(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='school_project')
+    school_news = models.ForeignKey(SchoolNews, on_delete=models.DO_NOTHING, related_name='school_news')
+    
+    class Meta:
+        db_table = "SchoolProject"
 
 class ClassInform(models.Model):   
     school = models.ForeignKey(School, related_name='class_school', on_delete=models.CASCADE)
