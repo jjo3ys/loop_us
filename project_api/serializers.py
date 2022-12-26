@@ -1,6 +1,6 @@
 from .models import Project, ProjectUser
 from rest_framework import serializers
-from crawling_api.models import ClassProject, SchoolNews, ClassInform
+from crawling_api.models import ClassProject, OutsideInform, SchoolNews, ClassInform, SchoolProject
 from post_api.models import Post, PostImage, Comment
 from post_api.serializers import MainloadSerializer
 from user_api.models import Company, Company_Inform, Profile
@@ -15,6 +15,11 @@ class ClassInformSerializer(serializers.ModelSerializer):
 class SchoolNewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = SchoolNews
+        fields = '__all__'
+
+class OutsideInformSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = OutsideInform
         fields = '__all__'
 
 class PostingSerializer(serializers.ModelSerializer):
@@ -156,14 +161,35 @@ class ClassProjectSerializer(serializers.ModelSerializer):
         return {'profile':SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data,
                 'count':project_obj.count()}
         
-class DetailSerializer(serializers.ModelSerializer):
-    class_inform = ClassInformSerializer()
-    member = serializers.SerializerMethodField()
-    class Meta:
-        model = ClassProject
-        fields = ['class_inform', 'project', 'member']
+# class DetailClassSerializer(serializers.ModelSerializer):
+#     class_inform = ClassInformSerializer()
+#     member = serializers.SerializerMethodField()
+#     class Meta:
+#         model = ClassProject
+#         fields = ['class_inform', 'project', 'member']
         
-    def get_member(self, obj):
-        project_obj = ProjectUser.objects.filter(project_id=obj.project_id)
-        user_list = list(project_obj.values_list('user_id', flat=True))
-        return SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+#     def get_member(self, obj):
+#         project_obj = ProjectUser.objects.filter(project_id=obj.project_id)
+#         user_list = list(project_obj.values_list('user_id', flat=True))
+#         return SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+
+# class DetailSchoolSerializer(serializers.ModelSerializer):
+#     member = serializers.SerializerMethodField()
+#     class Meta:
+#         model = SchoolNews
+#         fields = ['id' ,'cat', 'title', 'image', 'url', 'content', 'view_count', 'member']
+    
+#     def get_member(self, obj):
+#         school_obj = SchoolProject.objects.filter(school_news_id=obj.id)
+#         if school_obj.exists():
+#             project_obj = ProjectUser.objects.filter(project_id=school_obj[0].project_id)
+#             user_list = list(project_obj.values_list('user_id', flat=True))
+#             return SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+#         else:
+#             return []
+
+# class DetailOutSerializer(serializers.ModelSerializer):
+#     member = serializers.SerializerMethodField()
+#     class Meta:
+#         model = OutsideInform
+#         fields = ['id', 'group', 'content', 'image']

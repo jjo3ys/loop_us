@@ -1,6 +1,7 @@
-from crawling_api.models import Competition, SchoolNews, ClassProject, SchoolProject
+from crawling_api.models import OutProject, OutsideInform, SchoolNews, ClassProject, SchoolProject
 from post_api.serializers import MainloadSerializer
-from .serializers import ClassInformSerializer, ClassProjectSerializer, DetailSerializer, ProjectUserSerializer, SchoolNewsSerializer
+from user_api.serializers import SimpleProfileSerializer
+from .serializers import ClassProjectSerializer, OutsideInformSerilizer, ProjectUserSerializer, SchoolNewsSerializer
 from .models import Project, ProjectUser
 from user_api.models import Company, Profile, Alarm
 from user_api.views import ES
@@ -153,28 +154,48 @@ def in_school(request):
             'activity':school_act_obj
         }
         return Response(result, status=status.HTTP_200_OK)
+
+@api_view(['GET',])
+@permission_classes((IsAuthenticated,))
+def out_school(request):
+    if request.method == 'GET':
+        if request.GET['type'] == 'pop':
+            project_obj = OutsideInform.objects.filter(type=request.GET['cat']).order_by('-view_count')[:10]
+        elif request.GET['type'] == 'main':
+            project_obj = OutsideInform.objects.filter(type=request.GET['cat'], group=request.GET['group']).order_by('-end_date')[:4]
+        return Response(OutsideInformSerilizer(project_obj, many=True).data, status=status.HTTP_200_OK)
+            
     
 @api_view(['GET',])
 @permission_classes((IsAuthenticated,))
 def detail(request):
-    user_id = request.user.id
     if request.method == 'GET':
         if request.GET['type'] == 'class':
-            project_obj = ClassProject.objects.select_related('class_inform').get(project_id=request.GET['id'])
-            project_obj = DetailSerializer(project_obj).data
-            project_id = request.GET['id']
+            project_id = ClassProject.objects.select_related('class_inform').filter(project_id=request.GET['id'])[0].project_id
             
         elif request.GET['type'] == 'school':
             project_obj = SchoolProject.objects.select_related('project', 'school_news').filter(school_news_id=request.GET['id'])
             if project_obj.exists():
-                project_obj = project_obj[0]
-                project_id = project_obj.project_id
-            else: 
-                project_obj = SchoolNews.objects.get(id=request.GET['id'])
-                project_id = None
-            project_obj = SchoolNewsSerializer(project_obj).data
+                project_id = project_obj[0].project_id
+            else: project_id = None
+        
+        elif request.GET['type'] == 'activity':
+            project_obj = OutProject.objects.select_related('project', 'outside_inform').filter(id=request.GET['id'])
+            if project_obj.exists():
+                project_id = project_obj[0].project_id
+            else: project_id = None
             
-        post_obj = Post.objects.filter(project_id=project_id, id__lte=request.GET['last'])[:20]
+        project_obj = ProjectUser.objects.filter(project_id=project_id)
+        user_list = list(project_obj.values_list('user_id', flat=True))
+        member = SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+        return Response({'member':member, 'project_id':project_id}, status=status.HTTP_200_OK)
+    
+@api_view(['GET',])
+@permission_classes((IsAuthenticated,))
+def detail_post(request):
+    user_id = request.user.id
+    if request.method == 'GET':    
+        post_obj = Post.objects.filter(project_id=request.GET['id'], id__lte=request.GET['last'])[:20]
         post_list = list(post_obj.values_list('id', flat=True))
         like_list = dict(Like.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
         book_list = dict(BookMark.objects.filter(user_id=user_id, post_id__in=post_list).values_list('post_id', 'user_id'))
@@ -195,8 +216,7 @@ def detail(request):
                 p.update({'is_marked':1})
             else:
                 p.update({'is_marked':0})
-        project_obj['post'] = post_obj   
-        return Response(project_obj, status=status.HTTP_200_OK)
+        return Response(post_obj, status=status.HTTP_200_OK)
 
 # @api_view(['GET',])
 # @permission_classes((IsAuthenticated,))
