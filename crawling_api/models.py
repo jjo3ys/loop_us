@@ -34,7 +34,8 @@ class CompanyNews(models.Model):
     class Meta:
         db_table = "Comapny_News"
 
-class Competition(models.Model):
+class OutsideInform(models.Model):
+    type = models.SmallIntegerField(null=True, default=0)
     group = models.CharField(max_length=20)
     content = models.TextField()
     image = models.TextField()
@@ -46,21 +47,7 @@ class Competition(models.Model):
     tagged_count = models.PositiveIntegerField(default=0)
 
     class Meta:
-        db_table = "Competition"
-        
-class OutActivity(models.Model):
-    group = models.CharField(max_length=20)
-    content = models.TextField()
-    image = models.TextField()
-    title = models.CharField(max_length=50)
-    organizer = models.CharField(max_length=30)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    view_count = models.PositiveIntegerField(default=0)
-    tagged_count = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        db_table = "OutActivity"
+        db_table = "OutsideInform"
         
 class SchoolNews(models.Model):
     school = models.ForeignKey(School, related_name='school_news', on_delete=models.DO_NOTHING)
@@ -89,4 +76,12 @@ class ClassProject(models.Model):
     
     class Meta:
         db_table = 'ClassProject'
+
+class OutProject(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='outside_project')
+    out_inform = models.ForeignKey(OutsideInform, on_delete=models.DO_NOTHING, related_name='outside_inform')
+    
+    class Meta:
+        db_table = 'OutProject'
+
 # Create your models here.
