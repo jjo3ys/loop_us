@@ -36,7 +36,7 @@ class CompanyNews(models.Model):
 
 class OutsideInform(models.Model):
     type = models.SmallIntegerField(null=True, default=0)
-    group = models.CharField(max_length=20)
+    group = models.SmallIntegerField()
     content = models.TextField()
     image = models.TextField()
     title = models.CharField(max_length=50)
@@ -92,3 +92,41 @@ class OutProject(models.Model):
         db_table = 'OutProject'
 
 # Create your models here.
+outproject_map = {
+    0:{
+        '기획/아이디어':0,
+        '정책/제안/공로':1,
+        '광고/홍보/마케팅':2,
+        '논문/논술/학술/리포트':3,
+        '네이밍/슬로건/카피라이팅':4,
+        '영상/UCC/영화':5,
+        '사진/이미지/SNS콘텐츠':6,
+        '수기/후기/감상문/글짓기':7,
+        '문학/시나리오/스토리':8,
+        '캐릭터/웹툰/만화':9,
+        '디자인/패션/제품':10,
+        '아트/미술/공예':11,
+        '음악/무용/공연/연기':12,
+        'IT/웹/모바일/게임':13,
+        '과학/공학/기술':14,
+        '건축/건설/인테리어':15,
+        '취업/창업':16,
+        '모의영연/발표/토론':17,
+        '이벤트/기타':18
+    },
+    1:{
+        '마케터':0,
+        '서포터즈':1,
+        '리포터/객원기자':2,
+        '모니터':3,
+        '체험단':4,
+        '재능기부':5,
+        '봉사활동':6,
+        '캠프':7,
+        '취업/창업':8,
+        '교육/강연/세미나':9,
+        '전시/페스티벌':10,
+        '해외탐방':11,
+        '기타':12
+    }
+}
