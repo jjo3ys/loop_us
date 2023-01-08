@@ -1,0 +1,25 @@
+<html>
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+ 
+</head>
+<body>
+<?php
+ 
+$currOS=$_SERVER['HTTP_USER_AGENT'];
+ 
+if (strpos($currOS, 'OS X') !== false) {
+    <meta http-equiv="refresh" content="0; url=https://www.naver.com"></meta>
+}
+ 
+if (strpos($currOS, 'iPhone') !== false) {
+    <meta http-equiv="refresh" content="0; url=https://www.naver.com"></meta>
+}
+ 
+if (strpos($currOS, 'Android') !== false) {
+    <meta http-equiv="refresh" content="0; url=https://www.google.com"></meta>
+}
+ 
+?>
+</body>
+</html>

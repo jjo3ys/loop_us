@@ -1,55 +1,195 @@
-from .models import Project, TagLooper
+from .models import Project, ProjectUser
 from rest_framework import serializers
-from post_api.models import Post, Like
-from user_api.models import Profile
-from user_api.serializers import SimpleProfileSerializer
-from post_api.serializers import PostingSerializer
+from crawling_api.models import ClassProject, OutsideInform, SchoolNews, ClassInform, SchoolProject
+from post_api.models import Post, PostImage, Comment
+from post_api.serializers import MainloadSerializer
+from user_api.models import Company, Company_Inform, Profile
+from user_api.serializers import SimpleProfileSerializer, simpleprofile
+from post_api.serializers import CommentSerializer, PostTagSerializer, PostingImageSerializer, PostingLinkeSerializer
 
-class ProjectLooperSerializer(serializers.ModelSerializer):
-    profile = serializers.SerializerMethodField()
+class ClassInformSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TagLooper
-        fields = ['profile']
-    
-    def get_profile(self, obj):
-        try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.looper_id)[0]).data
-        except:
-            return None
+        model = ClassInform
+        fields = '__all__'
+        
+class SchoolNewsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SchoolNews
+        fields = '__all__'
 
+class OutsideInformSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = OutsideInform
+        fields = '__all__'
+
+class PostingSerializer(serializers.ModelSerializer):
+    post_tag = PostTagSerializer(many=True, read_only=True)
+    contents_image = PostingImageSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
+    contents_link = PostingLinkeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['id', 'user_id', 'date', 'like_count', 'contents', 'contents_image', 'post_tag', 'comments', 'contents_link']
+    
+    def get_comments(self, obj):
+        comments_obj = Comment.objects.filter(post_id=obj.id).order_by('-id')[:10]
+        return CommentSerializer(comments_obj, many=True).data
+    
 class ProjectSerializer(serializers.ModelSerializer):
-    looper = ProjectLooperSerializer(many=True, read_only=True)
-    group = serializers.SerializerMethodField()
-    class Meta:
-        model = Project
-        fields = ['id', 'user_id', 'project_name', 'start_date', 'end_date', 'post_count', 'looper', 'group']
-    
-    def get_group(self, obj):
-        try:
-            return max(obj.group, key=obj.group.get)
-        except:
-            return "10"
-
-class ProjectPostSerializer(serializers.ModelSerializer):
-    looper = ProjectLooperSerializer(many=True, read_only=True)
+    thumbnail = serializers.SerializerMethodField()
     post = PostingSerializer(many=True, read_only=True)
-    count = serializers.SerializerMethodField()
-    profile = serializers.SerializerMethodField()
-    
     class Meta:
         model = Project
-        fields = ['id', 'profile', 'project_name', 'start_date', 'end_date', 'looper', 'count', 'post']
+        fields = ['id', 'project_name', 'group', 'thumbnail', 'post', 'post_update_date', 'is_public']
+
+    def get_thumbnail(self, obj):
+        if obj.thumbnail == 0: return None
+        elif obj.tag_company:
+            img_obj = Company.objects.filter(id=obj.thumbnail)
+            company_profile = Company_Inform.objects.filter(company_logo_id=obj.thumbnail)
+            if img_obj and company_profile:
+                return {'company_logo':img_obj[0].logo.url, 'user_id':company_profile[0].user_id, 'company_name':company_profile[0].company_name}
+            elif img_obj:
+                return {'company_logo':img_obj[0].logo.url, 'user_id':None, 'company_name':img_obj[0].company_name}
+        else:
+            img_obj = PostImage.objects.filter(id=obj.thumbnail)
+            if img_obj:
+                return img_obj[0].image.url
+        return None
     
-    def get_count(self, obj):
-        post = Post.objects.filter(project_id=obj.id)
-        post_id = post.values_list('id', flat=True)
-        
-        count=Like.objects.filter(post_id__in = post_id).count()
-        
-        return {"post_count":post.count(), "like_count":count}
+class OnlyProjectSerializer(serializers.ModelSerializer):
+    thumbnail = serializers.SerializerMethodField()
+    class Meta:
+        model = Project
+        fields = ['id', 'project_name', 'group', 'thumbnail', 'post_update_date', 'is_public']
+
+    def get_thumbnail(self, obj):
+        if obj.thumbnail == 0: return None
+        elif obj.tag_company:
+            img_obj = Company.objects.filter(id=obj.thumbnail)
+            if img_obj:
+                return img_obj[0].logo.url
+        else:
+            img_obj = PostImage.objects.filter(id=obj.thumbnail)
+            
+            if img_obj:
+                return img_obj[0].image.url
+        return None
     
-    def get_profile(self, obj):
-        try:
-            return SimpleProfileSerializer(Profile.objects.filter(user_id=obj.user_id)[0]).data
-        except:
+class ProjectUserSerializer(serializers.ModelSerializer):
+    manager = serializers.SerializerMethodField()
+    member = serializers.SerializerMethodField()
+    ratio = serializers.SerializerMethodField()
+    project = serializers.SerializerMethodField()
+    class Meta:
+        model = ProjectUser
+        fields = ['user_id', 'project', 'ratio', 'post_count', 'order', 'member', 'manager']
+        
+    def get_manager(self, obj):
+        if obj.is_manager:
+            return obj.user_id
+        return ProjectUser.objects.filter(project_id=obj.project_id, is_manager=True)[0].user_id
+    
+    def get_member(self, obj):
+        if obj.project.is_public: 
+            user_list = list(ProjectUser.objects.filter(project_id=obj.project_id).values_list('user_id', flat=True))
+            return SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+        else:
             return None
+    
+    def get_ratio(self, obj):
+        post_count = Post.objects.filter(user_id=obj.user_id).count()
+        if post_count:
+            return round(obj.post_count/post_count, 2)
+        else: return 0
+    
+    def get_project(self, obj):
+        return ProjectSerializer(obj.project, read_only=True).data
+
+class OnlyProjectUserSerializer(serializers.ModelSerializer):
+    manager = serializers.SerializerMethodField()
+    member = serializers.SerializerMethodField()
+    ratio = serializers.SerializerMethodField()
+    project = serializers.SerializerMethodField()
+    class Meta:
+        model = ProjectUser
+        fields = ['user_id', 'project', 'ratio', 'post_count', 'order', 'member', 'manager']
+        
+    def get_manager(self, obj):
+        if obj.is_manager:
+            return obj.user_id
+        return ProjectUser.objects.filter(project_id=obj.project_id, is_manager=True)[0].user_id
+    
+    def get_member(self, obj):
+        if obj.project.is_public: 
+            user_list = list(ProjectUser.objects.filter(project_id=obj.project_id).values_list('user_id', flat=True))
+            return SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+        else:
+            return None
+    
+    def get_ratio(self, obj):
+        post_count = Post.objects.filter(user_id=obj.user_id).count()
+        if post_count:
+            return round(obj.post_count/post_count, 2)
+        else: return 0
+
+    def get_project(self, obj):
+        return OnlyProjectSerializer(obj.project).data
+    
+class MemberSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+    class Meta:
+        model = ProjectUser
+        fields = ['profile', 'is_manager']
+        
+    def get_profile(self, obj):
+        profile = simpleprofile(obj)
+        return profile
+
+class ClassProjectSerializer(serializers.ModelSerializer):
+    class_inform = ClassInformSerializer()
+    project = OnlyProjectSerializer()
+    member = serializers.SerializerMethodField()
+    class Meta:
+        model = ClassProject
+        fields = ['class_inform', 'project', 'member']
+        
+    def get_member(self, obj):
+        project_obj = ProjectUser.objects.filter(project_id=obj.project_id)
+        user_list = list(project_obj.order_by('?')[:3].values_list('user_id', flat=True))
+        return {'profile':SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data,
+                'count':project_obj.count()}
+        
+# class DetailClassSerializer(serializers.ModelSerializer):
+#     class_inform = ClassInformSerializer()
+#     member = serializers.SerializerMethodField()
+#     class Meta:
+#         model = ClassProject
+#         fields = ['class_inform', 'project', 'member']
+        
+#     def get_member(self, obj):
+#         project_obj = ProjectUser.objects.filter(project_id=obj.project_id)
+#         user_list = list(project_obj.values_list('user_id', flat=True))
+#         return SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+
+# class DetailSchoolSerializer(serializers.ModelSerializer):
+#     member = serializers.SerializerMethodField()
+#     class Meta:
+#         model = SchoolNews
+#         fields = ['id' ,'cat', 'title', 'image', 'url', 'content', 'view_count', 'member']
+    
+#     def get_member(self, obj):
+#         school_obj = SchoolProject.objects.filter(school_news_id=obj.id)
+#         if school_obj.exists():
+#             project_obj = ProjectUser.objects.filter(project_id=school_obj[0].project_id)
+#             user_list = list(project_obj.values_list('user_id', flat=True))
+#             return SimpleProfileSerializer(Profile.objects.filter(user_id__in=user_list).select_related('school', 'department'), many=True).data
+#         else:
+#             return []
+
+# class DetailOutSerializer(serializers.ModelSerializer):
+#     member = serializers.SerializerMethodField()
+#     class Meta:
+#         model = OutsideInform
+#         fields = ['id', 'group', 'content', 'image']

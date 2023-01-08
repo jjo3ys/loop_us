@@ -4,6 +4,8 @@ from project_api.models import Project
 from user_api.models import User
 # Create your models here.
 
+def file_upload_path(instance, filename):
+    return 'post_file/{}/{}'.format(instance.post.user_id, filename)
 
 class Post(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -25,10 +27,14 @@ class PostLink(models.Model):
 
 class PostImage(models.Model):
     post = models.ForeignKey(Post, related_name='contents_image', on_delete=models.CASCADE)
-    image = models.ImageField(null=True, upload_to='post/image/%Y%m%d/')
+    image = models.ImageField(null=True, upload_to='post/')
 
     class Meta:
         db_table = "Post_image"
+
+class PostFile(models.Model):
+    post = models.ForeignKey(Post, related_name='contents_file', on_delete=models.CASCADE)
+    file = models.FileField(upload_to=file_upload_path)
     
 class Comment(models.Model):
     post = models.ForeignKey(Post, related_name='comments', on_delete=models.CASCADE)
@@ -57,6 +63,13 @@ class Like(models.Model):
 
     class Meta:
         db_table = "Post_like"
+
+class CorpLike(models.Model):
+    post = models.ForeignKey(Post, null=True, related_name='corp_like', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "Corp_like"
 
 class CommentLike(models.Model):
     comment = models.ForeignKey(Comment, null=True, related_name='comment_like', on_delete=models.CASCADE)

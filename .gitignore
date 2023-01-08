@@ -7,8 +7,8 @@ __pycache__/
 /venv/
 /docker-compose.yml
 Dockerfile
-/requirements.txt
-requirements.txt
+#/requirements.txt
+#requirements.txt
 /Pipfile
 /Pipfile.lock
 
@@ -20,9 +20,21 @@ config/__pycache__
 
 /**/migrations
 *.exe
+*.csv
 
 # /**/migrations
 config/my_settings.py
 firebase.json
 serviceAccountKey.json
 
+youtube_crawler.py
+locust.py
+signup.py
+
+chromedriver
+
+*.swm
+*.swn
+*.swo
+*.swp
+*.out

@@ -1,26 +1,32 @@
 from django.urls import path
 from . import views
+# from . import school
 
 urlpatterns = [
-    path('check_email', views.create_user),
+    path('check_email', views.certification),
     path('check_corp_num', views.check_corp_num),
-    path('check_token', views.check_token),
+    # path('check_token', views.check_token),
     path('signup', views.signup),
+    # path('valid', views.check_valid),
     path('login', views.login),
-    path('logout', views.logout),
+    # path('logout', views.logout),
     path('resign', views.resign),
-    path('activate/<uidb64>/<token>',views.activate),
+    # path('activate/<token>',views.activate),
+    path('activate',views.activate),
+    path('corp_profile', views.companyProfile),
+    path('view_list', views.view_list),
     path('profile', views.profile),
+    path('interest_companies', views.interest_companies),
     path('posting', views.posting),
     path('project', views.project),
     path('posting', views.posting),
+    path('posting', views.posting),
     path('password', views.password),
-    path('department_list', views.department_list),
-    path('university_list', views.university_list),
     path('report', views.report_profile),
     path('alarm', views.alarm),
     path('ask', views.ask),
     path('ban', views.ban),
-    path('check_token', views.check_token),
-    # path('noti', views.noti)
+    path('indexing', views.profile_indexing),
+    path('qrcode', views.qrcode),
+    # path('company', views.company)
 ]

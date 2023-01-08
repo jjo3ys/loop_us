@@ -2,28 +2,89 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 
+class School(models.Model):
+    school = models.CharField(max_length=20)
+    logo = models.ImageField(null=True, default='', upload_to='logo/school/')
+    email = models.CharField(max_length=20, default=None)
+    class Meta:
+        db_table = 'School'
+
+class Department(models.Model):
+    school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
+    department = models.CharField(max_length=50)
+    class Meta:
+        db_table = 'Department'
+
+class Company(models.Model):
+    logo = models.ImageField(null=True, upload_to = 'logo/company/')
+    company_name = models.TextField()
+
+    class Meta:
+        db_table = "Company"
 
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    real_name = models.CharField(max_length=10)
+    real_name = models.CharField(max_length=20)
     type = models.SmallIntegerField(default=0)
     profile_image = models.ImageField(null = True, upload_to='profile_image/')
-    department = models.TextField()
-    group = models.PositiveSmallIntegerField(default=10)
+    school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
+    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, null=True)
+    group = models.PositiveSmallIntegerField(default=15)
     rank = models.PositiveBigIntegerField(default=0)
     score = models.IntegerField(default=0)
-    last_lank = models.PositiveBigIntegerField(default=0)
+    last_rank = models.PositiveBigIntegerField(default=0)
+    school_last_rank = models.PositiveBigIntegerField(default=0)
+    school_rank = models.PositiveBigIntegerField(default=0)
     view_count = models.PositiveBigIntegerField(default=0)
+    admission = models.CharField(max_length=10)
+    company = models.ForeignKey(Company, null=True, default=None, on_delete=models.DO_NOTHING)
+    upload_size = models.PositiveBigIntegerField(default=0)
     class Meta:
         db_table = "Profile"
 
-class Company_Inform(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='company_inform')
-    corp_num = models.CharField(max_length=10)
-    corp_name = models.TextField()
+class UserSNS(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='user_sns')
+    url = models.TextField()
+    type = models.SmallIntegerField()
 
+class Company_Inform(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
+    company_name = models.TextField(null = True)
+    company_logo = models.ForeignKey(Company, related_name='company_logo', on_delete=models.DO_NOTHING)
+    group = models.PositiveSmallIntegerField(default=15)
+    location = models.CharField(max_length = 50, null = True)
+    information = models.TextField(null=True)
+    category = models.CharField(max_length = 20, null=True)
+    homepage = models.CharField(max_length = 30, null=True)
+    slogan = models.CharField(max_length = 30, null=True)
+    view_count = models.IntegerField(default=0)
+    type = models.SmallIntegerField(default=0)
+    
     class Meta:
         db_table = "Corp_inform"
+
+class ViewCompany(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name= 'show_profile', on_delete=models.CASCADE)
+    shown = models.ForeignKey(settings.AUTH_USER_MODEL, related_name= 'profile_shown', on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "View_Company"
+
+class CompanyImage(models.Model):
+    company_info = models.ForeignKey(Company_Inform, related_name='company_id', on_delete=models.CASCADE)
+    image_info = models.TextField(null=True)
+    image = models.ImageField(null=True, upload_to='company/image/%Y%m%d/')
+
+    class Meta:
+        db_table = "Company_Image"
+
+class InterestCompany(models.Model):
+    company = models.PositiveBigIntegerField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "Interset_Company"
 
 class Activation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

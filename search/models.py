@@ -1,5 +1,5 @@
+from email.policy import default
 from django.db import models
-from django.conf import settings
 
 # Create your models here.
 class Log(models.Model):
@@ -7,6 +7,7 @@ class Log(models.Model):
     query = models.TextField()
     type = models.PositiveSmallIntegerField(default=0)
     date = models.DateTimeField(auto_now_add=True)
+    viewed = models.BooleanField(default=True)
     
     class Meta:
         db_table = 'Search_Log'

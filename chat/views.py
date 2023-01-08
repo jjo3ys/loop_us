@@ -1,7 +1,7 @@
-from user_api.serializers import SimpleProfileSerializer
-from user_api.models import Banlist, Profile
+from user_api.serializers import SimpleComapnyProfileSerializer, SimpleProfileSerializer
+from user_api.models import Banlist, Company_Inform, Profile
 from fcm.push_fcm import chat_fcm
-from fcm.models import FcmToken
+# from fcm.models import FcmToken
 
 from .models import Msg, Room
 from .serializer import ChatSerializer
@@ -56,8 +56,7 @@ def chatting(request):
         
         try:
             send_profile = Profile.objects.filter(user_id=user.id)[0]
-            receiver_token = FcmToken.objects.get(user_id=request.GET['id'])    
-            chat_fcm(receiver_token.token, send_profile.real_name, request.data['message'], user.id) 
+            chat_fcm(request.GET['id'], send_profile.real_name, request.data['message'], user.id) 
         except:
             pass
 
@@ -76,13 +75,41 @@ def get_list(request):
     return_list = []
     for r in room:
         msg_obj = Msg.objects.filter(room_id=r.id)
-        r.member.remove(request.user.id)
         try:
             profile = SimpleProfileSerializer(Profile.objects.filter(user_id=r.member[0])[0]).data
         except:
             profile = None
+
         return_list.append({"profile":profile,
-                            "message":ChatSerializer(msg_obj.last()).data,
-                            "not_read":msg_obj.filter(room_id=r.id, receiver_id=request.user.id, is_read=False).count()})
+                                "message":ChatSerializer(msg_obj.last()).data,
+                                "not_read":msg_obj.filter(room_id=r.id, receiver_id=request.user.id, is_read=False).count()})
+
+
     return_list.sort(key=lambda x: x['message']['date'], reverse=True)
     return Response(return_list, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def get_profile(request):
+
+    member = eval(request.GET['members'])
+
+    profiles = (SimpleProfileSerializer(Profile.objects.filter(user_id__in=member).select_related('school', 'department'), many=True).data
+                    + SimpleComapnyProfileSerializer(Company_Inform.objects.filter(user_id__in=member).select_related('company_logo'), many=True).data)
+
+    user_banned = list(Banlist.objects.filter(banlist__contains=request.user.id).values_list('user_id', flat=True))
+    try:
+        user_ban = Banlist.objects.filter(user_id=request.user.id)[0].banlist
+    except IndexError:
+        user_ban = []
+
+    for profile in profiles:
+        if profile['user_id'] in user_banned:      # 상대 유저가 나를 차단해서 나의 채팅방에 알수없음으로 표시
+            profile['is_banned'] = 2
+        elif profile['user_id'] in user_ban:
+            profile['is_banned'] = 1
+        else:       
+            profile['is_banned'] = 0
+        member.remove(profile['user_id'])
+
+    return Response({'profile':profiles, 'none':member}, status=status.HTTP_200_OK)

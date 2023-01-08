@@ -1,22 +1,30 @@
 import platform
+import time
 
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException as NE
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-from .models import News, Insta, Youtube
+from googleapiclient.discovery import build
 
+from .models import News, Brunch, SchoolNews, Youtube, CompanyNews
+
+from user_api.models import Company_Inform
 from tag.models import Tag, Group
+from config.my_settings import YOUTUBEKEY
 
 if platform.system() == 'Linux':
     path = '/home/ubuntu/loopus/chromedriver'
 else:
-    path = 'C:\\project\\loop\\chromedriver'
+    path = 'chromedriver'
 
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('--headless')
@@ -24,45 +32,179 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument("--single-process")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
-def feed_crawling(type):
-    if type == 'insta':
-        pass
+@api_view(['GET'])
+def companyNews(request):
+    if request.user.id !=5:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    
+    driver = webdriver.Chrome(path, chrome_options=chrome_options)
+    driver.implicitly_wait(10)
+    url = 'https://www.google.com/search?tbm=nws&q='
+    company_inform = Company_Inform.objects.all()
+    news_list = []
+    last = CompanyNews.objects.last()
+    for company in company_inform:
+        driver.get(url+'기업 '+company.company_name)
+        news_count = 0
+        a_tag = driver.find_elements_by_tag_name('a')
+        link_map = []
+        for a in a_tag:
+            if a.get_attribute('jsname') == 'YKoRaf':
+                link = a.get_attribute('href')
+                link_map.append(link)
+                news_count += 1
+            if news_count == 5:
+                break
+            
+        news_count = 0
+        div_tag = driver.find_elements_by_tag_name('div')
+        for div in div_tag:
+            if div.get_attribute('class') == 'CEMjEf NUnG9d':
+                txt = div.find_element_by_tag_name('span').text
+                obj = CompanyNews(urls=link_map[news_count], company=company, corp=txt)
+                news_list.append(obj)
+                news_count += 1
+            if news_count == 5:
+                break
+    CompanyNews.objects.bulk_create(news_list)
+    if last:
+        CompanyNews.objects.filter(id__lte=last.id).delete()
+    return Response(status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes((IsAuthenticated, ))
-def news_crawling(request):
+def crawling(request):
     if request.user.id !=5:
         return Response(status=status.HTTP_403_FORBIDDEN)
+
     driver = webdriver.Chrome(path, chrome_options=chrome_options)
-    url = 'https://search.naver.com/search.naver?where=news&query='
+    driver.implicitly_wait(10)
+    youtube = build('youtube', 'v3', developerKey=YOUTUBEKEY)
 
     group_id = Group.objects.all()
-    last = News.objects.last()
-    
+    last_news = News.objects.last()
+    last_yt = Youtube.objects.last()
+    last_br = Brunch.objects.last()
+    #Naver
+    # url = 'https://search.naver.com/search.naver?where=news&query='
+    #Goggle
+    url = 'https://www.google.com/search?tbm=nws&q='
     for group in group_id:
         tag_list = Tag.objects.filter(group_id=group.id).order_by('-count')[:5]
         link_dict = {}
+        
         for tag in tag_list:
-            news_url = url+tag.tag
-            driver.get(news_url)
-            news_count = 0
-            for i in range(1, 4):            
-                try:
-                    link = driver.find_element_by_css_selector('#sp_nws{} > div.news_wrap.api_ani_send > div > a'.format(i+news_count)).get_attribute('href')
-                    sub_news_list = driver.find_elements_by_css_selector('#sp_nws{} > div.news_cluster > ul > li'.format(i+news_count))
-                    news_count += len(sub_news_list)
-                except:
-                    try:    
-                        link = driver.find_element_by_css_selector('#sp_nws{} > div > div > a'.format(i+news_count)).get_attribute('href')
-                    except:
-                        pass
+            try:
+                news_url = url+tag.tag
+                driver.get(news_url)
+                news_count = 0
+                a_tag = driver.find_elements_by_tag_name('a')
+                link_map = []
+                for a in a_tag:
+                    if a.get_attribute('jsname') == 'YKoRaf':
+                        link = a.get_attribute('href')
+                        if link not in link_dict:
+                            link_map.append(link)
+                            link_dict[link] = True
+                            news_count += 1
+                    if news_count == 3:
+                        break
+                    
+                news_count = 0
+                div_tag = driver.find_elements_by_tag_name('div')
+                for div in div_tag:
+                    if div.get_attribute('class') == 'CEMjEf NUnG9d':
+                        txt = div.find_element_by_tag_name('span').text
+                        News.objects.create(urls=link_map[news_count], group=group, corp=txt)
+                        news_count += 1
+                    if news_count == 3:
+                        break
+                        
+            except:pass
+            try:
+                driver.get('https://brunch.co.kr/search')
+                driver.find_element_by_class_name('txt_search').send_keys(tag.tag+Keys.ENTER)
+                link_list = []
+                for i in range(1, 4):
+                    try:
+                        link = driver.find_element_by_xpath(f'//*[@id="resultArticle"]/div/div[1]/div[2]/ul/li[{i}]/a')
+                    except: break
+                    link = link.get_attribute('href')
+                    link_list.append(link)
                 
-                try:
-                    if link not in link_dict:
-                        News.objects.create(urls=link, group=group)
-                        link_dict[link] = True
-                except:
-                    continue
-    News.objects.filter(id__lte=last.id).delete()
+                for link in link_list:
+                    driver.get(link)
+                    writer = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/strong/a').text
+                    image_url = driver.find_element_by_xpath('/html/body/div[3]/div[3]/div/div[1]/a/img').get_attribute('src')
+                    Brunch.objects.create(urls=link, group=group, writer=writer, profile_url=image_url)
+            except:pass
+            try:
+                results = youtube.search().list(q=tag.tag, order='relevance', part='snippet', maxResults=10).execute()
+                count = 0
+                for result in results['items']:
+                    
+                    if result['id']['kind'] == 'youtube#video':
+                        try:
+                            video_id = result['id']['videoId']
+                        except AttributeError:
+                            continue
+                        link = 'https://www.youtube.com/watch?v=' + video_id
+                        Youtube.objects.create(urls=link, group=group)
+                        count += 1
+                    if count == 3:
+                        break
+            except:
+                pass
+    try:
+        News.objects.filter(id__lte=last_news.id).delete()
+        Youtube.objects.filter(id__lte=last_yt.id).delete()
+        Brunch.objects.filter(id__lte=last_br.id).delete()
+    except AttributeError:
+        pass
     driver.close()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def schoolNews(request):
+    if request.user.id !=5:
+        return Response(status=status.HTTP_403_FORBIDDEN)
+    driver = webdriver.Chrome(path, chrome_options=chrome_options)
+    driver.implicitly_wait(10)
+    cat_dict = {'행사':'https://www.inu.ac.kr/user/boardList.do?boardId=49243&page=1&siteId=inu&id=inu_070207000000&column=&search=',
+                '모집':'https://www.inu.ac.kr/user/boardList.do?boardId=49235&page=1&siteId=inu&id=inu_070205000000&column=&search='}
+    news_list = []
+    for cat in cat_dict:
+        driver.get(cat_dict[cat])
+        dummy = 1
+        while True:
+            a = driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[1]'.format(dummy))
+            if not a.text:
+                dummy += 1
+            else:break
+        for i in range(15):
+            upload_date = driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[4]'.format(dummy+i)).text.replace('.', '-')
+            src = driver.find_element_by_xpath('//*[@id="list_frm"]/div/table/tbody/tr[{}]/td[2]/a'.format(dummy+i))
+            link = src.get_attribute('href')
+            src.click()
+            time.sleep(2)
+            title = driver.find_element_by_xpath('//*[@id="board-container"]/div[1]/table/tbody/tr[2]/td').text
+            div = driver.find_element_by_xpath('//*[@id="board-container"]/div[2]')
+            content = div.text
+            img = div.find_elements_by_tag_name('img')
+            try:
+                img_url = img[0].get_attribute('src')
+            except:
+                img_url = None
+            driver.back()
+            news_list.append(SchoolNews(
+                school_id=275,
+                cat=cat,
+                url=link,
+                title=title,
+                image = img_url,
+                content = content,
+                upload_date = upload_date
+            ))
+    SchoolNews.objects.bulk_create(news_list)
     return Response(status=status.HTTP_200_OK)
