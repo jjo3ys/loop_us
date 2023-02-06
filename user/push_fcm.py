@@ -247,7 +247,7 @@ def rank_fcm(topic):
         pass
    
 def public_pj_fcm(topic, id, from_id, pj_name):
-    user_obj = list(ProjectUser.objects.filter(project_id=topic).exclude(user_id=from_id).values_list('user_id'))
+    user_obj = list(CareerUser.objects.filter(project_id=topic).exclude(user_id=from_id).values_list('user_id'))
     alarm_list = list(map(lambda x:Alarm(user_id=x[0], type=11, target_id=id, alarm_from_id=from_id), user_obj))
     Alarm.objects.bulk_create(alarm_list)
     message = messaging.Message(
@@ -326,27 +326,3 @@ def report_alarm(count, type, id, reason):
         messaging.send(message)
     except QuotaExceededError:
         pass
-
-# def topic_alarm(topic, title):
-#     message = messaging.Message(notification=messaging.Notification(
-#         title=title,
-#         body='토픽으로 알람보내기'
-#     ),
-#     topic=topic
-#     )
-#     try:
-#         messaging.send(message)
-#     except UnregisteredError:
-#         pass
-
-# def logout_push(token):
-#     message = messaging.Message(
-#         data={
-#             "type":"logout"
-#         },   
-#         token=token
-#     )
-#     try:
-#         messaging.send(message)
-#     except UnregisteredError:
-#         pass
