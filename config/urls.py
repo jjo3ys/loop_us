@@ -10,16 +10,8 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('user_api/', include('user_api.urls')),
-    path('post_api/', include('post_api.urls')),
-    path('project_api/', include('project_api.urls')),
-    path('tag_api/', include('tag.urls')),
-    path('loop_api/', include('loop.urls')),
-    path('search_api/', include('search.urls')),
-    path('alarm/', include('fcm.urls')),
-    path('chat/', include('chat.urls')),
-    path('rank/', include('rank_api.urls')),
-    path('get_data/', include('crawling_api.urls')),
-    path('scout_api/', include('scout_api.urls')), 
-    # path('search/', include('haystack.urls'))
+    path('user/', include('user.urls')),
+    path('search/', include('search.urls')),
+    path('career/', include('career.urls')),
+    path('data/', include('data.urls'))
 ]+ staticfiles_urlpatterns()
