@@ -11,6 +11,7 @@ Dockerfile
 #requirements.txt
 /Pipfile
 /Pipfile.lock
+.venv
 
 confing/__pycache__
 config/my_settings.py

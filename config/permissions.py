@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-from user_api.models import Banlist
+from user.models import Banlist
 
 class Ban(BasePermission):
     def has_permission(self, request, view, obj):
