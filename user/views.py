@@ -12,12 +12,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from .utils import ES, CLIENT, send_msg
+from .utils import ES, CLIENT, send_msg, email_format, loop
 from .models import *
+from .serializers import *
 
 from career.utils import delete_tag
 from career.models import *
+from career.serializer import *
 
+from config.settings import COUNT_PER_PAGE
+
+import datetime
 # 인증번호 확인
 class Activate(APIView):
     def post(self, request):
@@ -65,7 +70,7 @@ class Signup(APIView):
         dep_id    = data['department']
         school_id = data['school']
         admission = data['admission']
-        type      = data['type']
+        user_type      = data['type']
         
         user_obj = User.objects.create_user(
             username = email,
@@ -82,7 +87,7 @@ class Signup(APIView):
                 department_id = dep_id,
                 school_id     = school_id,
                 admission     = admission,
-                type          = type
+                type          = user_type
             )
         except: # 프로필 양식에 알맞지 않아 생성이 안됨
             token_obj.delete()
@@ -101,7 +106,8 @@ class Signup(APIView):
             }
         ES.index(index='profile', doc_type='_doc', body=body)
         
-        if not int(type):                                                                                               # 학생 계정일 때만 기본 커리어 생성
+        # 일반 사용자일 떄 시작 커리어 생성
+        if not int(user_type):                                                                                               # 학생 계정일 때만 기본 커리어 생성
             career_obj = Career.objects.create(
                 career_name = '나만의 커리어',
                 is_public   = False
@@ -110,29 +116,16 @@ class Signup(APIView):
                 user   = user_obj,
                 career = career_obj
             )
-            
-        loop_list = list()                                                                                              # 생성시 같은 학과 내 계정들 다 팔로우&팔로잉
-        loopers = Profile.objects.filter(
-            department_id = dep_id
-        ).exclude(user_id = user_obj.id)
-        for looper in loopers:
-            loop_list.append(Loopship(
-                user_id=user_obj.id, 
-                friend_id=looper.user_id
-                ))
-            loop_list.append(Loopship(
-                user_id=looper.user_id,
-                friend_id=user_obj.id
-                ))
-        Loopship.objects.bulk_create(loop_list)
         
-        return Response(data={
+        return_data = {
             'token'        : token_obj.key,
             'school_id'    : 'school'+str(school_id),
             'department_id': 'department'+str(dep_id),
             'is_student'   : 1,
             'user_id'      : str(user_obj.id)
-        }, status=status.HTTP_201_CREATED)
+        }
+              
+        return Response(data=return_data, status=status.HTTP_201_CREATED)
 
 # 회원 탈퇴
 class Resign(APIView):
@@ -145,6 +138,7 @@ class Resign(APIView):
         profile_obj = Profile.objects.select_related('department', 'school').get(user_id = user_obj.id)
         profile_obj.profile_image.delete(save=False)
         
+        # 탈퇴 사유
         message = EmailMessage(
             subject = f'{profile_obj.real_name}님 탈퇴 사유',
             body    = f'{profile_obj.school.school} {profile_obj.department.department} \n 사유 : {reason}',
@@ -154,7 +148,9 @@ class Resign(APIView):
         try:
             message.send()
         except: return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
-
+        
+        # 탈퇴 시 커리어 삭제 및 공유커리어에서 thumbnail 변경
+        ## s3에서 업로드한 이미지, 파일 삭제
         careerUser_obj = CareerUser.objects.filter(user_id=user_obj.id)
         career_list = list(careerUser_obj.values_list('career_id', flat=True))
         career_dict = dict(Career.objects.filter(
@@ -164,6 +160,7 @@ class Resign(APIView):
         
         post_obj = Post.objects.filter(user_id=user_obj.id).prefetch_related('contents_image', 'contents_file')
         for post in post_obj:
+            # 커리어 thumbnail 변경
             for image in post.contents_image.all():
                 if image.id in career_dict:
                     post.career.thumbnail = None
@@ -173,16 +170,20 @@ class Resign(APIView):
                         post.career.thumbnail = post_image_obj.last().id               
                     post.career.save()
                 image.image.delete(save=False)
-            
+
+            # 커리어 내 포스팅에 업로드 파일 삭제
             for file in post.contents_file.all():
                 file.file.delete(save=False)
-                 
+
+        # 자신이 방장인 커리어 삭제
         career_list = list(careerUser_obj.filter(is_manager=1).values_list('career_id', flat=True))
         Career.objects.filter(id__in=career_list).delete()
         
+        # 사용자가 사용한 태그에서 count 변화
         tag_obj = Post_Tag.objects.filter(post___in=post_obj)
         delete_tag(tag_obj)
         
+        #elasticsearch 서버에서 해당 사용자 삭제
         ES.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id}}}})
         user = User.objects.filter(id=user_obj.id)
         user.delete()
@@ -202,12 +203,15 @@ class Login(APIView):
             password = password
         )
         
+        #로그인 정보가 존재하며, 활성화 상태
         if user_obj and user_obj.is_active:
             token_obj = Token.objects.get(user_id = user_obj.id)
             
+            # 사용자 최근 로그인 시간 업데이트
             user_obj.last_login = timezone.now()
             user_obj.save()
-            
+
+            # 학생 사용자일 때
             profile_obj = Profile.objects.filter(user_id = user_obj.id)
             if profile_obj.exists():
                 profile_obj = profile_obj.first()
@@ -222,7 +226,7 @@ class Login(APIView):
                     'user_id'      : str(user_obj.id),
                     'is_student'   : 1
                 }, status=status.HTTP_202_ACCEPTED)
-            
+            # 기업 사용자일 때
             else:
                 return Response(data={
                     'token'     : token_obj.key,
@@ -237,14 +241,16 @@ class Password(APIView):
         param = request.GET
         data  = request.data
         
-        type  = param['type']
+        put_type  = param['type']
         
-        if type == 'change' and check_password(data['origin_pw'], user.password): # 비밀번호 변경
+        #비밀번호 변경
+        if put_type == 'change' and check_password(data['origin_pw'], user.password):
             user.set_password(data['origin_pw'])
             user.save()
             return Response(status=status.HTTP_200_OK)
         
-        elif type == 'find':                                                      # 인증 완료 후 비밀번호 설정
+        # 인증 완료 후 비밀번호 설정
+        elif put_type == 'find':                                                      
             try: user = User.objects.get(email=data['email'])
             except: return Response(status=status.HTTP_401_UNAUTHORIZED)
             
@@ -253,7 +259,8 @@ class Password(APIView):
             return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     
-    def post(self, request):                                                      # 비밀번호 찾기 인증
+    # 비밀번호 찾기 인증과정
+    def post(self, request):                                                      
         data  = request.data     
          
         email = data['email']
@@ -266,32 +273,332 @@ class Password(APIView):
     
 # 문의
 class Ask(APIView):
-    mail = {
-        'school'         : '학교 등록 문의',
-        'department'     : '학과 등록 문의',
-        'comapny_signup' : '기업 회원가입 문의',
-        'company_info'   : '기업 소개 수정 문의',
-    }
     def post(self, request):
         param     = request.GET
         data      = request.data
         
-        type      = param['type']
+        ask_type      = param['type']
         
-        if type == 'normal':
-            message = EmailMessage(
-                subject = f'{data["real_name"]}님 문의',
-                body    = f'이메일:{data["email"]}\n\
-                            문의내용:{data["content"]}\n\
-                            기기:{data["device"]}\n\
-                            OS버전:{data["os"]}\n\
-                            빌드번호:{ data["app_ver"]}\n\
-                            유저id:{data["id"]}',
-                to      = ['loopus@loopus.co.kr']
-            )
+        message = email_format(ask_type, data)
+
+        try:
+            message.send()
+        except: return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
+        return Response(status=status.HTTP_200_OK)
+
+# 기업 사용자 프로필
+class CompanyProfile(APIView):
+    def get(self, request):
+        user  = request.user
+        param = request.GET
+
+        company_id = param['id']
+        is_student = param['is_student']
+
+        company_obj = Company_Inform.objects.get(
+            user_id = company_id
+        )
+        # 학생 사용자일 경우
+        if int(is_student):
+            company_obj.view_count += 1
+            company_obj.save()
+
+            # 탐색 기록 남김
+            viewd, created = ViewCompany.objects.get_or_create(student_id = user.id, comapny_id = company_id)
+            if not created:
+                viewd.date = datetime.datetime.now()
+                viewd.save()
         
-        elif type == 'school':
-            message = EmailMessage(
-                subject = '학교 등록 문의',
-                body    =
+        company_obj = CompanyProfileSerializer(company_obj).data
+        follow_obj = Loopship.objects.filter(user_id=user.id)
+        following_obj = Loopship.objects.filter(friend_id=user.id)
+
+        # 프로필 주인일 때
+        if user.id == int(company_id):
+            company_obj.update({
+                "is_user"         : 1,
+                "follow_count"    : follow_obj.count(),
+                "following_count" : following_obj.count()
+                })
+        # 아닐 때
+        else:
+            looped = loop(user.id, company_id)                  
+            company_obj.update({
+                "is_user": 0,
+                "looped" : looped
+                })
+
+        # 기업 프로필을 봤던 학생들 리스트
+        viewd_profile = ViewCompany.objects.filter(comapny_id = company_id).order_by('-date').select_related('show_profile')
+        viewd_profile = ViewCompanyProfileSerializer(viewd_profile, many=True).data
+        company_obj.update({
+            "interest":viewd_profile
+        })
+
+        return Response(company_obj, status=status.HTTP_200_OK)
+
+# 학생 사용자 프로필
+class StudentProfile(APIView):
+    def get(self, request):
+        user  = request.user
+        param = request.GET
+
+        target_id = param['id']
+
+        try: 
+            profile_obj = Profile.objects.select_related('department', 'school').get(
+                user_id = target_id
             )
+        except Profile.DoesNotExist: return Response(status=status.HTTP_404_NOT_FOUND)
+
+        alarm = False
+        # 프로필 주인이 자신일 때
+        if user.id == int(target_id):
+            is_user = 0
+            if Alarm.objects.filter(user_id = user.id, is_read = False).exists(): 
+                alarm = True
+        # 아닐 때
+        else:
+            is_user = 1
+            is_banned = Banlist.objects.filter(user_id = target_id, banlist__contains=user.id).exists()
+            # 프로필 주인이 나를 밴했을 때
+            if is_banned: return Response(status=status.HTTP_204_NO_CONTENT)
+
+            # 프로필 조회수 +1
+            profile_obj.view_count += 1
+            profile_obj.save()
+
+        # 프로필 주인과의 관계
+        looped = loop(user.id, target_id)
+
+        profile_obj = ProfileSerialzer(profile_obj).data
+        profile_obj.update({
+            "is_user": is_user,
+            "alarm"  : alarm,
+            "looped" : looped
+        })
+        return Response(profile_obj, status=status.HTTP_200_OK)
+    
+    def put(self, request):
+        user  = request.user
+        data  = request.data
+        param = request.GET
+        files = request.FILES
+
+        put_type    = param["type"]
+        profile_obj = Profile.objects.select_related("department", "school").get(user_id = user.id)
+
+        # 프로필 이미지 수정
+        if put_type == "image":
+            profile_obj.profile_image.delete(save=False)
+            profile_obj.profile_image = files.get("image")
+        
+        # 프로필 수정(인증 필요)
+        elif put_type == "profile":
+            email         = data["email"]
+            real_name     = data["real_name"]
+            school_id     = data["school"]
+            department_id = data["department"]
+            admission     = data["admission"]
+
+            # 이메일 변경으로 인한 회원가입 아이디 변경
+            user_obj = User.objects.get(user_id = user.id)
+
+            user_obj.username = email
+            user_obj.email    = email
+            user_obj.save()
+
+            profile_obj.real_name     = real_name
+            profile_obj.school_id     = school_id
+            profile_obj.department_id = department_id
+            profile_obj.admission     = admission
+
+            # 랭킹 초기화
+            profile_obj.rank, profile_obj.last_rank, profile_obj.school_rank, profile_obj.school_last_rank = 0, 0, 0, 0
+
+            # elasticsearch 색인 수정
+            ES.delete_by_query(index='profile', doc_type='_doc', body={'query':{'match':{"user_id":{"query":request.user.id,}}}})
+            body = {
+                "user_id":request.user.id,
+                "text":profile_obj.school.school + " " + profile_obj.department.department + " " + profile_obj.real_name
+            }
+            ES.index(index='profile', doc_type='_doc', body=body)
+        
+        # 프로필 sns url 수정
+        elif put_type == "sns":
+            sns_type = data["sns_type"]
+            url      = data["url"]
+            
+            sns_obj, _  = UserSNS.objects.get_or_create(profile_id = profile_obj.id, type = sns_type)
+            sns_obj.url = url
+            sns_obj.save()
+        
+        profile_obj.save()
+
+        return Response(status=status.HTTP_200_OK)
+    
+    def delete(self, request):
+        param = request.GET
+        user  = request.user
+
+        del_type = param["type"]
+
+        # 프로필 sns url 삭제
+        if del_type == "sns":
+            sns_id = param["id"]
+            UserSNS.objects.get(id = sns_id).delete()
+        
+        # 프로필 이미지 삭제
+        elif del_type == "image":
+            profile_obj = Profile.objects.get(user_id = user.id)
+            profile_obj.profile_image.delete(save = False)
+            profile_obj.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+# 프로필내 커리어
+class ProfileCareer(APIView):
+    # 커리어 리스트
+    def get(self, request):
+        param = request.GET
+
+        target_id = param["id"]
+        try:
+            career_obj = CareerUser.objects.filter(user_id = target_id).select_related('career').order_by('order')
+        except: return Response(status=status.HTTP_404_NOT_FOUND)
+        career_obj = CareerUserSerializer(career_obj, many=True).data
+        return Response(career_obj, status=status.HTTP_200_OK)
+
+    # 커리어 순서 변경
+    def put(self, request):
+        user = request.user
+        data = request.data
+
+        career_obj = CareerUser.objects.filter(user_id = user.id)
+        for career in career_obj:
+            try:
+                career.order = data[str(career.career_id)]
+            except: continue
+        CareerUser.objects.bulk_update(career_obj, ['order'])
+        return Response(status=status.HTTP_200_OK)
+
+# 프로필내 포스팅
+class ProfilePost(APIView):
+    def get(self, request):
+        user  = request.user
+        param = request.GET
+
+        target_id = param["id"]
+        page      = param["page"]
+        get_type  = param["type"]
+
+        post_obj = Post.objects.select_related("career").prefetch_related("contents_image", "contents_link", "contents_file", "comments_cocomments", "post_lie", "post_tag").order_by('-id')
+
+        # 커리어 하나의 포스팅
+        if get_type == "career":
+            post_obj = post_obj.filter(career_id = target_id)
+        
+        # 프로필 주인의 모든 포스팅
+        elif get_type == "all":
+            post_obj = post_obj.filter(user_id = target_id)
+        
+        # 마지막 페이지 처리
+        if page > post_obj.count()//COUNT_PER_PAGE+1:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        post_obj = post_obj[(page-1)*20:page*20]
+
+        # 사용자의 좋아요 목록, 북마크 목록 비교
+        post_list = post_obj.values_list("id", flat=True)
+        like_list = dict(Like.objects.filter(user_id=user.id, post_id__in=post_list).values_list('post_id', 'user_id'))
+        book_list = dict(BookMark.objects.filter(user_id=user.id, post_id__in=post_list).values_list('post_id', 'user_id'))
+
+        post_obj = MainloadSerializer(post_obj, many=True, read_only=True, context={"like_list":like_list, "book_list":book_list, "user_id":user.id}).data
+
+        return Response(post_obj, status=status.HTTP_200_OK)
+
+# 밴 관리
+class Ban(APIView):
+    # 추가 밴
+    def post(self, request):
+        user  = request.user
+        param = request.GET
+
+        ban_id = param["id"]
+
+        banlist_obj, created = Banlist.objects.get_or_create(user_id = user.id)
+        if not created:
+            banlist_obj.banlist.append(int(ban_id))
+        else: banlist_obj.banlist = [int(ban_id)]
+
+        banlist_obj.save()
+
+        # 팔로우 팔로잉 목록에서 삭제
+        Loopship.objects.filter(user_id = user.id, friend_id = ban_id).delete()
+        Loopship.objects.filter(user_id = ban_id, friend_id = user.id).delete()
+
+        return Response(status=status.HTTP_200_OK)
+    
+    # 밴 목록
+    def get(self, request):
+        user = request.user
+
+        banlist_obj = Banlist.objects.filter(user_id = user.id)
+        banlist_obj = BanlistSerializer(banlist_obj).data
+
+        return Response(banlist_obj, status=status.HTTP_200_OK)
+    
+    # 밴 해제
+    def delete(self, request):
+        user  = request.user
+        param = request.GET
+
+        target_id = param["id"]
+
+        banlist_obj = Banlist.objects.get(user_id = user.id)
+        banlist_obj.banlist.remove(int(target_id))
+        banlist_obj.save()
+
+        return Response(status=status.HTTP_200_OK)
+
+# 사용자 알람
+class UserAlarm(APIView):
+    def get(self, request):
+        user  = request.user
+        param = request.GET
+
+        get_type = param["type"]
+        
+        # 알람 읽음 처리리
+        if get_type == "read":
+            alarm_id = param["id"]
+            Alarm.objects.filter(id = alarm_id).update(is_read=True)
+
+            return Response(status=status.HTTP_200_OK)
+        
+        # 알람 리스트 조회
+        elif get_type == "list":
+            last_id = param["last"]
+
+            # 7일 이후 알람 읽음 처리
+            expired_date = datetime.datetime.now() - datetime.timedelta(days=7)
+            Alarm.objects.filter(user_id = user.id, date__lte = expired_date, is_read = False).update(is_read = True)
+            
+            alarm_obj = Alarm.objects.filter(user_id = user.id).order_by('-id')
+            # 리스트에서 마지막 알람 id 이후 20개 호출
+            if last_id != "0":
+                alarm_obj = alarm_obj.filter(id__lt = last_id)
+            
+            alarm_obj = alarm_obj[:COUNT_PER_PAGE]
+            alarm_obj = AlarmSerializer(alarm_obj, many=True).data
+
+            return Response(alarm_obj, status=status.HTTP_200_OK)
+    
+    def delete(self, request):
+        param = request.GET
+
+        target_id = param["id"]
+
+        Alarm.objects.get(id = target_id).delete()
+
+        return Response(status=status.HTTP_200_OK)

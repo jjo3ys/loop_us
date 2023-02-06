@@ -18,19 +18,12 @@ class Department(models.Model):
     class Meta:
         db_table = 'Department'
 
-class Company(models.Model):
-    logo = models.ImageField(null=True, upload_to = 'logo/company/')
-    company_name = models.TextField()
-
-    class Meta:
-        db_table = "Company"
-
-<<<<<<< HEAD:user_api/models.py
+# Student
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     real_name = models.CharField(max_length=20)
     type = models.SmallIntegerField(default=0)
-    profile_image = models.ImageField(null = True, upload_to='profile_image/')
+    profile_image = models.ImageField(null = True, upload_to='profile_image/', default=None)
     school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
     department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, null=True)
     group = models.PositiveSmallIntegerField(default=15)
@@ -41,8 +34,6 @@ class Profile(models.Model):
     school_rank = models.PositiveBigIntegerField(default=0)
     view_count = models.PositiveBigIntegerField(default=0)
     admission = models.CharField(max_length=10)
-    company = models.ForeignKey(Company, null=True, default=None, on_delete=models.DO_NOTHING)
-    upload_size = models.PositiveBigIntegerField(default=0)
     class Meta:
         db_table = "Profile"
 
@@ -51,9 +42,14 @@ class UserSNS(models.Model):
     url = models.TextField()
     type = models.SmallIntegerField()
 
-=======
 # Company
->>>>>>> 75119f2e7591c692370edb4b86d5b7665dd78e23:user/models.py
+class Company(models.Model):
+    logo = models.ImageField(null=True, upload_to = 'logo/company/')
+    company_name = models.TextField()
+
+    class Meta:
+        db_table = "Company"
+
 class Company_Inform(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
     company_name = models.TextField(null = True)
@@ -71,8 +67,8 @@ class Company_Inform(models.Model):
         db_table = "Corp_inform"
 
 class ViewCompany(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name= 'show_profile', on_delete=models.CASCADE)
-    shown = models.ForeignKey(settings.AUTH_USER_MODEL, related_name= 'profile_shown', on_delete=models.CASCADE)
+    student = models.ForeignKey(Profile, related_name= 'show_profile', on_delete=models.CASCADE)
+    company = models.ForeignKey(Company_Inform, related_name= 'profile_shown', on_delete=models.CASCADE)
     date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -103,30 +99,7 @@ class Contact(models.Model):
     class Meta:
         db_table = "Contact"
 
-# Student
-class Profile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    real_name = models.CharField(max_length=20)
-    type = models.SmallIntegerField(default=0)
-    profile_image = models.ImageField(null = True, upload_to='profile_image/', default=None)
-    school = models.ForeignKey(School, on_delete=models.DO_NOTHING)
-    department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, null=True)
-    group = models.PositiveSmallIntegerField(default=15)
-    rank = models.PositiveBigIntegerField(default=0)
-    score = models.IntegerField(default=0)
-    last_rank = models.PositiveBigIntegerField(default=0)
-    school_last_rank = models.PositiveBigIntegerField(default=0)
-    school_rank = models.PositiveBigIntegerField(default=0)
-    view_count = models.PositiveBigIntegerField(default=0)
-    admission = models.CharField(max_length=10)
-    company = models.ForeignKey(Company, null=True, default=None, on_delete=models.DO_NOTHING)
-    class Meta:
-        db_table = "Profile"
 
-class UserSNS(models.Model):
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='user_sns')
-    url = models.TextField()
-    type = models.SmallIntegerField()
 
 # Ban
 class Banlist(models.Model):
