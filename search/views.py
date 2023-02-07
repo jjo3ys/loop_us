@@ -18,7 +18,7 @@ from user.models import Banlist, Company, Company_Inform, Department, Profile, S
 from user.serializers import DepSerializer, ProfileListSerializer, SearchCompanySerializer, SchoolSerializer
 
 from .models import Log
-from .serializer import LogSerializer, CompanyProfileListSerializer
+from .serializers import LogSerializer, CompanyProfileListSerializer
 
 class Search(APIView):
     def get(self, request):
