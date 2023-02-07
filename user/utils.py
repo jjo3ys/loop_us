@@ -10,6 +10,7 @@ import redis
 ES = Elasticsearch('localhost:9200')
 CLIENT = redis.Redis()
 
+# 인증 메일
 def send_msg(email):
     r = CLIENT.get(email.replace('@', ''))
     if not r:
@@ -29,6 +30,7 @@ def send_msg(email):
     msg.send()
     CLIENT.set(email.replace('@', ''), certify_num, datetime.timedelta(seconds=180))
 
+# 루프 상태
 def loop(user, friend):
     follow = Loopship.objects.filter(user_id = user, friend_id = friend).exists()
     following = Loopship.objects.filter(user_id = friend, friend_id = user).exists()
@@ -39,6 +41,12 @@ def loop(user, friend):
     elif following:          looped = 1 # 상대방이 팔로우
 
     return looped
+
+# 팔로우 팔로잉 카운트
+def loop_count(target_id):
+    follower_count  = Loopship.objects.filter(friend_id=target_id).count()
+    following_count = Loopship.objects.filter(user_id=target_id).count()
+    return {"follower":follower_count, "following":following_count}
 
 def email_format(ask_type, data):
     # 일반 문의
