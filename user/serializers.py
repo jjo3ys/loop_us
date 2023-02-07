@@ -25,6 +25,25 @@ class ProfileListSerializer(serializers.ModelSerializer):
     def get_school(self, obj):
         return obj.school.school
 
+# 기본 회사 정보
+class SearchCompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = "__all__"
+
+# 회사 로고
+class LogoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ["logo", "company_name"]
+
+# 간단 회사 프로필 리스트
+class CompanyProfileListSerializer(serializers.ModelSerializer):
+    company_logo = LogoSerializer()
+    class Meta:
+        model = Company_Inform
+        fields = ["user_id", "group", "category", "location",
+                  "company_logo"]
 # 회사 소개용 이미지
 class InformImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -71,6 +90,18 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
 
     def get_company_logo(self, obj):
         return obj.company_logo.logo.url
+
+# 학교 리스트
+class SchoolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = ["id", "school", "email"]
+
+# 학과 리스트
+class DepSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ["id", "department"]
 
 # 학생 사용자 sns
 class SNSSerializer(serializers.ModelSerializer):
