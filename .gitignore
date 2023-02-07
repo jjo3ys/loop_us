@@ -34,6 +34,7 @@ signup.py
 
 chromedriver
 
+*.zip
 *.swm
 *.swn
 *.swo
