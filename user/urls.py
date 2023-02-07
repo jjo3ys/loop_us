@@ -23,5 +23,3 @@ urlpatterns = [
 
     path('ask', views.Ask.as_view()),
 ]
-
-urlpatterns = format_suffix_patterns(urlpatterns)
