@@ -1,25 +1,23 @@
 from django.urls import path
-from rest_framework.urlpatterns import format_suffix_patterns
-from . import views
-# from . import school
+from .views import *
 
 urlpatterns = [
-    path('activate', views.Activate.as_view()),
-    path('certification', views.Certification.as_view()),
+    path('activate', Activate.as_view()),
+    path('certification', Certification.as_view()),
 
-    path('singup', views.Signup.as_view()),
-    path('resign', views.Resign.as_view()),
-    path('login', views.Login.as_view()),
-    path('password', views.Password.as_view()),
+    path('singup', Signup.as_view()),
+    path('resign', Resign.as_view()),
+    path('login', Login.as_view()),
+    path('password', Password.as_view()),
 
-    path('comapny_profile', views.CompanyProfile.as_view()),
-    path('student_profile', views.StudentProfile.as_view()),
-    path('profile_career', views.ProfileCareer.as_view()),
-    path('profile_career', views.ProfilePost.as_view()),
+    path('comapny_profile', CompanyProfile.as_view()),
+    path('student_profile', StudentProfile.as_view()),
+    path('profile_career', ProfileCareer.as_view()),
+    path('profile_career', ProfilePost.as_view()),
 
-    path('ban', views.Ban.as_view()),
+    path('ban', Ban.as_view()),
 
-    path('alarm', views.UserAlarm.as_view()),
+    path('alarm', UserAlarm.as_view()),
 
-    path('ask', views.Ask.as_view()),
+    path('ask', Ask.as_view()),
 ]
