@@ -1,14 +1,11 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
-from django.core.paginator import Paginator
-from django.core.mail import EmailMessage, EmailMultiAlternatives
+from django.core.mail import EmailMessage
 from django.utils import timezone
-from django.db.utils import IntegrityError
 
 from rest_framework.response import Response
 from rest_framework.decorators import APIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
@@ -457,8 +454,8 @@ class ProfilePost(APIView):
         post_obj = post_obj[(page-1)*20:page*20]
 
         # 사용자의 좋아요 목록, 북마크 목록 비교
-        post_list = post_obj.values_list("id", flat=True)
-        like_list = dict(Like.objects.filter(user_id=user.id, post_id__in=post_list).values_list("post_id", "user_id"))
+        post_list = list(post_obj)
+        like_list = dict(Like.objects.filter(user_id=user.id, post__in=post_list).values_list("post_id", "user_id"))
         book_list = dict(BookMark.objects.filter(user_id=user.id, post_id__in=post_list).values_list("post_id", "user_id"))
 
         post_obj = MainPageSerializer(post_obj, many=True, read_only=True, context={"like_list":like_list, "book_list":book_list, "user_id":user.id}).data
