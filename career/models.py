@@ -17,7 +17,7 @@ class Career(models.Model):
         db_table = 'Career'
 
 class CareerUser(models.Model):
-    career = models.ForeignKey(Career, on_delete=models.CASCADE, related_name='member')
+    career = models.ForeignKey(Career, on_delete=models.CASCADE, related_name='career')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='member')
     post_count = models.PositiveSmallIntegerField(default=0)
     order = models.PositiveSmallIntegerField(default=None, null=True)
