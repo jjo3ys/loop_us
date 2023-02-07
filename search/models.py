@@ -1,7 +1,7 @@
 from email.policy import default
 from django.db import models
 
-# Create your models here.
+# Log
 class Log(models.Model):
     user_id = models.PositiveBigIntegerField()
     query = models.TextField()
