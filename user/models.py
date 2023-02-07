@@ -75,7 +75,7 @@ class ViewCompany(models.Model):
         db_table = "View_Company"
 
 class CompanyImage(models.Model):
-    company_info = models.ForeignKey(Company_Inform, related_name='company_id', on_delete=models.CASCADE)
+    company_info = models.ForeignKey(Company_Inform, related_name='inform_image', on_delete=models.CASCADE)
     image_info = models.TextField(null=True)
     image = models.ImageField(null=True, upload_to='company/image/%Y%m%d/')
 

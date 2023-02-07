@@ -1,13 +1,7 @@
 from django.db import models
-<<<<<<< HEAD:crawling_api/models.py
-from tag.models import Group
-from user_api.models import Company_Inform, Department, School
-from project_api.models import Project
-=======
 from career.models import Group
 from user.models import Company_Inform
 
->>>>>>> 75119f2e7591c692370edb4b86d5b7665dd78e23:data/models.py
 class News(models.Model):
     urls = models.TextField()
     group = models.ForeignKey(Group, related_name='group_news', on_delete=models.DO_NOTHING)

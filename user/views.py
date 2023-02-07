@@ -18,7 +18,7 @@ from .serializers import *
 
 from career.utils import delete_tag
 from career.models import *
-from career.serializer import *
+from career.serializers import *
 
 from config.settings import COUNT_PER_PAGE
 
@@ -295,7 +295,7 @@ class CompanyProfile(APIView):
         company_id = param['id']
         is_student = param['is_student']
 
-        company_obj = Company_Inform.objects.get(
+        company_obj = Company_Inform.objects.select_related('company_logo').prefetch_related('inform_image').get(
             user_id = company_id
         )
         # 학생 사용자일 경우
@@ -308,8 +308,11 @@ class CompanyProfile(APIView):
             if not created:
                 viewd.date = datetime.datetime.now()
                 viewd.save()
-        
-        company_obj = CompanyProfileSerializer(company_obj).data
+                
+        viewd_list = ViewCompany.objects.filter(comapny_id = company_id).order_by('-date').select_related('show_profile')[:100]
+        viewd_list = list(map(lambda x: x.student, viewd_list))
+
+        company_obj = CompanyProfileSerializer(company_obj, context={'viewd_list':viewd_list}).data
         follow_obj = Loopship.objects.filter(user_id=user.id)
         following_obj = Loopship.objects.filter(friend_id=user.id)
 
@@ -329,7 +332,7 @@ class CompanyProfile(APIView):
                 })
 
         # 기업 프로필을 봤던 학생들 리스트
-        viewd_profile = ViewCompany.objects.filter(comapny_id = company_id).order_by('-date').select_related('show_profile')
+        
         viewd_profile = ViewCompanyProfileSerializer(viewd_profile, many=True).data
         company_obj.update({
             "interest":viewd_profile
