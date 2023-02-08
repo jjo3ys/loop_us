@@ -6,7 +6,7 @@ from rest_framework import status
 
 from config.settings import COUNT_PER_PAGE
 
-from career.models import BookMark, Like, Post, Post_Tag
+from career.models import BookMark, Like, Post, Post_Tag, Tag
 from career.serializers import MainPageSerializer
 
 from user.utils import ES
@@ -120,6 +120,21 @@ class SearchLog(APIView):
         else:
             Log.objects.filter(user_id=user.id).update(viewd=False)
         return Response(status=status.HTTP_200_OK)
+
+# 태그 검색
+class SearchTag(APIView):
+    def get(self, request):
+        param = request.GET
+
+        query = param["query"]
+
+        results = list(Tag.objects.filter(tag=query))
+        tags = Tag.objects.filter(tag__icontains=query).order_by("-count")[:10]
+
+        results += [t for t in tags if t not in results]
+        results = TagSerializer(results, many=True, read_only=True).data
+
+        return Response(results, status=status.HTTP_200_OK)
 
 # 학교, 학과 검색
 class SearchUniversity(APIView):
