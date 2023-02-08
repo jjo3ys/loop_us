@@ -10,6 +10,8 @@ import redis
 ES = Elasticsearch('localhost:9200')
 CLIENT = redis.Redis()
 
+PROFILE_SELECT_LIST = ["department", "school"]
+
 # 인증 메일
 def send_msg(email):
     r = CLIENT.get(email.replace('@', ''))
@@ -31,7 +33,7 @@ def send_msg(email):
     CLIENT.set(email.replace('@', ''), certify_num, datetime.timedelta(seconds=180))
 
 # 루프 상태
-def loop(user, friend):
+def get_loop(user, friend):
     follow = Loopship.objects.filter(user_id = user, friend_id = friend).exists()
     following = Loopship.objects.filter(user_id = friend, friend_id = user).exists()
 
