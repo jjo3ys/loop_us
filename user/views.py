@@ -649,8 +649,9 @@ class PostRanking(APIView):
 
 # 일별 지난 30일간 기록을 통한 유저 랭킹
 class UserRanking(APIView):
-    def get_ranker_list(user, count):
-        ranker_obj = Profile.objects.all().exclude(rank=0).order_by("rank")[:count]
+    # 유저 랭킹 top N 
+    def get_ranker_list(self, user, N=None):
+        ranker_obj = Profile.objects.all().exclude(rank=0).order_by("rank")[:N]
         following_list = dict(Loopship.objects.filter(user_id=user.id).values_list('friend_id', 'user_id'))
         follower_list  = dict(Loopship.objects.filter(friend_id=user.id).values_list('user_id', 'friend_id'))
 
@@ -658,7 +659,7 @@ class UserRanking(APIView):
                         context={"user_id":user.id, "follower_list":follower_list, "following_list":following_list}
                         ).data
         return ranker_obj
-        
+
     def post(self, request):
         user = request.user
         if user.id != 5: return Response(status=status.HTTP_403_FORBIDDEN)
@@ -728,6 +729,7 @@ class UserRanking(APIView):
 
         get_type = param["type"]
 
+        # 커리어 보드 main
         if get_type == "main":
             # 인기 포스팅
             post_obj = PostingRanking.objects.all().select_related(
@@ -740,16 +742,34 @@ class UserRanking(APIView):
             post_obj = MainPageSerializer(post_obj, many=True, read_only=True).data
 
             # 상위 랭커            
-            ranker_obj = Profile.objects.all().exclude(rank=0).order_by("rank")[:3]
-            following_list = dict(Loopship.objects.filter(user_id=user.id).values_list('friend_id', 'user_id'))
-            follower_list  = dict(Loopship.objects.filter(friend_id=user.id).values_list('user_id', 'friend_id'))
-
-            ranker_obj = RankProfileListSerializer(ranker_obj, many=True, read_only=True, 
-                            context={"user_id":user.id, "follower_list":follower_list, "following_list":following_list}
-                            ).data
-            
+            ranker_obj = self.get_ranker_list(user, 3)
             return Response({"posting":post_obj, "ranking":ranker_obj}, status=status.HTTP_200_OK)
         
         # 순위 리스트 top50
         else:
-            profile_obj = Profile.objects.all().exclude(rank=0).order_by("rank")[:50]
+            ranker_obj = self.get_ranker_list(user, 50)
+            return Response(ranker_obj, status=status.HTTP_200_OK)
+
+class HotStudent(APIView):
+    def post(self, request):
+        user = request.user
+        if user.id != 5: return Response(status=status.HTTP_403_FORBIDDEN)
+
+        now = datetime.datetime.now()
+        
+        post_obj = Post.objects.filter(
+                    date__range = [now-datetime.timedelta(days=7), now]
+                    ).values("user_id"
+                    ).annotate(Sum("like_count")).order_by("-like_count__sum")[:20]
+
+        hotstudent_list = [HotUser(user_id=post["user_id"]) for post in post_obj]
+        HotUser.objects.all().delete()
+        HotUser.objects.bulk_create(hotstudent_list)
+
+        return Response(status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        user_obj = HotUser.objects.all().select_related(["user__profile" + _ for _ in PROFILE_SELECT_LIST])
+        user_obj = list(map(lambda x: x.user.profile, user_obj))
+        user_obj = RankProfileListSerializer(user_obj, many=True, read_only=True).data
+        return Response(user_obj, status=status.HTTP_200_OK)
