@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from django.core.mail import EmailMessage
+from django.db.models import Sum
 from django.utils import timezone
 
 from rest_framework.response import Response
@@ -9,16 +10,18 @@ from rest_framework.decorators import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from .utils import ES, CLIENT, send_msg, email_format
-from .push_fcm import loop_fcm
+from .utils import ES, CLIENT, PROFILE_SELECT_LIST, send_msg, email_format
+from .push_fcm import loop_fcm, rank_fcm
 from .models import *
 from .serializers import *
 
-from career.utils import delete_tag
+from career.utils import delete_tag, POST_PREFETCH_LIST, POST_SELECTE_LIST
 from career.models import *
 from career.serializers import AlarmSerializer, BanlistSerializer, CareerListSerializer, MainPageSerializer
 
 from config.settings import COUNT_PER_PAGE
+
+from dateutil.relativedelta import relativedelta
 
 import datetime
 # 인증번호 확인
@@ -312,7 +315,7 @@ class StudentProfile(APIView):
         target_id = param["id"]
 
         try: 
-            profile_obj = Profile.objects.select_related("department", "school").prefetch_related("user_sns").get(
+            profile_obj = Profile.objects.select_related(PROFILE_SELECT_LIST).prefetch_related("user_sns").get(
                 user_id = target_id
             )
         except Profile.DoesNotExist: return Response(status=status.HTTP_404_NOT_FOUND)
@@ -438,7 +441,11 @@ class ProfilePost(APIView):
         page      = param["page"]
         get_type  = param["type"]
 
-        post_obj = Post.objects.select_related("career").prefetch_related("contents_image", "contents_link", "contents_file", "comments_cocomments", "post_like", "post_tag").order_by("-id")
+        post_obj = Post.objects.select_related(
+            POST_SELECTE_LIST
+            ).prefetch_related(
+                POST_PREFETCH_LIST
+            ).order_by("-id")
 
         # 커리어 하나의 포스팅
         if get_type == "career":
@@ -588,7 +595,161 @@ class Loop(APIView):
                         "friend__profile__department", "friend__profile__school"
                         ).filter(friend_id=param["id"])
             loop_obj = list(map(lambda x: x.user.profile, loop_obj))
-        
-        loop_obj = ProfileListWithLoopSerializer(loop_obj, many=True, read_only=True, context={"user_id":user.id}).data
+
+        following_list = dict(Loopship.objects.filter(user_id=user.id).values_list('friend_id', 'user_id'))
+        follower_list  = dict(Loopship.objects.filter(friend_id=user.id).values_list('user_id', 'friend_id'))
+
+        loop_obj = ProfileListWithLoopSerializer(loop_obj, many=True, read_only=True, 
+                    context={"user_id":user.id, "follower_list":follower_list, "following_list":following_list}
+                    ).data
 
         return Response(loop_obj, status=status.HTTP_200_OK)
+
+# 매월 1일 월별 태그 동향 기록
+class MonthlyTag(APIView):
+    def post(self, request):
+        user = request.user
+        if user.id != 5: return Response(status=status.HTTP_403_FORBIDDEN)
+
+        today      = datetime.date.today()
+        date_range = today-relativedelta(months=1)
+        last_month = date_range.month
+
+        post_tags = Post_Tag.objects.select_related("post", "tag").filter(
+            post__date__range=[date_range, today]
+        )
+
+        tag_map = {}
+        for tag in post_tags:
+            if tag.tag not in tag_map: tag_map[tag.tag] = 1
+            else: tag_map[tag.tag] += 1
+        
+        for tag in tag_map:
+            tag.monthly_count[last_month] = tag_map[tag]
+
+        Tag.objects.bulk_update(tag_map, ['monthly_count'])
+
+        return Response(status=status.HTTP_200_OK)
+
+# 일별 지난 7일간 인기 포스팅
+class PostRanking(APIView):
+    def post(self, request):
+        user = request.user
+        if user.id != 5: return Response(status=status.HTTP_403_FORBIDDEN)
+
+        now = datetime.datetime.now()
+        post_obj = Post.objects.filter(date__range=[now-datetime.timedelta(days=7), now]
+                    ).select_related("career").order_by("-like_count", "-id")[:10]
+        
+        post_list = [PostingRanking(post_id=post.id, score=post.like_count) for post in post_obj]
+        PostingRanking.objects.all().delete()
+        PostingRanking.objects.bulk_create(post_list)
+
+        return Response(status=status.HTTP_200_OK)
+
+# 일별 지난 30일간 기록을 통한 유저 랭킹
+class UserRanking(APIView):
+    def get_ranker_list(user, count):
+        ranker_obj = Profile.objects.all().exclude(rank=0).order_by("rank")[:count]
+        following_list = dict(Loopship.objects.filter(user_id=user.id).values_list('friend_id', 'user_id'))
+        follower_list  = dict(Loopship.objects.filter(friend_id=user.id).values_list('user_id', 'friend_id'))
+
+        ranker_obj = RankProfileListSerializer(ranker_obj, many=True, read_only=True, 
+                        context={"user_id":user.id, "follower_list":follower_list, "following_list":following_list}
+                        ).data
+        return ranker_obj
+        
+    def post(self, request):
+        user = request.user
+        if user.id != 5: return Response(status=status.HTTP_403_FORBIDDEN)
+
+        now = datetime.datetime.now()
+
+        profile_obj = Profile.objects.filter(type=0)
+        post_obj    = Post.objects.filter(date__range = [now-datetime.timedelta(days=30), now])
+
+        # 점수 업데이트 점수 = 좋아요X3 + 조회수X1 + 포스팅수X5
+        for profile in profile_obj:
+            user_post = post_obj.filter(user_id = profile.user_id)
+            
+            count = user_post.aaggregate(like_count=Sum("like_count"), view_count=Sum("view_count"))
+            score = count["like_count"] * 3 + count["view_count"] + user_post.count() * 5
+            profile.score = score
+
+        Profile.objects.bulk_update(profile_obj, ["score"])
+
+        # 순위 계산
+        accN = 0
+        score = 0
+        
+        profile_obj = Profile.objects.filter(type=0).order_by("-score")
+        for i , profile in enumerate(profile_obj, 1):
+            profile.last_rank = profile.rank
+            # 공동 순위를 위한 계산
+            if profile.score != score: 
+                profile.rank = i
+                score        = profile.score
+                accN         = 0
+            else: 
+                accN         += 1
+                profile.rank = i - accN
+                
+
+        Profile.objects.bulk_update(profile_obj, ["rank", "last_rank"])      
+
+        # 교내 순위 계산
+        profile_obj = Profile.objects.filter(type=0).order_by("-score")
+        school_list = profile_obj.values("school_id").distinct()
+        for school in school_list:
+            school_profile = profile_obj.filter(school_id = school["school_id"]).order_by("-score")
+
+            accN = 0
+            score = 0
+            for i, profile in enumerate(school_profile, 1):
+                profile.school_last_rank = profile.school_rank
+                # 공동 순위를 위한 계산
+                if profile.score != score:
+                    profile.school_rank = i
+                    score               = profile.score
+                    accN                = 0
+                else:
+                    accN                += 1
+                    profile.school_rank = i - accN
+                    
+            Profile.objects.bulk_update(school_profile, ["school_rank", "school_last_rank"]) 
+            # 교내 순위 업데이트 알람
+            rank_fcm(school["school_id"])
+        
+        return Response(status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        user  = request.user
+        param = request.GET
+
+        get_type = param["type"]
+
+        if get_type == "main":
+            # 인기 포스팅
+            post_obj = PostingRanking.objects.all().select_related(
+                ["post__" + _ for _ in POST_SELECTE_LIST]
+                ).prefetch_related(
+                    ["post__"+ _ for _ in POST_PREFETCH_LIST]
+                )
+
+            post_obj = list(map(lambda x:x.post, post_obj))
+            post_obj = MainPageSerializer(post_obj, many=True, read_only=True).data
+
+            # 상위 랭커            
+            ranker_obj = Profile.objects.all().exclude(rank=0).order_by("rank")[:3]
+            following_list = dict(Loopship.objects.filter(user_id=user.id).values_list('friend_id', 'user_id'))
+            follower_list  = dict(Loopship.objects.filter(friend_id=user.id).values_list('user_id', 'friend_id'))
+
+            ranker_obj = RankProfileListSerializer(ranker_obj, many=True, read_only=True, 
+                            context={"user_id":user.id, "follower_list":follower_list, "following_list":following_list}
+                            ).data
+            
+            return Response({"posting":post_obj, "ranking":ranker_obj}, status=status.HTTP_200_OK)
+        
+        # 순위 리스트 top50
+        else:
+            profile_obj = Profile.objects.all().exclude(rank=0).order_by("rank")[:50]
