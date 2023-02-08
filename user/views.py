@@ -10,6 +10,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from .utils import ES, CLIENT, send_msg, email_format
+from .push_fcm import loop_fcm
 from .models import *
 from .serializers import *
 
@@ -437,7 +438,7 @@ class ProfilePost(APIView):
         page      = param["page"]
         get_type  = param["type"]
 
-        post_obj = Post.objects.select_related("career").prefetch_related("contents_image", "contents_link", "contents_file", "comments_cocomments", "post_lie", "post_tag").order_by("-id")
+        post_obj = Post.objects.select_related("career").prefetch_related("contents_image", "contents_link", "contents_file", "comments_cocomments", "post_like", "post_tag").order_by("-id")
 
         # 커리어 하나의 포스팅
         if get_type == "career":
@@ -547,3 +548,47 @@ class UserAlarm(APIView):
         Alarm.objects.get(id = target_id).delete()
 
         return Response(status=status.HTTP_200_OK)
+
+# 팔로우 관리
+class Loop(APIView):
+    # 팔로우
+    def post(self, request):
+        user  = request.user
+        param = request.GET
+
+        profile_obj = Profile.objects.get(user_id=user.id)
+        loop_fcm(param["id"], profile_obj.real_name, user.id)
+
+        Loopship.objects.create(user_id=user.id, friend_id=param["id"])
+        return Response(status=status.HTTP_200_OK)
+    # 언팔로우
+    def delete(self, request):
+        user  = request.user
+        param = request.GET
+
+        Loopship.objects.get(user_id=user.id, friend_id=param["id"]).delete()
+        return Response(status=status.HTTP_200_OK)
+    
+    # 팔로우리스트
+    def get(self, request):
+        user  = request.user
+        param = request.GET
+
+        follow_type = param["type"]
+
+        if follow_type == "following":
+            loop_obj = Loopship.objects.select_related(
+                        "friend__profile__department", "friend__profile__school"
+                        ).filter(user_id=param["id"])
+
+            loop_obj = list(map(lambda x: x.friend.profile, loop_obj))
+        
+        elif follow_type == "follower":
+            loop_obj = Loopship.objects.select_related(
+                        "friend__profile__department", "friend__profile__school"
+                        ).filter(friend_id=param["id"])
+            loop_obj = list(map(lambda x: x.user.profile, loop_obj))
+        
+        loop_obj = ProfileListWithLoopSerializer(loop_obj, many=True, read_only=True, context={"user_id":user.id}).data
+
+        return Response(loop_obj, status=status.HTTP_200_OK)

@@ -11,8 +11,9 @@ from data.serializers import *
 
 # 간단 프로필 리스트
 class ProfileListSerializer(serializers.ModelSerializer):
-    department = serializers.SerializerMethodField()
-    school     = serializers.SerializerMethodField()
+    department   = serializers.SerializerMethodField()
+    school       = serializers.SerializerMethodField()
+    relationship = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
@@ -24,6 +25,23 @@ class ProfileListSerializer(serializers.ModelSerializer):
 
     def get_school(self, obj):
         return obj.school.school
+
+# 사용자와의 관계가 있는 프로필 리스트
+class ProfileListWithLoopSerializer(ProfileListSerializer):
+    relationship = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ["user_id", "real_name", "profile_image"
+                  "department", "school", "relationship"]
+    
+    def get_relationship(self, obj):
+        user_id = self.context.get("user_id")
+        looped = loop(user_id, obj.user_id)
+
+        if obj.user_id == user_id: 
+            return {"is_user":1}
+        return {"is_user":0, "looped":looped}
 
 # 기본 회사 정보
 class SearchCompanySerializer(serializers.ModelSerializer):
