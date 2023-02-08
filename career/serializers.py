@@ -147,15 +147,17 @@ class MainPageSerializer(serializers.ModelSerializer):
     
     # 사용자의 좋아요, 북마크 여부 표시
     def get_interest(self, obj):
-        user_id   = self.context.get("user_id")
-        like_list = self.context.get("like_list")
-        book_list = self.context.get("book_list")
+        if "user_id" in self.context:
+            user_id   = self.context.get("user_id")
+            like_list = self.context.get("like_list")
+            book_list = self.context.get("book_list")
 
-        is_user, is_liked, is_marked = 0, 0, 0
-        if user_id == obj.user_id: is_user = 1
-        if obj.id in like_list: is_liked = 1
-        if obj.id in book_list: is_marked = 1
+            is_user, is_liked, is_marked = 0, 0, 0
+            if user_id == obj.user_id: is_user = 1
+            if obj.id in like_list: is_liked = 1
+            if obj.id in book_list: is_marked = 1
 
-        return {"is_user":is_user,
-                "is_liked":is_liked,
-                "is_marked":is_marked}
+            return {"is_user":is_user,
+                    "is_liked":is_liked,
+                    "is_marked":is_marked}
+        else: return None
