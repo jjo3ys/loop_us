@@ -1,13 +1,15 @@
 from rest_framework import serializers
 
 from .models import *
-from .utils import loop, loop_count
+from .utils import get_loop, loop_count
 
 from career.models import *
 from career.serializers import *
 
 from data.models import *
 from data.serializers import *
+
+import datetime
 
 # 간단 프로필 리스트
 class ProfileListSerializer(serializers.ModelSerializer):
@@ -36,12 +38,36 @@ class ProfileListWithLoopSerializer(ProfileListSerializer):
                   "department", "school", "relationship"]
     
     def get_relationship(self, obj):
+        if "user_id" not in self.context: return None
         user_id = self.context.get("user_id")
-        looped = loop(user_id, obj.user_id)
 
-        if obj.user_id == user_id: 
-            return {"is_user":1}
+        follower_list  = self.context.get("follower_list")
+        following_list = self.context.get("following_list")
+
+        following = obj.user_id in follower_list
+        follower  = obj.user_id in following_list
+
+        if follower and following: looped = 3
+        elif follower:             looped = 2
+        elif following:            looped = 1
+        else:                      looped = 0
+
+        if obj.user_id == user_id: return {"is_user":1}
         return {"is_user":0, "looped":looped}
+
+# 랭킹 프로필 리스트(최근 포스팅 개수 포함)
+class RankProfileListSerializer(ProfileListWithLoopSerializer):
+    post_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ["user_id", "real_name", "profile_image"
+                  "department", "school", "relationship", "post_count"]
+
+    def get_post_count(self, obj):
+        now = datetime.datetime.now()
+        count = Post.objects.filter(user_id=obj.user_id, date__range=[now-datetime.timedelta(days=30), now]).count()
+        return count
 
 # 기본 회사 정보
 class SearchCompanySerializer(serializers.ModelSerializer):
@@ -99,7 +125,7 @@ class CompanyProfileSerializer(serializers.ModelSerializer):
                     "follow_count":follow_obj.count(),
                     "following_count":following_obj.count()}
         else:
-            looped = loop(user_id, obj.user_id)                  
+            looped = get_loop(user_id, obj.user_id)                  
             return {"is_user":0, "looped":looped}
     
     # 프로필 주인 팔로우 팔로잉 카운트
@@ -133,7 +159,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     school       = serializers.SerializerMethodField()
     post_count   = serializers.SerializerMethodField()
     relationship = serializers.SerializerMethodField()
-    loop_count    = serializers.SerializerMethodField()
+    loop_count   = serializers.SerializerMethodField()
     user_sns     = SNSSerializer(many=True, read_only=True)
 
     class Meta:
@@ -160,7 +186,7 @@ class ProfileSerializer(serializers.ModelSerializer):
                 alarm = True
             return {"is_user":1, "alarm":alarm}
         else:
-            looped = loop(user_id, obj.user_id)
+            looped = get_loop(user_id, obj.user_id)
             return {"is_user":0, "looped":looped}
     
     # 프로필 주인 팔로우 팔로잉 카운트
