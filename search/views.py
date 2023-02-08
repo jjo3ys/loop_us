@@ -35,10 +35,10 @@ class Search(APIView):
             obj = Post.objects.filter(contents__icontains=query
                   ).exclude(user_id__in=ban_list
                   ).select_related(
-                    "career").prefetch_related(
-                    "user__profile__department", "user__profiel__school",
+                    "career", "user__profile__department", "user__profile__school",
+                ).prefetch_related(                    
+                    "contents_image", "contents_link", "contents_file", "post_like", "post_tag", "bookmark",
                     "comments__cocomments",
-                    "contents_image", "contents_link", "contents_file", "post_like", "post_tag", "bookmark"
                     ).order_by("-id")
             if obj.count()//COUNT_PER_PAGE+1 < page: return Response(status=status.HTTP_204_NO_CONTENT)
 
