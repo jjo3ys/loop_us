@@ -11,7 +11,7 @@ from user.serializers import RankProfileListSerializer
 
 from user.utils import PROFILE_SELECT_LIST
 from user.models import Alarm, Banlist, Company, Profile
-from user.push_fcm import cocomment_fcm, comment_fcm, comment_like_fcm, like_fcm, public_pj_fcm, tag_fcm
+from user.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, comment_like_fcm, like_fcm, public_pj_fcm, tag_fcm
 
 from .models import *
 from .serializers import MainPageSerializer
@@ -394,14 +394,14 @@ class LikeAPI(APIView):
             
             obj       = like_obj.comment
             post_id   = like_obj.comment.post_id
-            send_func = comment_fcm
+            send_func = comment_like_fcm
             
         else:
             like_obj = CocommentLike.objects.create(cocomment_id=param["id"], user_id=user.id)
             
             obj       = like_obj.cocomment
             post_id   = like_obj.cocomment.comment.post_id
-            send_func = cocomment_fcm
+            send_func = cocomment_like_fcm
 
         self.send_alarm(obj, user.profile.real_name, param["id"], post_id, send_func, user) 
         self.update_count(obj, 1)     
