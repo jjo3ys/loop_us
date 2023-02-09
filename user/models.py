@@ -32,6 +32,7 @@ class Profile(models.Model):
     school_rank = models.PositiveBigIntegerField(default=0)
     view_count = models.PositiveBigIntegerField(default=0)
     admission = models.CharField(max_length=10)
+    upload_size = models.PositiveBigIntegerField(default=0)
     class Meta:
         db_table = "Profile"
 
