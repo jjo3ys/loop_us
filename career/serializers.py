@@ -161,3 +161,19 @@ class MainPageSerializer(serializers.ModelSerializer):
                     "is_liked":is_liked,
                     "is_marked":is_marked}
         else: return None
+
+class BookMarkListSerializer(MainPageSerializer):
+    interst = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Post
+        fields = ["id", "user_id", "contents", "date", 
+                  "profile", "last_comment", "file_count", "comment_count", 
+                  "post_tag", "contents_image", "contents_link", "career"]
+    
+    def get_interest(self, obj):
+        like_list = self.context.get("like_list")
+        if obj.id in like_list: is_liked = 1
+        else:                   is_liked = 0
+        
+        return {"is_user":1, "is_liked":is_liked, "is_marked":1}
