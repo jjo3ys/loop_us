@@ -11,7 +11,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 
 from .utils import ES, CLIENT, PROFILE_SELECT_LIST, send_msg, email_format
-from .push_fcm import loop_fcm, rank_fcm
+from .push_fcm import loop_fcm, rank_fcm, report_alarm
 from .models import *
 from .serializers import *
 
@@ -514,6 +514,34 @@ class Ban(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+# 신고
+class ReposrtAPI(APIView):
+    report_type = {
+        "post"     : 1,
+        "comment"  : 2,
+        "cocomment": 3
+    }
+    
+    def post(self, request):
+        user  = request.user
+        data  = request.data
+        param = request.GET
+
+        report_type = self.report_type[param["type"]]
+
+        Report.objects.create(
+            user_id   = user.id, 
+            type      = report_type,
+            target_id = data["id"],
+            reason    = data["reason"]
+            )
+        report_count = Report.objects.filter(type=report_type, target_id=data["id"]).count()
+        # 누적 3회 이상 시 운영진에게 알람
+        if report_count >= 3:    
+            report_alarm(report_count, data["id"], data["reason"])
+
+        return Response(status=status.HTTP_200_OK)
+
 # 사용자 알람
 class UserAlarm(APIView):
     def get(self, request):
@@ -769,7 +797,7 @@ class HotStudent(APIView):
         return Response(status=status.HTTP_200_OK)
     
     def get(self, request):
-        user_obj = HotUser.objects.all().select_related(["user__profile" + _ for _ in PROFILE_SELECT_LIST])
+        user_obj = HotUser.objects.all().select_related(["user__profile__" + _ for _ in PROFILE_SELECT_LIST])
         user_obj = list(map(lambda x: x.user.profile, user_obj))
         user_obj = RankProfileListSerializer(user_obj, many=True, read_only=True).data
         return Response(user_obj, status=status.HTTP_200_OK)
