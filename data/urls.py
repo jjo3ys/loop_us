@@ -1,7 +1,7 @@
 from django.urls import path
-from . import views
+from .views import *
 
 urlpatterns = [
-    path("get_data", views.GetData.as_view()),
-    path("company_news", views.CompanyNewsData.as_view()),
+    path("get_data", GetData.as_view()), #crawling
+    path("company_news", CompanyNewsData.as_view()), #crawling
 ]
