@@ -12,6 +12,7 @@ from config.settings import COUNT_PER_PAGE
 from config.my_settings import YOUTUBEKEY, LINUX_CHROME_DRIVER, WINDOW_CHROME_DRIVER
 
 from career.models import Tag
+from data.serializers import BrunchSerializer, NewsSerializer, YoutubeSerializer
 
 from user.models import Company_Inform
 
@@ -137,7 +138,20 @@ class GetData(APIView):
         driver.close()
 
         return Response(status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        results = {}
 
+        news_obj = News.objects.all().order_by("?")
+        br_obj   = Brunch.objects.all().order_by("?")
+        yt_obj   = Youtube.objects.all().order_by("?")
+
+        results["news"]    = NewsSerializer(news_obj, many=True, read_only=True).data
+        results["brunch"]  = BrunchSerializer(br_obj, many=True, read_only=True).data
+        results["youtube"] = YoutubeSerializer(yt_obj, many=True, read_only=True).data
+
+        return Response(results, status=status.HTTP_200_OK)
+        
 # 회사 연관 뉴스
 class CompanyNewsData(GetData):
     def post(self, request):
