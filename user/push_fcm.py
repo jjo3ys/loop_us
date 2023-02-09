@@ -49,7 +49,12 @@ def tag_fcm(topic, req_from, from_id, project, id):
         except QuotaExceededError:
             pass
 
-def like_fcm(topic, req_from, id, from_id):
+def like_fcm(param):
+    topic    = param["topic"]
+    req_from = param["req_from"]
+    id       = param["id"]
+    from_id  = param["from_id"]
+
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=4, target_id=id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
@@ -71,7 +76,13 @@ def like_fcm(topic, req_from, id, from_id):
         except QuotaExceededError:
             pass
 
-def comment_like_fcm(topic, req_from, id, from_id, post_id):
+def comment_like_fcm(param):
+    topic    = param["topic"]
+    req_from = param["req_from"]
+    id       = param["id"]
+    from_id  = param["from_id"]
+    post_id  = param["post_id"]
+
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=5, target_id=post_id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
@@ -94,7 +105,13 @@ def comment_like_fcm(topic, req_from, id, from_id, post_id):
         except QuotaExceededError:
             pass
 
-def cocomment_like_fcm(topic, req_from, id, from_id, post_id):
+def cocomment_like_fcm(param):
+    topic    = param["topic"]
+    req_from = param["req_from"]
+    id       = param["id"]
+    from_id  = param["from_id"]
+    post_id  = param["post_id"]
+    
     alarm, valid = Alarm.objects.get_or_create(user_id=topic, type=6, target_id=post_id, alarm_from_id=from_id)
     if valid:
         message = messaging.Message(
