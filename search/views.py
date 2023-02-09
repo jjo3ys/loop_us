@@ -7,7 +7,7 @@ from rest_framework import status
 from config.settings import COUNT_PER_PAGE
 
 from career.models import BookMark, Like, Post, Post_Tag, Tag
-from career.serializers import MainPageSerializer
+from career.serializers import MainPageSerializer, TagSerializer
 
 from user.utils import ES
 from user.models import Banlist, Company, Company_Inform, Department, Profile, School
