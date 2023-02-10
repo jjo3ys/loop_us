@@ -7,7 +7,8 @@ import datetime
 import random
 import redis
 
-ES = Elasticsearch('localhost:9200')
+# ES = Elasticsearch('localhost:9200')
+ES = None
 CLIENT = redis.Redis()
 
 PROFILE_SELECT_LIST = ["department", "school"]

@@ -5,10 +5,25 @@ from rest_framework import serializers
 from .models import *
 
 from user.models import Profile, Company
-from user.serializers import ProfileListSerializer
 from user.utils import PROFILE_SELECT_LIST
 
 from config.settings import COUNT_PER_PAGE
+
+class ProfileListSerializer(serializers.ModelSerializer):
+    department   = serializers.SerializerMethodField()
+    school       = serializers.SerializerMethodField()
+    relationship = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Profile
+        fields = ["user_id", "real_name", "profile_image"
+                  "department", "school"]
+    
+    def get_department(self, obj):
+        return obj.department.department
+
+    def get_school(self, obj):
+        return obj.school.school
 
 # 간단한 커리어 정보
 class CareerInformSerializer(serializers.ModelSerializer):
@@ -209,7 +224,7 @@ class PostSerializer(MainPageSerializer):
                 "is_marked":is_marked}
     
     def get_comments(self, obj):
-        comment_obj = obj.comment.all()[:10]
+        comment_obj = obj.comment.all()[:COUNT_PER_PAGE]
         return CommentListSerializer(comment_obj, many=True, read_only=True).data
 
 # 북마크리스트
