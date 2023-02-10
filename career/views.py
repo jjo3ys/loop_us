@@ -14,7 +14,7 @@ from user.serializers import RankProfileListSerializer
 from user.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, comment_like_fcm, like_fcm, public_pj_fcm, tag_fcm
 
 from .models import *
-from .serializers import CareerListSerializer, CocommentListSerializer, CocommentSerializer, CommentSerializer, MainPageSerializer, PostSerializer
+from .serializers import CareerListSerializer, CocommentListSerializer, CommentSerializer, MainPageSerializer, PostSerializer
 from .utils import POST_PREFETCH_LIST, POST_SELECTE_LIST
 
 from datetime import date
