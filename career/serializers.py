@@ -6,6 +6,9 @@ from .models import *
 
 from user.models import Profile, Company
 from user.serializers import ProfileListSerializer
+from user.utils import PROFILE_SELECT_LIST
+
+from config.settings import COUNT_PER_PAGE
 
 # 간단한 커리어 정보
 class CareerInformSerializer(serializers.ModelSerializer):
@@ -53,10 +56,11 @@ class CareerListSerializer(serializers.ModelSerializer):
     
     # 공유 커리어 멤버
     def get_member(self, obj):
-        if not obj.career.is_public: return None
-        user_list = CareerUser.objects.filter(career_id=obj.career_id).values_list("user_id", flat=True)
-        return ProfileListSerializer(Profile.objects.filter(user_id__in=user_list).select_related("school", "department"),
-                                     many=True, read_only=True).data
+        if obj.career.is_public:
+            user_list = CareerUser.objects.select_related(["user__profile__"+_ for _ in PROFILE_SELECT_LIST]).filter(career_id=obj.career_id)
+            user_list = list(map(lambda x:x.user.profile, user_list))
+            return ProfileListSerializer(user_list, many=True, read_only=True).data
+        return None
     
     # 해당 커리어에서 쓴 포스팅 개수 / 전체 포스팅 비율
     def get_ratio(self, obj):
@@ -103,10 +107,32 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ["profile", "content", "like_count"]
+        fields = ["content", "like_count",
+                  "profile"]
 
     def get_profile(self, obj):
         return ProfileListSerializer(obj.user.profile, read_only=True).data
+
+# 댓글 리스트
+class CommentListSerializer(CommentSerializer):
+    class Meta:
+        model = Comment
+        fields = ["id", "content", "like_count", "date",
+                  "profile"]
+
+# 대댓글 리스트
+class CocommentListSerializer(CommentSerializer):
+    tagged_user = serializers.SerializerMethodField()
+    class Meta:
+        model = Cocomment
+        fields = ["id", "content", "like_count", "date",
+                  "profile", "tagged_user"]
+
+    def get_tagged_user(self, obj):
+        if obj.tagged:
+            return {"real_name":obj.tagged.real_name, "user_id":obj.tagged_id}
+        else: return None
+
 
 # 메인 페이지 포스팅 리스트
 class MainPageSerializer(serializers.ModelSerializer):
@@ -123,7 +149,7 @@ class MainPageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ["id", "user_id", "contents", "date", 
-                  "profile", "last_comment", "file_count", "comment_count", 
+                  "profile", "most_liked_comment", "file_count", "comment_count", "interest"
                   "post_tag", "contents_image", "contents_link", "career"]
     
     # 포스팅 주인 프로필
@@ -162,6 +188,31 @@ class MainPageSerializer(serializers.ModelSerializer):
                     "is_marked":is_marked}
         else: return None
 
+# 포스트
+class PostSerializer(MainPageSerializer):
+    interest = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Post
+        fields = ["id", "user_id", "contents", "date", 
+                  "profile", "file_count", "interest"
+                  "post_tag", "contents_image", "contents_link", "career", "comments"]
+    
+    def get_interest(self, obj):
+        user_id = self.context.get("user_id")
+        is_user   = obj.user_id == user_id
+        is_liked  = Like.objects.filter(user_id=user_id, post_id=obj.id).exists()
+        is_marked = BookMark.objects.filter(user_id=user_id, post_id=obj.id).exists()
+        return {"is_user":is_user,
+                "is_liked":is_liked,
+                "is_marked":is_marked}
+    
+    def get_comments(self, obj):
+        comment_obj = obj.comment.all()[:10]
+        return CommentListSerializer(comment_obj, many=True, read_only=True).data
+
+# 북마크리스트
 class BookMarkListSerializer(MainPageSerializer):
     interst = serializers.SerializerMethodField()
 
