@@ -17,7 +17,7 @@ from .serializers import *
 
 from career.utils import delete_tag, POST_PREFETCH_LIST, POST_SELECTE_LIST
 from career.models import *
-from career.serializers import BanlistSerializer, CareerListSerializer, MainPageSerializer
+from career.serializers import CareerListSerializer, MainPageSerializer
 
 from config.settings import COUNT_PER_PAGE
 
