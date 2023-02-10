@@ -7,14 +7,14 @@ from rest_framework import status
 from django.db.models import F, Count
 
 from config.settings import COUNT_PER_PAGE
-from user.serializers import RankProfileListSerializer
 
 from user.utils import PROFILE_SELECT_LIST
-from user.models import Alarm, Banlist, Company, Profile
+from user.models import Alarm, Banlist, Profile
+from user.serializers import RankProfileListSerializer
 from user.push_fcm import cocomment_fcm, cocomment_like_fcm, comment_fcm, comment_like_fcm, like_fcm, public_pj_fcm, tag_fcm
 
 from .models import *
-from .serializers import MainPageSerializer
+from .serializers import CareerListSerializer, CocommentListSerializer, CocommentSerializer, CommentSerializer, MainPageSerializer, PostSerializer
 from .utils import POST_PREFETCH_LIST, POST_SELECTE_LIST
 
 from datetime import date
@@ -40,7 +40,7 @@ class CareerAPI(APIView):
             career_obj.save()
         
         career_obj = CareerUser.objects.create(user_id=user.id, career_id=career_obj.id)
-        career_obj = CareerUserSerializer(career_obj, read_only=True).data
+        career_obj = CareerListSerializer(career_obj, read_only=True).data
 
         return Response(career_obj, status=status.HTTP_200_OK)
     
@@ -52,7 +52,7 @@ class CareerAPI(APIView):
         career_obj = CareerUser.objects.prefetch_related("career__post"
                         ).get(career_id=param["career_id"], user_id=param["user_id"])
         
-        career_obj = CareerUserSerializer(career_obj, read_only=True).data
+        career_obj = CareerListSerializer(career_obj, read_only=True).data
         return Response(career_obj, status=status.HTTP_200_OK)
 
     # 커리어 수정
@@ -81,7 +81,7 @@ class CareerAPI(APIView):
         
         career_obj.save()
         career_obj = CareerUser.objects.select_related("career").get(career_id=param["id"], user_id=user.id)
-        career_obj = CareerUserSerializer(career_obj, read_only=True).data
+        career_obj = CareerListSerializer(career_obj, read_only=True).data
 
         return Response(career_obj, status=status.HTTP_200_OK)
     
@@ -180,7 +180,7 @@ class PostAPI(APIView):
         if post_obj.career.is_public:
             public_pj_fcm(post_obj.career_id, post_obj.id, user.id, post_obj.career.career_name)
         
-        post_obj = PostSerializer(post_obj, read_only=True).data
+        post_obj = PostSerializer(post_obj, read_only=True, context={"user_id":user.id}).data
         return Response(post_obj, status=status.HTTP_200_OK)
 
     def get(self, request):
@@ -190,11 +190,11 @@ class PostAPI(APIView):
         post_obj = Post.objects.select_related(
                     POST_SELECTE_LIST
                     ).prefetch_related(
-                        POST_PREFETCH_LIST
+                        POST_PREFETCH_LIST + ["comments__user__profile__" + _ for _ in PROFILE_SELECT_LIST ]
                     ).get(id=param["id"])
         post_obj.view_count += 1
         post_obj.save()
-        post_obj = PostSerializer(post_obj, read_only=True).data
+        post_obj = PostSerializer(post_obj, read_only=True, context={"user_id":user.id}).data
         return Response(post_obj, status=status.HTTP_200_OK)
 
     def put(self, request):
@@ -291,7 +291,6 @@ class CommentAPI(APIView):
                 profile_obj = user.profile
                 comment_fcm(comment_obj.post.user_id, profile_obj.real_name, param["id"], user.id)
             
-            comment_obj = CommentSerializer(comment_obj, read_only=True).data
         # 대댓글 작성
         else:
             comment_obj = Cocomment.objects.create(
@@ -304,9 +303,8 @@ class CommentAPI(APIView):
             if user.id != comment_obj.user.id:
                 profile_obj = user.profile
                 cocomment_fcm(data["tagged_user"], profile_obj.real_name, comment_obj.id, user.id, comment_obj.comment.post_id)
-           comment_obj = CocommentSerializer(comment_obj, read_only=True).data
         
-        return Response(comment_obj, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK)
 
     # 댓글 리스트
     def get(self, request):
@@ -315,11 +313,13 @@ class CommentAPI(APIView):
         get_type = param["type"]
         
         if get_type == "comment":
-            comment_obj = Comment.objects.filter(post_id=param["id"], id__lt=param["last"]).order_by("-id")[:COUNT_PER_PAGE]
+            comment_obj = Comment.objects.select_related(
+                            ["user__profile"+_ for _ in PROFILE_SELECT_LIST]).filter(post_id=param["id"], id__lt=param["last"]).order_by("-id")[:COUNT_PER_PAGE]
             comment_obj = CommentSerializer(comment_obj, many=True, read_only=True).data
         else: 
-            comment_obj = Cocomment.objects.filter(comment_id=param["id"], id__lt=param["last"]).order_by("-id")[:COUNT_PER_PAGE]
-            comment_obj = CocommentSerializer(comment_obj, many=True, read_only=True).data
+            comment_obj = Cocomment.objects.select_related(
+                            ["user__profile"+_ for _ in PROFILE_SELECT_LIST]).filter(comment_id=param["id"], id__lt=param["last"]).order_by("-id")[:COUNT_PER_PAGE]
+            comment_obj = CocommentListSerializer(comment_obj, many=True, read_only=True).data
         
         return Response(comment_obj, status=status.HTTP_200_OK)
     
