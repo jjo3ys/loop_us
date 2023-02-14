@@ -3,13 +3,17 @@ from elasticsearch import Elasticsearch
 
 from .models import Loopship
 
+import platform
 import datetime
 import random
 import redis
 
-# ES = Elasticsearch('localhost:9200')
-ES = None
-CLIENT = redis.Redis()
+if platform.system() == 'Linux':
+    ES = Elasticsearch('localhost:9200')
+    CLIENT = redis.Redis()
+else:
+    ES = None
+    CLIENT = None
 
 PROFILE_SELECT_LIST = ["department", "school"]
 
