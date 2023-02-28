@@ -1,46 +1,36 @@
 import requests
 
 from config.my_settings import HEADER
+from config.settings import SITE_URL
 from apscheduler.schedulers.blocking import BlockingScheduler
 
 header = HEADER
 
 def rank_api():
     try:
-        requests.get('http://3.35.253.151:8000/rank/posting_ranking', headers=header)
+        requests.post(SITE_URL+'user/post_rank', headers=header)
     except:
         pass
     try:
-        requests.post('http://3.35.253.151:8000/rank/hot_user', headers=header)
+        requests.post(SITE_URL+'user/hot_user', headers=header)
     except:
         pass
-    # try:
-    #     requests.get('http://3.35.253.151:8000/rank/project_group', headers=header)
-    # except:
-    #     pass
-    # try:
-    #     requests.get('http://3.35.253.151:8000/rank/profile_group', headers=header)
-    # except:
-    #     pass
     try:
-        requests.get('http://3.35.253.151:8000/rank/user_ranking', headers=header)
+        requests.post(SITE_URL+'user/rank', headers=header)
     except:
         pass
 
 def news_crawling():
-    requests.get('http://3.35.253.151:8000/get_data/crawling', headers=header)
+    requests.post(SITE_URL+'data/get_data', headers=header)
 
 def set_monthly():
     try:
-        requests.get('http://3.35.253.151:8000/rank/tag_count', headers=header)
-    except: pass
-    try:
-        requests.post('http://3.35.253.151:8000/rank/posting_trends', headers=header)
-    except: pass    
+        requests.post(SITE_URL+'user/tag_count', headers=header)
+    except: pass   
     
 def set_weekly():
     try:
-        requests.get('http://3.35.253.151:8000/get_data/company_news', headers=header)
+        requests.post(SITE_URL+'data/company_news', headers=header)
     except: pass
 bg_scheuler = BlockingScheduler(timezone="Asia/Seoul")
 
