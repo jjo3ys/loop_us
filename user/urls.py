@@ -22,4 +22,9 @@ urlpatterns = [
     path("ask", Ask.as_view()), #user
 
     path("loop", Loop.as_view()), #loop
+
+    path("tag_count", MonthlyTag.as_view()),
+    path("rank", UserRanking.as_view()),
+    path("post_rank", PostRanking.as_view()),
+    path("hot_student", HotStudent.as_view()),   
 ]
