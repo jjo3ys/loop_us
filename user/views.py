@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import check_password
 from django.core.mail import EmailMessage
-from django.db.models import Sum
+from django.db.models import Sum, F, Count, SmallIntegerField, ExpressionWrapper
 from django.utils import timezone
 
 from rest_framework.response import Response
@@ -24,6 +24,8 @@ from config.settings import COUNT_PER_PAGE
 from dateutil.relativedelta import relativedelta
 
 import datetime
+import heapq
+
 # 인증번호 확인
 class Activate(APIView):
     def post(self, request):
@@ -695,59 +697,52 @@ class UserRanking(APIView):
         now = datetime.datetime.now()
 
         profile_obj = Profile.objects.filter(type=0)
-        post_obj    = Post.objects.filter(date__range = [now-datetime.timedelta(days=30), now])
+        profile_obj = Profile.objects.prefetch_related('user__post'
+                      ).filter(type=0, user__post__date__range=[now-datetime.timedelta(days=90), now]
+                      ).annotate(calc_score=ExpressionWrapper(
+                        Sum('user__post__like_count')*5+Sum('user__post__view_count')+Count('user__post')*3, 
+                        output_field=SmallIntegerField())
+                      ).order_by('-calc_score')
+        
 
         # 점수 업데이트 점수 = 좋아요X3 + 조회수X1 + 포스팅수X5
         for profile in profile_obj:
-            user_post = post_obj.filter(user_id = profile.user_id)
-            
-            count = user_post.aaggregate(like_count=Sum("like_count"), view_count=Sum("view_count"))
-            score = count["like_count"] * 3 + count["view_count"] + user_post.count() * 5
-            profile.score = score
+            profile.score = profile.calc_score
 
         Profile.objects.bulk_update(profile_obj, ["score"])
-
-        # 순위 계산
+        
         accN = 0
         score = 0
+        school_dict = {}
+        school_list = Profile.objects.filter(type=0).values('school_id').distinct()
+        for school in school_list:
+            school_dict[school['school_id']] = {'accN':0, 'score':0, 'rank':1}
         
         profile_obj = Profile.objects.filter(type=0).order_by("-score")
+        # 전국, 교내 순위 계산
         for i , profile in enumerate(profile_obj, 1):
             profile.last_rank = profile.rank
             # 공동 순위를 위한 계산
-            if profile.score != score: 
+            if profile.calc_score != score: 
                 profile.rank = i
-                score        = profile.score
+                score        = profile.calc_score
                 accN         = 0
             else: 
                 accN         += 1
                 profile.rank = i - accN
-                
 
-        Profile.objects.bulk_update(profile_obj, ["rank", "last_rank"])      
+            profile.school_last_rank = profile.school_rank
+            school_rank = school_dict[profile.school_id]
+            if profile.calc_score != school_rank['score']:
+                profile.school_rank = school_rank['rank']
+                school_rank['rank'] += 1
+                school_rank['score'] = profile.calc_score
+                school_rank['accN'] = 0
+            else:
+                school_rank['accN'] += 1
+                profile.school_rank = school_rank['rank'] - school_rank['accN']
 
-        # 교내 순위 계산
-        profile_obj = Profile.objects.filter(type=0).order_by("-score")
-        school_list = profile_obj.values("school_id").distinct()
-        for school in school_list:
-            school_profile = profile_obj.filter(school_id = school["school_id"]).order_by("-score")
-
-            accN = 0
-            score = 0
-            for i, profile in enumerate(school_profile, 1):
-                profile.school_last_rank = profile.school_rank
-                # 공동 순위를 위한 계산
-                if profile.score != score:
-                    profile.school_rank = i
-                    score               = profile.score
-                    accN                = 0
-                else:
-                    accN                += 1
-                    profile.school_rank = i - accN
-                    
-            Profile.objects.bulk_update(school_profile, ["school_rank", "school_last_rank"]) 
-            # 교내 순위 업데이트 알람
-            rank_fcm(school["school_id"])
+        Profile.objects.bulk_update(profile_obj, ["rank", "last_rank", "school_rank", "school_last_rank"])  
         
         return Response(status=status.HTTP_200_OK)
     

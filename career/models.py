@@ -29,7 +29,7 @@ class CareerUser(models.Model):
 
 # Post
 class Post(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='post', on_delete=models.CASCADE)
     career = models.ForeignKey(Career, related_name='post', on_delete=models.CASCADE)
     contents = models.TextField(null=True)
     date = models.DateTimeField(auto_now_add=True)
