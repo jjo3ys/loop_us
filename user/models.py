@@ -26,7 +26,6 @@ class Profile(models.Model):
     department = models.ForeignKey(Department, on_delete=models.DO_NOTHING, null=True)
     group = models.PositiveSmallIntegerField(default=15)
     rank = models.PositiveBigIntegerField(default=0)
-    score = models.IntegerField(default=0)
     last_rank = models.PositiveBigIntegerField(default=0)
     school_last_rank = models.PositiveBigIntegerField(default=0)
     school_rank = models.PositiveBigIntegerField(default=0)
