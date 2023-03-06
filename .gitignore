@@ -7,8 +7,6 @@ __pycache__/
 /venv/
 /docker-compose.yml
 Dockerfile
-#/requirements.txt
-#requirements.txt
 /Pipfile
 /Pipfile.lock
 .venv
@@ -17,6 +15,7 @@ confing/__pycache__
 config/my_settings.py
 /serviceAccountKey.json
 
+static/*
 config/__pycache__
 
 /**/migrations
