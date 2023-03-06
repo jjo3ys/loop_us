@@ -24,7 +24,6 @@ from config.settings import COUNT_PER_PAGE
 from dateutil.relativedelta import relativedelta
 
 import datetime
-import heapq
 
 # 인증번호 확인
 class Activate(APIView):
