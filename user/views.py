@@ -696,19 +696,13 @@ class UserRanking(APIView):
         now = datetime.datetime.now()
 
         profile_obj = Profile.objects.filter(type=0)
+        # 점수 = 좋아요X3 + 조회수X1 + 포스팅수X5
         profile_obj = Profile.objects.prefetch_related('user__post'
                       ).filter(type=0, user__post__date__range=[now-datetime.timedelta(days=90), now]
                       ).annotate(calc_score=ExpressionWrapper(
                         Sum('user__post__like_count')*5+Sum('user__post__view_count')+Count('user__post')*3, 
                         output_field=SmallIntegerField())
                       ).order_by('-calc_score')
-        
-
-        # 점수 업데이트 점수 = 좋아요X3 + 조회수X1 + 포스팅수X5
-        for profile in profile_obj:
-            profile.score = profile.calc_score
-
-        Profile.objects.bulk_update(profile_obj, ["score"])
         
         accN = 0
         score = 0
