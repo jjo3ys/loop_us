@@ -31,15 +31,15 @@ SNS 형식의 플랫폼으로 기존의 딱딱한 플랫폼들과 달리 친근�
 
 | 1. 메인 페이지           | 2. 회원가입 화면 |3-1. 프로필 화면 1|
 |---------------------|---|---|
-| ![Alt text](image.png) |![Alt text](image-1.png)|![Alt text](image-3.png)|
+| ![Alt text](/img/image.png) |![Alt text](/img/image-1.png)|![Alt text](/img/image-3.png)|
 
 | 3-2. 프로필 화면2           | 4. 메세지 화면|5. 알림 화면|
 |---------------------|---|---|
-|![Alt text](image-7.png)|![Alt text](image-5.png)|![Alt text](image-6.png)|
+|![Alt text](/img/image-7.png)|![Alt text](/img/image-5.png)|![Alt text](/img/image-6.png)|
 
 | 6. 검색 화면           | 7. 랭킹 화면 |
 |---------------------|---|
-|![Alt text](image-8.png)|![Alt text](image-9.png)|
+|![Alt text](/img/image-8.png)|![Alt text](/img/image-9.png)|
 
 <br>
 
