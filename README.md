@@ -16,14 +16,14 @@ SNS 형식의 플랫폼으로 기존의 딱딱한 플랫폼들과 달리 친근�
 
 ## 🛠️ Stacks
 
-<img src="https://img.shields.io/badge/-python-05122A?style=flat&logo=python"/>
-<img src="https://img.shields.io/badge/-django-05122A?style=flat&logo=django"/>
+![](https://img.shields.io/badge/-python-05122A?style=flat&logo=python)
+![](https://img.shields.io/badge/-django-05122A?style=flat&logo=django)
 <br>
-<img src="https://img.shields.io/badge/-mysql-05122A?style=flat&logo=mysql"/>
-<img src="https://img.shields.io/badge/-redis-05122A?style=flat&logo=redis"/>
-<img src="https://img.shields.io/badge/-es-05122A?style=flat&logo=elasticsearch"/>
+![](https://img.shields.io/badge/-mysql-05122A?style=flat&logo=mysql)
+![](https://img.shields.io/badge/-redis-05122A?style=flat&logo=redis)
+![](https://img.shields.io/badge/-es-05122A?style=flat&logo=elasticsearch)
 <br>
-<img src="https://img.shields.io/badge/-aws-05122A?style=flat&logo=amazonaws"/>
+![](https://img.shields.io/badge/-aws-05122A?style=flat&logo=amazonaws)
 
 <br>
 
