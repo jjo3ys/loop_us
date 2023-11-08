@@ -90,7 +90,7 @@ drf token을 사용하여 세션 방식의 로그인을 구현했습니다.
 > django orm의 prefetch, select related와 annotate등을 활용하여 점수를 db에서 계산하도록 하였고,
 > dictionary 자료구조를 활용하여 전국, 교내 랭킹을 집계할 때 for loop를 한 번만 돌도록 했습니다.
 
-### ✨ 후기
+## ✨ 후기
 
 해당 프로젝트를 진행하면서 aws의 cloud 기술들을 처음 사용해 봤습니다.<br>
 아무 도움 없이 혼자 해결하느라 시행착오가 있었지만, 기능을 사용해보면서<br>
