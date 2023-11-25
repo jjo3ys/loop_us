@@ -18,6 +18,7 @@ SNS 형식의 플랫폼으로 기존의 딱딱한 플랫폼들과 달리 친근�
 
 ![](https://img.shields.io/badge/-python-05122A?style=flat&logo=python)
 ![](https://img.shields.io/badge/-django-05122A?style=flat&logo=django)
+![](https://img.shields.io/badge/-fcm-05122A?style=flat&logo=firebase)
 <br>
 ![](https://img.shields.io/badge/-mysql-05122A?style=flat&logo=mysql)
 ![](https://img.shields.io/badge/-redis-05122A?style=flat&logo=redis)
@@ -44,8 +45,8 @@ SNS 형식의 플랫폼으로 기존의 딱딱한 플랫폼들과 달리 친근�
 <br>
 
 ## ✨ 구현 내용
-- db 스키마 설계
-- 유저, 피드, 댓글, 이미지, 태그 CRUD, 유저 랭킹 시스템 구현
+- db 스키마 설계, 알림 정책 설계
+- 유저, 피드, 댓글, 이미지, 태그 CRUD, 유저 랭킹 시스템, FCM알림 구현
 - 인증번호 회원가입, 세션 방식 로그인 구현
 - 뉴스 데이터 크롤링 scheduler 구현
 - elasticsearch 검색엔진 구현
@@ -84,11 +85,13 @@ drf token을 사용하여 세션 방식의 로그인을 구현했습니다.
 전국과 교내 랭킹을 집계하도록 api를 만들고 스케쥴링 했습니다.
 
 #### 문제 해결
-> 해당 과정을 처음 구현했을 때 유저수가 적었음에도 1분 이상 시간이 걸렸습니다.<br>
+> 해당 과정을 처음 구현했을 때 유저수가 적었음에도 랭킹을 집계하는데 1분 이상 시간이 걸렸습니다.<br>
+> 교내, 전국 랭킹을 처음 구현했을 때엔 따로 구현했었고, <br>
 > 랭킹을 집계하는 서버가 따로 있지 않았기 때문에 해당 시간을 줄이려 노력했습니다.
 >
-> django orm의 prefetch, select related와 annotate등을 활용하여 점수를 db에서 계산하도록 하였고,
-> dictionary 자료구조를 활용하여 전국, 교내 랭킹을 집계할 때 for loop를 한 번만 돌도록 했습니다.
+> django orm의 prefetch, select related와 annotate등을 활용하여 점수를 db에서 계산하도록 하였고,<br>
+> dictionary 자료구조를 활용하여 전국, 교내 랭킹을 집계할 때 for loop를 한 번만 돌도록 했습니다.<br>
+> 그 결과 랭킹 집계에 들던 시간 50%를 줄일 수 있었습니다.
 
 ## ✨ 후기
 
